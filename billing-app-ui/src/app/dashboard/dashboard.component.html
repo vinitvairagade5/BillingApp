@@ -1,0 +1,81 @@
+<div class="container">
+    <h1>Dashboard</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card sales">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+                <h3>Total Sales</h3>
+                <p class="stat-value">{{ stats.totalSales | currency:'INR' }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card gst">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-info">
+                <h3>Total GST</h3>
+                <p class="stat-value">{{ stats.totalGST | currency:'INR' }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card invoices">
+            <div class="stat-icon">📄</div>
+            <div class="stat-info">
+                <h3>Total Invoices</h3>
+                <p class="stat-value">{{ stats.totalInvoices }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card recent-invoices">
+            <div class="card-header">
+                <h2>Recent Invoices</h2>
+                <button class="btn-text" routerLink="/bills">View All</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th class="text-right">Amount</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let bill of recentBills">
+                        <td>
+                            <div class="bill-link">
+                                <strong>{{ bill.billNumber }}</strong>
+                                <small>{{ bill.date | date:'shortDate' }}</small>
+                            </div>
+                        </td>
+                        <td>{{ bill.customer?.name || 'Walk-in' }}</td>
+                        <td class="text-right">₹{{ bill.totalAmount | number:'1.2-2' }}</td>
+                        <td class="text-center">
+                            <button class="btn-view-sm" [routerLink]="['/bills', bill.id]">👁️ View</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card top-products">
+            <h2>Top Products</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-right">Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let product of stats.topProducts">
+                        <td>{{ product.name }}</td>
+                        <td class="text-right">₹{{ product.totalRevenue | number:'1.2-2' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

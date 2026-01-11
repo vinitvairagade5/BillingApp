@@ -1,0 +1,112 @@
+.container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--text-primary, #333);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    margin: 0.25rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.sales .stat-icon {
+    background: #e6fffa;
+}
+
+.gst .stat-icon {
+    background: #fff5f5;
+}
+
+.invoices .stat-icon {
+    background: #ebf8ff;
+}
+
+.dashboard-secondary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+.top-products {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.top-products h2 {
+    margin: 0 0 1.5rem;
+    font-size: 1.25rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    font-weight: 600;
+    color: #666;
+    background: #f8f9fa;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    padding: 2rem !important;
+}

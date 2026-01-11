@@ -1,0 +1,21 @@
+# .NET
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Angular
+dist/
+tmp/
+out-tsc/
+bazel-out/
+/billing-app-ui/node_modules/
+.angular/
+.vscode/
+
+# Project Specific
+.idea/
+*.log
+.DS_Store

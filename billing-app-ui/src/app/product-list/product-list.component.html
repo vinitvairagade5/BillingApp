@@ -1,0 +1,88 @@
+<div class="container">
+  <div class="header">
+    <h1>Products</h1>
+    <button class="btn-primary" (click)="openAddModal()">Add Product</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" [(ngModel)]="searchTerm" placeholder="Search products by name or category...">
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>GST Rate (%)</th>
+          <th>HSN Code</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of filteredProducts">
+          <td>{{ product.name }}</td>
+          <td>{{ product.category || 'N/A' }}</td>
+          <td>{{ product.price | currency:'INR' }}</td>
+          <td>{{ product.gstRate }}%</td>
+          <td>{{ product.hsnCode || 'N/A' }}</td>
+          <td class="actions">
+            <button class="btn-icon" (click)="openEditModal(product)" title="Edit">
+              <span class="icon">✏️</span>
+            </button>
+            <button class="btn-icon btn-delete" (click)="deleteProduct(product.id!)" title="Delete">
+              <span class="icon">🗑️</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" [class.open]="isModalOpen">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
+      <button class="close-btn" (click)="closeModal()">&times;</button>
+    </div>
+    <form (ngSubmit)="saveProduct()">
+      <div class="form-group">
+        <label>Product Name</label>
+        <input type="text" [(ngModel)]="newProduct.name" name="name" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" [(ngModel)]="newProduct.price" name="price" required>
+        </div>
+        <div class="form-group">
+          <label>GST Rate (%)</label>
+          <select [(ngModel)]="newProduct.gstRate" name="gstRate">
+            <option [ngValue]="0">0%</option>
+            <option [ngValue]="5">5%</option>
+            <option [ngValue]="12">12%</option>
+            <option [ngValue]="18">18%</option>
+            <option [ngValue]="28">28%</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" [(ngModel)]="newProduct.category" name="category">
+        </div>
+        <div class="form-group">
+          <label>HSN Code</label>
+          <input type="text" [(ngModel)]="newProduct.hsnCode" name="hsnCode">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
