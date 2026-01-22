@@ -18,7 +18,7 @@ services:
         value: http://+:8080
 
   # 2. Frontend Service (Static Site)
-  - type: static
+  - type: web
     name: billing-app-ui
     env: static
     region: singapore
