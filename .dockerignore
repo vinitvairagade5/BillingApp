@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/dist/
+**/node_modules/
+.git/
+.vs/
+*.md
+render.yaml
