@@ -21,7 +21,6 @@ services:
   - type: web
     name: billing-app-ui
     env: static
-    region: singapore
     branch: main
     rootDir: src/billing-app-ui
     buildCommand: npm install && npm run build -- --configuration production
