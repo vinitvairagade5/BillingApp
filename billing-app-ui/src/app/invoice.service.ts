@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface Bill {
     id: number;
@@ -57,7 +58,7 @@ export interface CreateBill {
 })
 export class InvoiceService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5017/api/Invoice';
+    private apiUrl = `${environment.apiUrl}/Invoice`;
 
     getBills(shopOwnerId: number): Observable<Bill[]> {
         return this.http.get<Bill[]>(`${this.apiUrl}?shopOwnerId=${shopOwnerId}`);

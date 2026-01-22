@@ -43,5 +43,5 @@ using (var scope = app.Services.CreateScope())
 app.UseAuthorization();
 app.MapControllers();
 
-app.Urls.Add("http://0.0.0.0:5017");
+// app.Urls.Add("http://0.0.0.0:5017");
 app.Run();

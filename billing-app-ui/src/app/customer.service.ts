@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface Customer {
     id?: number;
@@ -15,7 +16,7 @@ export interface Customer {
 })
 export class CustomerService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5017/api/Customer';
+    private apiUrl = `${environment.apiUrl}/Customer`;
 
     getCustomers(shopOwnerId: number): Observable<Customer[]> {
         return this.http.get<Customer[]>(`${this.apiUrl}?shopOwnerId=${shopOwnerId}`);

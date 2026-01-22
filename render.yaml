@@ -1,12 +1,44 @@
 services:
+  # 1. Backend Service (Docker API)
   - type: web
-    name: billing-app
+    name: billing-app-api
     env: docker
-    region: singapore # Close to India
+    region: singapore
     plan: free
     branch: main
+    rootDir: src # The Dockerfile is in src, but it copies BillingApp.API inside. 
+                 # Wait, looking at Dockerfile: COPY ["BillingApp.API/BillingApp.API.csproj", "BillingApp.API/"]
+                 # It expects to be run from `src`.
     envVars:
       - key: DATABASE_URL
-        sync: false # You will be prompted to enter this
+        fromDatabase:
+          name: billing-db
+          property: connectionString
       - key: ASPNETCORE_URLS
         value: http://+:8080
+
+  # 2. Frontend Service (Static Site)
+  - type: static
+    name: billing-app-ui
+    env: static
+    region: singapore
+    branch: main
+    rootDir: src/billing-app-ui
+    buildCommand: npm install && npm run build -- --configuration production
+    staticPublishPath: dist/billing-app-ui/browser
+    routes:
+      - type: rewrite
+        source: /**
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
+
+databases:
+  # 3. Database Service
+  - name: billing-db
+    databaseName: billing_db
+    user: billing_user
+    plan: free
+    region: singapore
+    ipAllowList: [] # Allow all IPs for now, or restrict if needed. Render internal network handles connection.
