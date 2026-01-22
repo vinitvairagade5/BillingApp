@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: billing-app
+    env: docker
+    region: singapore # Close to India
+    plan: free
+    branch: main
+    envVars:
+      - key: DATABASE_URL
+        sync: false # You will be prompted to enter this
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
