@@ -55,8 +55,10 @@
                 <textarea [(ngModel)]="newCustomer.address" name="address" rows="3"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Save Customer</button>
+                <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Cancel</button>
+                <button type="submit" class="btn-primary" [disabled]="isSaving">
+                    {{ isSaving ? 'Saving...' : 'Save Customer' }}
+                </button>
             </div>
         </form>
     </div>

@@ -31,7 +31,8 @@
             <button class="btn-icon" (click)="openEditModal(product)" title="Edit">
               <span class="icon">✏️</span>
             </button>
-            <button class="btn-icon btn-delete" (click)="deleteProduct(product.id!)" title="Delete">
+            <button class="btn-icon btn-delete" (click)="deleteProduct(product.id!)" title="Delete"
+              [disabled]="isSaving">
               <span class="icon">🗑️</span>
             </button>
           </td>
@@ -46,21 +47,22 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
-      <button class="close-btn" (click)="closeModal()">&times;</button>
+      <button class="close-btn" (click)="closeModal()" [disabled]="isSaving">&times;</button>
     </div>
     <form (ngSubmit)="saveProduct()">
+      <!-- ... (keeping body same) ... -->
       <div class="form-group">
         <label>Product Name</label>
-        <input type="text" [(ngModel)]="newProduct.name" name="name" required>
+        <input type="text" [(ngModel)]="newProduct.name" name="name" required [disabled]="isSaving">
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Price</label>
-          <input type="number" [(ngModel)]="newProduct.price" name="price" required>
+          <input type="number" [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving">
         </div>
         <div class="form-group">
           <label>GST Rate (%)</label>
-          <select [(ngModel)]="newProduct.gstRate" name="gstRate">
+          <select [(ngModel)]="newProduct.gstRate" name="gstRate" [disabled]="isSaving">
             <option [ngValue]="0">0%</option>
             <option [ngValue]="5">5%</option>
             <option [ngValue]="12">12%</option>
@@ -72,17 +74,20 @@
       <div class="form-row">
         <div class="form-group">
           <label>Category</label>
-          <input type="text" [(ngModel)]="newProduct.category" name="category">
+          <input type="text" [(ngModel)]="newProduct.category" name="category" [disabled]="isSaving">
         </div>
         <div class="form-group">
           <label>HSN Code</label>
-          <input type="text" [(ngModel)]="newProduct.hsnCode" name="hsnCode">
+          <input type="text" [(ngModel)]="newProduct.hsnCode" name="hsnCode" [disabled]="isSaving">
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
-        <button type="submit" class="btn-primary">Save Product</button>
+        <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Save Product' }}
+        </button>
       </div>
+
     </form>
   </div>
 </div>

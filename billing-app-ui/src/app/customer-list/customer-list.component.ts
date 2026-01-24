@@ -18,6 +18,7 @@ export class CustomerListComponent implements OnInit {
     customers: Customer[] = [];
     searchTerm: string = '';
     isModalOpen: boolean = false;
+    isSaving: boolean = false;
     editingCustomer: Customer | null = null;
 
     newCustomer: Customer = {
@@ -74,9 +75,18 @@ export class CustomerListComponent implements OnInit {
     }
 
     saveCustomer(): void {
-        this.customerService.createOrUpdateCustomer(this.newCustomer).subscribe(() => {
-            this.loadCustomers();
-            this.closeModal();
+        this.isSaving = true;
+        this.customerService.createOrUpdateCustomer(this.newCustomer).subscribe({
+            next: () => {
+                this.isSaving = false;
+                this.loadCustomers();
+                this.closeModal();
+            },
+            error: (err) => {
+                this.isSaving = false;
+                console.error('Error saving customer', err);
+                alert('Failed to save customer');
+            }
         });
     }
 }

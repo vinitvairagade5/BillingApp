@@ -18,6 +18,7 @@ export class ProductListComponent implements OnInit {
     products: Item[] = [];
     searchTerm: string = '';
     isModalOpen: boolean = false;
+    isSaving: boolean = false;
     editingProduct: Item | null = null;
 
     newProduct: Item = {
@@ -78,25 +79,40 @@ export class ProductListComponent implements OnInit {
     }
 
     saveProduct(): void {
-        if (this.editingProduct) {
-            this.productService.updateProduct(this.newProduct).subscribe(() => {
+        this.isSaving = true;
+        const request = this.editingProduct
+            ? this.productService.updateProduct(this.newProduct)
+            : this.productService.createProduct(this.newProduct);
+
+        request.subscribe({
+            next: () => {
+                this.isSaving = false;
                 this.loadProducts();
                 this.closeModal();
-            });
-        } else {
-            this.productService.createProduct(this.newProduct).subscribe(() => {
-                this.loadProducts();
-                this.closeModal();
-            });
-        }
+            },
+            error: (err) => {
+                this.isSaving = false;
+                console.error('Error saving product', err);
+                alert('Failed to save product');
+            }
+        });
     }
 
     deleteProduct(id: number): void {
         if (confirm('Are you sure you want to delete this product?')) {
             const user = this.authService.currentUserValue;
             if (user) {
-                this.productService.deleteProduct(id, user.id).subscribe(() => {
-                    this.loadProducts();
+                this.isSaving = true;
+                this.productService.deleteProduct(id, user.id).subscribe({
+                    next: () => {
+                        this.isSaving = false;
+                        this.loadProducts();
+                    },
+                    error: (err) => {
+                        this.isSaving = false;
+                        console.error('Error deleting product', err);
+                        alert('Failed to delete product');
+                    }
                 });
             }
         }
