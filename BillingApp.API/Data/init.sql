@@ -148,7 +148,7 @@ BEGIN
     -- Bill 1
     INSERT INTO "Bills" ("BillNumber", "Date", "CustomerId", "SubTotal", "Discount", "TotalCGST", "TotalSGST", "TotalIGST", "TotalAmount", "ShopOwnerId")
     VALUES ('INV-2024-0001', NOW() - INTERVAL '2 days', v_Cust1, 24500.00, 500, 2160, 2160, 0, 28320.00, v_UserId)
-    ON CONFLICT ("BillNumber") DO NOTHING
+    ON CONFLICT ("BillNumber", "ShopOwnerId") DO NOTHING
     RETURNING "Id" INTO v_BillId;
 
     IF v_BillId IS NOT NULL THEN
@@ -159,7 +159,7 @@ BEGIN
     -- Bill 2
     INSERT INTO "Bills" ("BillNumber", "Date", "CustomerId", "SubTotal", "Discount", "TotalCGST", "TotalSGST", "TotalIGST", "TotalAmount", "ShopOwnerId")
     VALUES ('INV-2024-0002', NOW() - INTERVAL '1 hour', v_Cust2, 1700.00, 0, 102, 102, 0, 1904.00, v_UserId)
-    ON CONFLICT ("BillNumber") DO NOTHING
+    ON CONFLICT ("BillNumber", "ShopOwnerId") DO NOTHING
     RETURNING "Id" INTO v_BillId;
 
     IF v_BillId IS NOT NULL THEN
