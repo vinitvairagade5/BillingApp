@@ -6,9 +6,8 @@ services:
     region: singapore
     plan: free
     branch: main
-    rootDir: src # The Dockerfile is in src, but it copies BillingApp.API inside. 
-                 # Wait, looking at Dockerfile: COPY ["BillingApp.API/BillingApp.API.csproj", "BillingApp.API/"]
-                 # It expects to be run from `src`.
+    rootDir: . # The Dockerfile is in the repo root (which is local src)
+                 # It copies BillingApp.API inside.
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -22,7 +21,7 @@ services:
     name: billing-app-ui
     env: static
     branch: main
-    rootDir: src/billing-app-ui
+    rootDir: billing-app-ui
     buildCommand: npm install && npm run build -- --configuration production
     staticPublishPath: dist/billing-app-ui/browser
     routes:
