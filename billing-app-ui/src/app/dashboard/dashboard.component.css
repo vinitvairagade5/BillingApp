@@ -105,8 +105,17 @@ th {
     background: #f8f9fa;
 }
 
-.no-data {
-    text-align: center;
-    color: #999;
-    padding: 2rem !important;
+@media (max-width: 640px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        /* Stack cards on mobile */
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
 }

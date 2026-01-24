@@ -6,17 +6,17 @@
   --primary-hsl: 221, 83%, 53%;
   --primary: hsl(var(--primary-hsl));
   --primary-glow: hsla(var(--primary-hsl), 0.15);
-  
+
   --secondary: #64748b;
   --accent: #f59e0b;
   --success: #10b981;
   --danger: #ef4444;
-  
+
   /* Backgrounds */
   --bg-main: #f8fafc;
   --bg-sidebar: #ffffff;
   --bg-card: rgba(255, 255, 255, 0.8);
-  
+
   /* Borders & Shadows */
   --border-color: rgba(226, 232, 240, 0.8);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -39,14 +39,19 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--bg-main);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, hsla(221, 83%, 93%, 0.5) 0px, transparent 50%),
     radial-gradient(at 100% 0%, hsla(199, 89%, 93%, 0.5) 0px, transparent 50%);
   color: #1e293b;
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Plus+Jakarta+Sans', 'Inter', sans-serif;
   font-weight: 700;
   color: #0f172a;
@@ -56,13 +61,16 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -96,4 +104,21 @@ h1, h2, h3, h4, h5, h6 {
 .card:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+/* Mobile Responsiveness Utilities */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    padding: 12px 20px;
+  }
 }

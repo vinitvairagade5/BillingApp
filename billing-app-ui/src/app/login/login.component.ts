@@ -5,10 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
-    selector: 'app-login',
-    standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule],
-    template: `
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  template: `
     <div class="login-page">
       <div class="login-card glass">
         <div class="login-header">
@@ -55,7 +55,7 @@ import { AuthService } from '../auth.service';
       <div class="blob blob-2"></div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .login-page {
       min-height: 100vh;
       display: flex;
@@ -67,11 +67,31 @@ import { AuthService } from '../auth.service';
     }
 
     .login-card {
-      width: 440px;
+      width: 100%;
+      max-width: 440px;
       padding: 48px;
       border-radius: 32px;
       z-index: 10;
       animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(255, 255, 255, 0.8); /* Fallback/Base */
+    }
+
+    @media (max-width: 480px) {
+      .login-page {
+        align-items: flex-start;
+        padding-top: 40px;
+        background: white; /* Simplify background on mobile */
+      }
+      
+      .login-card {
+        padding: 32px 24px;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+      }
+
+      .blob { display: none; } /* Hide heavy blobs on mobile */
     }
 
     @keyframes slideUp {
@@ -219,62 +239,62 @@ import { AuthService } from '../auth.service';
   `]
 })
 export class LoginComponent {
-    private fb = inject(FormBuilder);
-    private authService = inject(AuthService);
-    private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-    isRegister = false;
-    loading = false;
+  isRegister = false;
+  loading = false;
 
-    authForm = this.fb.group({
-        username: ['', [Validators.required]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
-        shopName: ['']
-    });
+  authForm = this.fb.group({
+    username: ['', [Validators.required]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    shopName: ['']
+  });
 
-    toggleMode() {
-        this.isRegister = !this.isRegister;
-        if (this.isRegister) {
-            this.authForm.get('shopName')?.setValidators([Validators.required]);
-        } else {
-            this.authForm.get('shopName')?.clearValidators();
+  toggleMode() {
+    this.isRegister = !this.isRegister;
+    if (this.isRegister) {
+      this.authForm.get('shopName')?.setValidators([Validators.required]);
+    } else {
+      this.authForm.get('shopName')?.clearValidators();
+    }
+    this.authForm.get('shopName')?.updateValueAndValidity();
+  }
+
+  showError(control: string) {
+    const c = this.authForm.get(control);
+    return c?.touched && c?.invalid;
+  }
+
+  onSubmit() {
+    if (this.authForm.invalid) return;
+
+    this.loading = true;
+    const { username, password, shopName } = this.authForm.value;
+
+    if (this.isRegister) {
+      this.authService.register({ username: username!, passwordHash: password!, shopName: shopName! }).subscribe({
+        next: () => {
+          this.isRegister = false;
+          this.loading = false;
+          alert('Registration successful! Please login.');
+        },
+        error: (err) => {
+          alert(err.error || 'Registration failed');
+          this.loading = false;
         }
-        this.authForm.get('shopName')?.updateValueAndValidity();
-    }
-
-    showError(control: string) {
-        const c = this.authForm.get(control);
-        return c?.touched && c?.invalid;
-    }
-
-    onSubmit() {
-        if (this.authForm.invalid) return;
-
-        this.loading = true;
-        const { username, password, shopName } = this.authForm.value;
-
-        if (this.isRegister) {
-            this.authService.register({ username: username!, passwordHash: password!, shopName: shopName! }).subscribe({
-                next: () => {
-                    this.isRegister = false;
-                    this.loading = false;
-                    alert('Registration successful! Please login.');
-                },
-                error: (err) => {
-                    alert(err.error || 'Registration failed');
-                    this.loading = false;
-                }
-            });
-        } else {
-            this.authService.login(username!, password!).subscribe({
-                next: () => {
-                    this.router.navigate(['/']);
-                },
-                error: (err) => {
-                    alert('Invalid credentials');
-                    this.loading = false;
-                }
-            });
+      });
+    } else {
+      this.authService.login(username!, password!).subscribe({
+        next: () => {
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          alert('Invalid credentials');
+          this.loading = false;
         }
+      });
     }
+  }
 }
