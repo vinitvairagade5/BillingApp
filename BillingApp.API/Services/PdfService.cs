@@ -45,7 +45,7 @@ public class PdfService : IPdfService
             {
                 row.RelativeItem().Column(column =>
                 {
-                    column.Item().Text(bill.ShopOwner?.ShopName?.ToUpper() ?? "MY SHOP").Style(titleStyle);
+                    column.Item().Text(bill.ShopOwner?.ShopName?.ToUpper() ?? "YOUR BUSINESS").Style(titleStyle);
                     
                     column.Item().PaddingTop(5).Column(col => {
                         if (!string.IsNullOrEmpty(bill.ShopOwner?.Address))

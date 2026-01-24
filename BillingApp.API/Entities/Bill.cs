@@ -7,7 +7,6 @@ public class Bill
     public DateTime Date { get; set; } = DateTime.UtcNow;
     
     public int CustomerId { get; set; }
-    [System.Text.Json.Serialization.JsonIgnore]
     public Customer? Customer { get; set; }
     
     public decimal SubTotal { get; set; }
@@ -18,7 +17,6 @@ public class Bill
     public decimal TotalAmount { get; set; }
     
     public int ShopOwnerId { get; set; }
-    [System.Text.Json.Serialization.JsonIgnore]
     public User? ShopOwner { get; set; }
     
     public List<BillItem> Items { get; set; } = new();
