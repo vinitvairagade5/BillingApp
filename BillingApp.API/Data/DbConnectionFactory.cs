@@ -77,5 +77,10 @@ public class DbConnectionFactory : IDbConnectionFactory
         var database = uri.AbsolutePath.TrimStart('/');
 
         return $"Host={host};Port={port};Database={database};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DbConnectionFactory] Error parsing URL: {ex.Message}");
+            return url;
+        }
     }
-}
