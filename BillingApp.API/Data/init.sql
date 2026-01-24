@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "Items" (
 -- Bills Table
 CREATE TABLE IF NOT EXISTS "Bills" (
     "Id" SERIAL PRIMARY KEY,
-    "BillNumber" VARCHAR(20) NOT NULL UNIQUE,
+    "BillNumber" VARCHAR(20) NOT NULL,
     "Date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "CustomerId" INT REFERENCES "Customers"("Id"),
     "SubTotal" DECIMAL(18,2) NOT NULL,
@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS "Bills" (
     "TotalSGST" DECIMAL(18,2) DEFAULT 0,
     "TotalIGST" DECIMAL(18,2) DEFAULT 0,
     "TotalAmount" DECIMAL(18,2) NOT NULL,
-    "ShopOwnerId" INT REFERENCES "Users"("Id")
+    "ShopOwnerId" INT REFERENCES "Users"("Id"),
+    CONSTRAINT "Unique_BillNumber_Per_Shop" UNIQUE ("BillNumber", "ShopOwnerId")
 );
 
 -- BillItems Table
@@ -164,5 +165,14 @@ BEGIN
     IF v_BillId IS NOT NULL THEN
         INSERT INTO "BillItems" ("BillId", "ItemId", "ItemName", "Price", "Quantity", "Discount", "HSNCode", "CGST", "SGST", "IGST", "Total")
         VALUES (v_BillId, v_Item2, 'Wireless Mouse', 850.00, 2, 0, '8471', 102, 102, 0, 1904.00);
+    END IF;
+END $$;
+
+-- Fix global unique constraint on BillNumber (Migration)
+ALTER TABLE "Bills" DROP CONSTRAINT IF EXISTS "Bills_BillNumber_key";
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Unique_BillNumber_Per_Shop') THEN
+        ALTER TABLE "Bills" ADD CONSTRAINT "Unique_BillNumber_Per_Shop" UNIQUE ("BillNumber", "ShopOwnerId");
     END IF;
 END $$;
