@@ -1,7 +1,8 @@
 using System.Data;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
-namespace BillingApp.API.Data;
+namespace BillingApp.Core.Data;
 
 public interface IDbConnectionFactory
 {

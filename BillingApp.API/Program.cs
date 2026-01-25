@@ -1,3 +1,4 @@
+using BillingApp.Core.Data;
 using BillingApp.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);

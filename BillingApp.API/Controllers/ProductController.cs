@@ -1,5 +1,5 @@
-using BillingApp.API.Data;
-using BillingApp.API.Entities;
+using BillingApp.Core.Data;
+using BillingApp.Core.Entities;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 

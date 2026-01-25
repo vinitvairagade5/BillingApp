@@ -1,4 +1,4 @@
-using BillingApp.API.Entities;
+using BillingApp.Core.Entities;
 
 namespace BillingApp.API.Services;
 

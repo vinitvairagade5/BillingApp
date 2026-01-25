@@ -1,4 +1,4 @@
-using BillingApp.API.Entities;
+using BillingApp.Core.Entities;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;

@@ -1,4 +1,4 @@
-namespace BillingApp.API.Entities;
+namespace BillingApp.Core.Entities;
 
 public class BillItem
 {

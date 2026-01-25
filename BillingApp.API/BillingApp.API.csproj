@@ -20,4 +20,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\shared\BillingApp.Core\BillingApp.Core.csproj" />
+  </ItemGroup>
+
 </Project>

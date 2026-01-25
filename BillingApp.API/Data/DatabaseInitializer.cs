@@ -1,4 +1,5 @@
 using Dapper;
+using BillingApp.Core.Data;
 
 namespace BillingApp.API.Data;
 

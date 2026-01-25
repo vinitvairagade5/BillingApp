@@ -129,6 +129,16 @@ INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwn
 SELECT 'Bluetooth Earbuds', 1999.00, 'Electronics', '8518', 18, "Id" FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT DO NOTHING;
 
+-- Fix global unique constraint on BillNumber (Migration)
+-- This must run before Seed Data because seed data uses ON CONFLICT ("BillNumber", "ShopOwnerId")
+ALTER TABLE "Bills" DROP CONSTRAINT IF EXISTS "Bills_BillNumber_key";
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Unique_BillNumber_Per_Shop') THEN
+        ALTER TABLE "Bills" ADD CONSTRAINT "Unique_BillNumber_Per_Shop" UNIQUE ("BillNumber", "ShopOwnerId");
+    END IF;
+END $$;
+
 -- Seed Initial Invoices
 DO $$
 DECLARE 
@@ -168,11 +178,3 @@ BEGIN
     END IF;
 END $$;
 
--- Fix global unique constraint on BillNumber (Migration)
-ALTER TABLE "Bills" DROP CONSTRAINT IF EXISTS "Bills_BillNumber_key";
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Unique_BillNumber_Per_Shop') THEN
-        ALTER TABLE "Bills" ADD CONSTRAINT "Unique_BillNumber_Per_Shop" UNIQUE ("BillNumber", "ShopOwnerId");
-    END IF;
-END $$;
