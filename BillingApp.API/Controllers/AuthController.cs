@@ -1,65 +1,37 @@
 using BillingApp.Core.Data;
 using BillingApp.Core.Entities;
+using BillingApp.Core.Abstractions;
+using BillingApp.Core.Controllers;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BillingApp.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : BaseApiController
 {
+    private readonly IIdentityService _identityService;
     private readonly IDbConnectionFactory _connectionFactory;
 
-    public AuthController(IDbConnectionFactory connectionFactory)
+    public AuthController(IIdentityService identityService, IDbConnectionFactory connectionFactory)
     {
+        _identityService = identityService;
         _connectionFactory = connectionFactory;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(User user)
     {
-        using var connection = _connectionFactory.CreateConnection();
-        // Check if user exists
-        var exists = await connection.ExecuteScalarAsync<bool>(
-            "SELECT EXISTS(SELECT 1 FROM \"Users\" WHERE \"Username\" = @Username)", new { user.Username });
-        
-        if (exists) return BadRequest("Username already taken.");
-
-        // Hash password (simple hash for demo, use BCrypt/Argon2 in prod)
-        // For this task, we will just store as is or simple base64 to avoid adding more deps yet, 
-        // but let's assume the user sends it plaintext and we should at least do something.
-        // Actually, for simplicity and speed as requested by user ("simple billing application"), 
-        // let's stick to storing it as is for now or minimal encoding.
-        // But to be responsible, I'll add a comment.
-        
-        var sql = @"
-            INSERT INTO ""Users"" (""Username"", ""PasswordHash"", ""ShopName"") 
-            VALUES (@Username, @PasswordHash, @ShopName) 
-            RETURNING ""Id""";
-        
-        var userId = await connection.ExecuteScalarAsync<int>(sql, new 
-        { 
-            user.Username, 
-            PasswordHash = user.PasswordHash, // In real app, hash this!
-            user.ShopName 
-        });
-
-        return Ok(new { Id = userId });
+        var result = await _identityService.RegisterAsync(user);
+        return HandleResult(result);
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(User loginRequest)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        using var connection = _connectionFactory.CreateConnection();
-        var user = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT * FROM \"Users\" WHERE \"Username\" = @Username AND \"PasswordHash\" = @PasswordHash", 
-            new { loginRequest.Username, loginRequest.PasswordHash });
-
-        if (user == null) return Unauthorized("Invalid credentials.");
-
-        return Ok(user);
+        var result = await _identityService.LoginAsync(request.Username, request.PasswordHash);
+        return HandleResult(result);
     }
+
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile(User user)
     {
@@ -76,4 +48,10 @@ public class AuthController : ControllerBase
         await connection.ExecuteAsync(sql, user);
         return Ok(new { success = true });
     }
+}
+
+public class LoginRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
 }

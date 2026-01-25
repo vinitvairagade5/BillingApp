@@ -36,6 +36,11 @@ import { AuthService } from '../auth.service';
             <div class="error" *ngIf="showError('password')">Password is required (min 6 chars)</div>
           </div>
 
+          <div class="form-group" *ngIf="isRegister">
+            <label>Referral Code (Optional)</label>
+            <input type="text" formControlName="referralCode" class="premium-input" placeholder="e.g. ABCD1234">
+          </div>
+
           <button type="submit" class="btn btn-primary btn-block" [disabled]="authForm.invalid || loading">
             <span *ngIf="!loading">{{ isRegister ? 'Create My Account' : 'Sign In to Dashboard' }}</span>
             <span *ngIf="loading" class="spinner"></span>
@@ -249,7 +254,8 @@ export class LoginComponent {
   authForm = this.fb.group({
     username: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    shopName: ['']
+    shopName: [''],
+    referralCode: ['']
   });
 
   toggleMode() {
@@ -271,10 +277,15 @@ export class LoginComponent {
     if (this.authForm.invalid) return;
 
     this.loading = true;
-    const { username, password, shopName } = this.authForm.value;
+    const { username, password, shopName, referralCode } = this.authForm.value;
 
     if (this.isRegister) {
-      this.authService.register({ username: username!, passwordHash: password!, shopName: shopName! }).subscribe({
+      this.authService.register({ 
+        username: username!, 
+        passwordHash: password!, 
+        shopName: shopName!,
+        referralCode: referralCode || undefined
+      }).subscribe({
         next: () => {
           this.isRegister = false;
           this.loading = false;

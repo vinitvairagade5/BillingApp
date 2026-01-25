@@ -12,6 +12,15 @@ import { AuthService } from '../auth.service';
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="invoice-page animation-fade-in">
+      <div class="limit-warning-banner glass" *ngIf="limitReached && !isPro">
+         <span class="icon">⚠️</span>
+         <div class="banner-text">
+            <strong>Free Limit Reached (10 Invoices)</strong>
+            <p>You have used all your free invoices. Please <a routerLink="/subscription">upgrade to PRO</a> to create more.</p>
+         </div>
+         <button class="btn btn-primary sm" routerLink="/subscription">Upgrade Now</button>
+      </div>
+
       <header class="page-header">
         <div class="header-info">
           <h1>Create New Invoice</h1>
@@ -23,7 +32,7 @@ import { AuthService } from '../auth.service';
             type="button" 
             class="btn btn-success btn-lg shadow-vibrant" 
             (click)="onSubmit()" 
-            [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting"
+            [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting || (limitReached && !isPro)"
           >
             <span class="icon">{{ isSubmitting ? '⏳' : '💾' }}</span> 
             {{ isSubmitting ? 'Saving...' : 'Save & Generate' }}
@@ -171,6 +180,24 @@ import { AuthService } from '../auth.service';
                 <span>Total Amount</span>
                 <span>₹{{ invoiceForm.get('totalAmount')?.value | number:'1.2-2' }}</span>
               </div>
+              
+              <div class="payment-method-selector mt-4">
+                 <label>Payment Method</label>
+                 <div class="payment-options">
+                    <div class="pay-option" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CASH'" (click)="invoiceForm.patchValue({paymentMethod: 'CASH'})">
+                       <span class="icon">💵</span>
+                       <span class="label">Cash</span>
+                    </div>
+                    <div class="pay-option" [class.active]="invoiceForm.get('paymentMethod')?.value === 'UPI'" (click)="invoiceForm.patchValue({paymentMethod: 'UPI'})">
+                       <span class="icon">📱</span>
+                       <span class="label">UPI</span>
+                    </div>
+                    <div class="pay-option" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CREDIT'" (click)="invoiceForm.patchValue({paymentMethod: 'CREDIT'})">
+                       <span class="icon">📝</span>
+                       <span class="label">Udhaar</span>
+                    </div>
+                 </div>
+              </div>
             </div>
 
             <div class="validation-box" *ngIf="(invoiceForm.invalid || !selectedCustomer) && !isSubmitting">
@@ -178,7 +205,7 @@ import { AuthService } from '../auth.service';
                <p class="error-msg" *ngIf="items.invalid"><span class="icon">⚠️</span> Fill item details (Step 2)</p>
             </div>
 
-            <button type="button" class="btn btn-success btn-block btn-lg shadow-vibrant" (click)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting">
+            <button type="button" class="btn btn-success btn-block btn-lg shadow-vibrant" (click)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting || (limitReached && !isPro)">
               <span class="icon">{{ isSubmitting ? '⏳' : '💾' }}</span> 
               {{ isSubmitting ? 'Saving...' : 'Save & Generate PDF' }}
             </button>
@@ -257,6 +284,14 @@ import { AuthService } from '../auth.service';
   `,
   styles: [`
     .invoice-page { padding: 40px; padding-bottom: 100px; max-width: 1400px; margin: 0 auto; }
+    
+    .limit-warning-banner { background: #fff7ed; border: 1px solid #ffedd5; padding: 16px 24px; border-radius: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .limit-warning-banner .icon { font-size: 24px; }
+    .limit-warning-banner .banner-text { flex: 1; }
+    .limit-warning-banner strong { color: #9a3412; font-size: 16px; display: block; margin-bottom: 2px; }
+    .limit-warning-banner p { color: #c2410c; margin: 0; font-size: 14px; }
+    .limit-warning-banner a { color: var(--primary); font-weight: 700; text-decoration: underline; }
+
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: white; padding: 24px 32px; border-radius: 24px; box-shadow: var(--shadow-sm); }
     .page-header h1 { margin: 0; font-size: 32px; letter-spacing: -0.02em; }
     .subtitle { color: #64748b; margin: 4px 0 0 0; font-size: 15px; }
@@ -362,6 +397,17 @@ import { AuthService } from '../auth.service';
     .summary-card h3 { margin-top: 0; margin-bottom: 24px; font-size: 22px; }
     .summary-line { display: flex; justify-content: space-between; margin-bottom: 14px; color: #64748b; font-weight: 600; font-size: 15px; }
     .grand-total { font-size: 26px; color: #059669; font-weight: 900; margin-top: 20px; border-top: 2px solid #ecfdf5; padding-top: 20px; }
+    
+    .payment-method-selector { margin-top: 24px; }
+    .payment-method-selector label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 12px; text-transform: uppercase; }
+    .payment-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .pay-option { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: var(--transition); }
+    .pay-option .icon { display: block; font-size: 20px; margin-bottom: 4px; }
+    .pay-option .label { font-size: 12px; font-weight: 700; color: #64748b; }
+    .pay-option:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .pay-option.active { background: #eff6ff; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+    .pay-option.active .label { color: var(--primary); }
+
     .divider { height: 1px; background: #f1f5f9; margin: 20px 0; }
     
     .btn-block { width: 100%; margin-top: 16px; }
@@ -399,27 +445,36 @@ export class InvoiceCreateComponent implements OnInit {
   createdBillId: number | null = null;
   createdBillNumber: string = '';
   isSubmitting: boolean = false;
+  limitReached: boolean = false;
+  isPro: boolean = false;
   availableGstRates: number[] = [0, 5, 12, 18, 28];
-
-  get shopOwnerId(): number {
-    return this.authService.currentUserValue?.id ?? 1;
-  }
 
   ngOnInit() {
     this.initForm();
     this.initQuickCustomerForm();
     this.addItem();
 
-    // Load dynamic GST rates from settings
+    // Load dynamic GST rates and check subscription status
     const user = this.authService.currentUserValue;
-    if (user && user.gstRates) {
-      this.availableGstRates = user.gstRates.split(',').map(r => parseFloat(r)).sort((a, b) => a - b);
+    if (user) {
+      this.isPro = !!(user.subscriptionType === 'PRO' && user.subscriptionExpiry && new Date(user.subscriptionExpiry) > new Date());
+
+      if (user.gstRates) {
+        this.availableGstRates = user.gstRates.split(',').map(r => parseFloat(r)).sort((a: number, b: number) => a - b);
+      }
+
+      if (!this.isPro) {
+        this.invoiceService.getDashboardStats().subscribe(stats => {
+          if (stats.totalInvoices >= 10) {
+            this.limitReached = true;
+          }
+        });
+      }
     }
   }
 
   initForm() {
     this.invoiceForm = this.fb.group({
-      shopOwnerId: [this.shopOwnerId],
       customerId: [null, Validators.required],
       date: [new Date().toISOString()],
       subTotal: [0],
@@ -428,6 +483,7 @@ export class InvoiceCreateComponent implements OnInit {
       totalSGST: [0],
       totalIGST: [0],
       totalAmount: [0],
+      paymentMethod: ['CASH'],
       items: this.fb.array([], Validators.required)
     });
   }
@@ -436,8 +492,7 @@ export class InvoiceCreateComponent implements OnInit {
     this.quickCustomerForm = this.fb.group({
       name: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      address: [''],
-      shopOwnerId: [this.shopOwnerId]
+      address: ['']
     });
   }
 
@@ -473,7 +528,7 @@ export class InvoiceCreateComponent implements OnInit {
       this.customerResults = [];
       return;
     }
-    this.invoiceService.searchCustomers(this.shopOwnerId, query).subscribe(res => {
+    this.invoiceService.searchCustomers(query).subscribe(res => {
       this.customerResults = res;
     });
   }
@@ -485,14 +540,13 @@ export class InvoiceCreateComponent implements OnInit {
 
     this.quickCustomerForm.patchValue({
       name: initialName,
-      mobile: initialMobile,
-      shopOwnerId: this.shopOwnerId
+      mobile: initialMobile
     });
   }
 
   closeQuickCustomerModal() {
     this.showQuickCustomerModal = false;
-    this.quickCustomerForm.reset({ shopOwnerId: this.shopOwnerId });
+    this.quickCustomerForm.reset();
   }
 
   saveQuickCustomer() {
@@ -531,7 +585,7 @@ export class InvoiceCreateComponent implements OnInit {
       this.itemResults = [];
       return;
     }
-    this.invoiceService.searchItems(this.shopOwnerId, query).subscribe(res => {
+    this.invoiceService.searchItems(query).subscribe(res => {
       this.itemResults = res;
     });
   }
@@ -598,7 +652,7 @@ export class InvoiceCreateComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.invoiceForm.invalid || !this.selectedCustomer) return;
+    if (this.invoiceForm.invalid || !this.selectedCustomer || (this.limitReached && !this.isPro)) return;
 
     this.isSubmitting = true;
     const payload: CreateBill = this.invoiceForm.value;
@@ -613,7 +667,8 @@ export class InvoiceCreateComponent implements OnInit {
       error: (err) => {
         this.isSubmitting = false;
         console.error('Error creating invoice', err);
-        alert('Failed to create invoice. Please check your internet or server connection.');
+        const errorMsg = err.error?.message || err.error || 'Failed to create invoice. Please check your internet or server connection.';
+        alert(errorMsg);
       }
     });
   }

@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS "Users" (
     "GSTIN" VARCHAR(20),
     "LogoUrl" TEXT,
     "GstRates" VARCHAR(100) DEFAULT '0,5,12,18,28',
+    "SubscriptionType" VARCHAR(20) DEFAULT 'FREE', -- 'FREE', 'PRO'
+    "SubscriptionExpiry" TIMESTAMP,
+    "ReferredById" INT REFERENCES "Users"("Id"),
+    "IsAdmin" BOOLEAN DEFAULT FALSE,
     "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -46,24 +50,25 @@ CREATE TABLE IF NOT EXISTS "Bills" (
     "TotalSGST" DECIMAL(18,2) DEFAULT 0,
     "TotalIGST" DECIMAL(18,2) DEFAULT 0,
     "TotalAmount" DECIMAL(18,2) NOT NULL,
+    "PaymentMethod" VARCHAR(20) DEFAULT 'CASH', -- 'CASH', 'UPI', 'CREDIT'
     "ShopOwnerId" INT REFERENCES "Users"("Id"),
     CONSTRAINT "Unique_BillNumber_Per_Shop" UNIQUE ("BillNumber", "ShopOwnerId")
 );
 
 -- BillItems Table
 CREATE TABLE IF NOT EXISTS "BillItems" (
-    "Id" SERIAL PRIMARY KEY,
-    "BillId" INT REFERENCES "Bills"("Id") ON DELETE CASCADE,
-    "ItemId" INT REFERENCES "Items"("Id"),
-    "ItemName" VARCHAR(100) NOT NULL,
-    "Price" DECIMAL(18,2) NOT NULL,
-    "Quantity" INT NOT NULL,
-    "Discount" DECIMAL(18,2) DEFAULT 0,
-    "HSNCode" VARCHAR(20),
-    "CGST" DECIMAL(18,2) DEFAULT 0,
-    "SGST" DECIMAL(18,2) DEFAULT 0,
-    "IGST" DECIMAL(18,2) DEFAULT 0,
     "Total" DECIMAL(18,2) NOT NULL
+);
+
+-- Activation Codes Table
+CREATE TABLE IF NOT EXISTS "ActivationCodes" (
+    "Id" SERIAL PRIMARY KEY,
+    "Code" VARCHAR(50) NOT NULL UNIQUE,
+    "DurationDays" INT NOT NULL DEFAULT 365,
+    "IsRedeemed" BOOLEAN DEFAULT FALSE,
+    "RedeemedByUserId" INT REFERENCES "Users"("Id"),
+    "RedeemedAt" TIMESTAMP,
+    "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes
@@ -89,15 +94,37 @@ ALTER TABLE "BillItems" ADD COLUMN IF NOT EXISTS "CGST" DECIMAL(18,2) DEFAULT 0;
 ALTER TABLE "BillItems" ADD COLUMN IF NOT EXISTS "SGST" DECIMAL(18,2) DEFAULT 0;
 ALTER TABLE "BillItems" ADD COLUMN IF NOT EXISTS "IGST" DECIMAL(18,2) DEFAULT 0;
 
+-- Phase 2 Migrations
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "SubscriptionType" VARCHAR(20) DEFAULT 'FREE';
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "SubscriptionExpiry" TIMESTAMP;
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ReferralCode" VARCHAR(20);
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ReferredById" INT;
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "IsAdmin" BOOLEAN DEFAULT FALSE;
+
+-- Phase 3 Migrations
+ALTER TABLE "Bills" ADD COLUMN IF NOT EXISTS "PaymentMethod" VARCHAR(20) DEFAULT 'CASH';
+
+CREATE TABLE IF NOT EXISTS "CustomerLedger" (
+    "Id" SERIAL PRIMARY KEY,
+    "CustomerId" INT REFERENCES "Customers"("Id"),
+    "BillId" INT REFERENCES "Bills"("Id"),
+    "Date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "Type" VARCHAR(10) NOT NULL,
+    "Amount" DECIMAL(18,2) NOT NULL,
+    "Description" TEXT,
+    "ShopOwnerId" INT REFERENCES "Users"("Id")
+);
+
 -- Seed Data (Refined with Realistic Indian Context)
-INSERT INTO "Users" ("Username", "PasswordHash", "ShopName", "Address", "GSTIN")
-VALUES ('admin', 'admin123', 'ELECTRA ELECTRONICS', 'Shop No. 42, Nehru Place Commercial Complex, New Delhi - 110019', '07AAAAA0000A1Z5')
+INSERT INTO "Users" ("Username", "PasswordHash", "ShopName", "Address", "GSTIN", "IsAdmin")
+VALUES ('admin', 'admin123', 'ELECTRA ELECTRONICS', 'Shop No. 42, Nehru Place Commercial Complex, New Delhi - 110019', '07AAAAA0000A1Z5', TRUE)
 ON CONFLICT ("Username") 
 DO UPDATE SET 
     "PasswordHash" = EXCLUDED."PasswordHash",
     "ShopName" = EXCLUDED."ShopName",
     "Address" = EXCLUDED."Address",
-    "GSTIN" = EXCLUDED."GSTIN";
+    "GSTIN" = EXCLUDED."GSTIN",
+    "IsAdmin" = EXCLUDED."IsAdmin";
 
 -- Seed Customers
 INSERT INTO "Customers" ("Name", "Mobile", "Address", "ShopOwnerId")
@@ -177,4 +204,8 @@ BEGIN
         VALUES (v_BillId, v_Item2, 'Wireless Mouse', 850.00, 2, 0, '8471', 102, 102, 0, 1904.00);
     END IF;
 END $$;
+
+-- Seed Activation Codes
+INSERT INTO "ActivationCodes" ("Code", "DurationDays") VALUES ('TEST-PRO-365DAYS', 365) ON CONFLICT DO NOTHING;
+INSERT INTO "ActivationCodes" ("Code", "DurationDays") VALUES ('Nagpur-Promo-2026', 30) ON CONFLICT DO NOTHING;
 

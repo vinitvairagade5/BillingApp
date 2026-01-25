@@ -20,4 +20,10 @@ public abstract class BaseApiController : ControllerBase
         var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
         return claim != null ? int.Parse(claim.Value) : 0;
     }
+
+    protected bool IsAdmin()
+    {
+        var claim = User.FindFirst("IsAdmin");
+        return claim != null && bool.Parse(claim.Value);
+    }
 }

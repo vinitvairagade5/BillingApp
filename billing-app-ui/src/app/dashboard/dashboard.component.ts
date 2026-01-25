@@ -25,14 +25,11 @@ export class DashboardComponent implements OnInit {
     recentBills: any[] = [];
 
     ngOnInit(): void {
-        const user = this.authService.currentUserValue;
-        if (user) {
-            this.invoiceService.getDashboardStats(user.id).subscribe(data => {
-                this.stats = data;
-            });
-            this.invoiceService.getBills(user.id).subscribe(data => {
-                this.recentBills = data.slice(0, 5);
-            });
-        }
+        this.invoiceService.getDashboardStats().subscribe(data => {
+            this.stats = data;
+        });
+        this.invoiceService.getBills().subscribe(data => {
+            this.recentBills = data.slice(0, 5);
+        });
     }
 }

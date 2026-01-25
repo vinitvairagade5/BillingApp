@@ -1,5 +1,10 @@
 using BillingApp.Core.Data;
+using BillingApp.Core.Abstractions;
+using BillingApp.Core.Services;
 using BillingApp.API.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +15,29 @@ builder.Services.AddSwaggerGen();
 
 // Dapper & Database
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ILedgerService, LedgerService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 builder.Services.AddScoped<BillingApp.API.Services.IPdfService, BillingApp.API.Services.PdfService>();
+
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyForBillingAppDevelopment2026!";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        };
+    });
 
 builder.Services.AddCors(options =>
 {
@@ -41,6 +67,7 @@ using (var scope = app.Services.CreateScope())
     await initializer.InitializeAsync();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

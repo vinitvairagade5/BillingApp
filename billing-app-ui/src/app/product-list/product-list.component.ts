@@ -31,20 +31,13 @@ export class ProductListComponent implements OnInit {
     };
 
     ngOnInit(): void {
-        const user = this.authService.currentUserValue;
-        if (user) {
-            this.newProduct.shopOwnerId = user.id;
-            this.loadProducts();
-        }
+        this.loadProducts();
     }
 
     loadProducts(): void {
-        const user = this.authService.currentUserValue;
-        if (user) {
-            this.productService.getProducts(user.id).subscribe(data => {
-                this.products = data;
-            });
-        }
+        this.productService.getProducts().subscribe(data => {
+            this.products = data;
+        });
     }
 
     get filteredProducts(): Item[] {
@@ -56,14 +49,13 @@ export class ProductListComponent implements OnInit {
 
     openAddModal(): void {
         this.editingProduct = null;
-        const user = this.authService.currentUserValue;
         this.newProduct = {
             name: '',
             price: 0,
             category: '',
             hsnCode: '',
             gstRate: 18,
-            shopOwnerId: user?.id || 0
+            shopOwnerId: 0
         };
         this.isModalOpen = true;
     }
@@ -100,21 +92,18 @@ export class ProductListComponent implements OnInit {
 
     deleteProduct(id: number): void {
         if (confirm('Are you sure you want to delete this product?')) {
-            const user = this.authService.currentUserValue;
-            if (user) {
-                this.isSaving = true;
-                this.productService.deleteProduct(id, user.id).subscribe({
-                    next: () => {
-                        this.isSaving = false;
-                        this.loadProducts();
-                    },
-                    error: (err) => {
-                        this.isSaving = false;
-                        console.error('Error deleting product', err);
-                        alert('Failed to delete product');
-                    }
-                });
-            }
+            this.isSaving = true;
+            this.productService.deleteProduct(id).subscribe({
+                next: () => {
+                    this.isSaving = false;
+                    this.loadProducts();
+                },
+                error: (err) => {
+                    this.isSaving = false;
+                    console.error('Error deleting product', err);
+                    alert('Failed to delete product');
+                }
+            });
         }
     }
 }

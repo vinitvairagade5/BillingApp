@@ -2,12 +2,13 @@ using BillingApp.Core.Data;
 using BillingApp.Core.Entities;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using BillingApp.Core.Controllers;
 
 namespace BillingApp.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProductController : ControllerBase
+[Authorize]
+public class ProductController : BaseApiController
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
@@ -17,8 +18,9 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Item>> Get(int shopOwnerId)
+    public async Task<IEnumerable<Item>> Get()
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Item>(
             "SELECT * FROM \"Items\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { ShopOwnerId = shopOwnerId });
@@ -27,6 +29,7 @@ public class ProductController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Item item)
     {
+        item.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
             INSERT INTO ""Items"" (""Name"", ""Price"", ""Category"", ""HSNCode"", ""GSTRate"", ""ShopOwnerId"")
@@ -40,6 +43,7 @@ public class ProductController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Update(Item item)
     {
+        item.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
             UPDATE ""Items"" 
@@ -52,8 +56,9 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, int shopOwnerId)
+    public async Task<IActionResult> Delete(int id)
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var affected = await connection.ExecuteAsync(
             "DELETE FROM \"Items\" WHERE \"Id\" = @Id AND \"ShopOwnerId\" = @ShopOwnerId", 

@@ -29,20 +29,13 @@ export class CustomerListComponent implements OnInit {
     };
 
     ngOnInit(): void {
-        const user = this.authService.currentUserValue;
-        if (user) {
-            this.newCustomer.shopOwnerId = user.id;
-            this.loadCustomers();
-        }
+        this.loadCustomers();
     }
 
     loadCustomers(): void {
-        const user = this.authService.currentUserValue;
-        if (user) {
-            this.customerService.getCustomers(user.id).subscribe(data => {
-                this.customers = data;
-            });
-        }
+        this.customerService.getCustomers().subscribe(data => {
+            this.customers = data;
+        });
     }
 
     get filteredCustomers(): Customer[] {
@@ -54,12 +47,11 @@ export class CustomerListComponent implements OnInit {
 
     openAddModal(): void {
         this.editingCustomer = null;
-        const user = this.authService.currentUserValue;
         this.newCustomer = {
             name: '',
             mobile: '',
             address: '',
-            shopOwnerId: user?.id || 0
+            shopOwnerId: 0
         };
         this.isModalOpen = true;
     }

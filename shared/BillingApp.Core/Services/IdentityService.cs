@@ -38,25 +38,68 @@ public class IdentityService : IIdentityService
         {
             Token = token,
             Expiry = DateTime.UtcNow.AddDays(7),
-            User = new UserDto { Id = user.Id, Username = user.Username, ShopName = user.ShopName }
+            User = new UserDto { Id = user.Id, Username = user.Username, ShopName = user.ShopName, IsAdmin = user.IsAdmin }
         });
     }
 
     public async Task<ApiResult<int>> RegisterAsync(User user)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var exists = await connection.ExecuteScalarAsync<bool>(
-            "SELECT EXISTS(SELECT 1 FROM \"Users\" WHERE \"Username\" = @Username)", new { user.Username });
-        
-        if (exists) return ApiResult<int>.Failure("Username already taken.");
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
 
-        var sql = @"
-            INSERT INTO ""Users"" (""Username"", ""PasswordHash"", ""ShopName"") 
-            VALUES (@Username, @PasswordHash, @ShopName) 
-            RETURNING ""Id""";
-        
-        var userId = await connection.ExecuteScalarAsync<int>(sql, user);
-        return ApiResult<int>.Ok(userId);
+        try
+        {
+            var exists = await connection.ExecuteScalarAsync<bool>(
+                "SELECT EXISTS(SELECT 1 FROM \"Users\" WHERE \"Username\" = @Username)", 
+                new { user.Username }, transaction);
+            
+            if (exists) return ApiResult<int>.Failure("Username already taken.");
+
+            // 1. Handle Referral Code (if provided in the request or temporary field)
+            // Note: We use the existing user.ReferralCode field from the request to check for the INVITER'S code
+            string? inputReferralCode = user.ReferralCode; 
+            
+            if (!string.IsNullOrEmpty(inputReferralCode))
+            {
+                var inviter = await connection.QuerySingleOrDefaultAsync<User>(
+                    "SELECT \"Id\", \"SubscriptionExpiry\" FROM \"Users\" WHERE \"ReferralCode\" = @inputReferralCode",
+                    new { inputReferralCode }, transaction);
+
+                if (inviter != null)
+                {
+                    user.ReferredById = inviter.Id;
+                    user.SubscriptionType = "PRO";
+                    user.SubscriptionExpiry = DateTime.UtcNow.AddDays(30);
+
+                    // Reward Inviter: Add 30 days to their current expiry or from now
+                    DateTime inviterCurrentExpiry = inviter.SubscriptionExpiry ?? DateTime.UtcNow;
+                    if (inviterCurrentExpiry < DateTime.UtcNow) inviterCurrentExpiry = DateTime.UtcNow;
+                    DateTime newInviterExpiry = inviterCurrentExpiry.AddDays(30);
+
+                    await connection.ExecuteAsync(
+                        "UPDATE \"Users\" SET \"SubscriptionType\" = 'PRO', \"SubscriptionExpiry\" = @newInviterExpiry WHERE \"Id\" = @Id",
+                        new { newInviterExpiry, Id = inviter.Id }, transaction);
+                }
+            }
+
+            // 2. Generate their OWN referral code for future invites
+            user.ReferralCode = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+
+            var sql = @"
+                INSERT INTO ""Users"" (""Username"", ""PasswordHash"", ""ShopName"", ""ReferralCode"", ""ReferredById"", ""SubscriptionType"", ""SubscriptionExpiry"") 
+                VALUES (@Username, @PasswordHash, @ShopName, @ReferralCode, @ReferredById, @SubscriptionType, @SubscriptionExpiry) 
+                RETURNING ""Id""";
+            
+            var userId = await connection.ExecuteScalarAsync<int>(sql, user, transaction);
+            transaction.Commit();
+            return ApiResult<int>.Ok(userId);
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     public string GenerateJwtToken(User user)
@@ -70,7 +113,8 @@ public class IdentityService : IIdentityService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim("ShopName", user.ShopName)
+            new Claim("ShopName", user.ShopName),
+            new Claim("IsAdmin", user.IsAdmin.ToString())
         };
 
         var token = new JwtSecurityToken(

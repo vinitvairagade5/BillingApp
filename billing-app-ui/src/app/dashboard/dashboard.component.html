@@ -25,6 +25,14 @@
                 <p class="stat-value">{{ stats.totalInvoices }}</p>
             </div>
         </div>
+
+        <div class="stat-card udhaar" routerLink="/udhaar" style="cursor: pointer;">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+                <h3>Total Udhaar</h3>
+                <p class="stat-value text-danger">₹{{ stats.totalUdhaar | number:'1.2-2' }}</p>
+            </div>
+        </div>
     </div>
 
     <div class="dashboard-grid">

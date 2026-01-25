@@ -18,12 +18,12 @@ export class CustomerService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Customer`;
 
-    getCustomers(shopOwnerId: number): Observable<Customer[]> {
-        return this.http.get<Customer[]>(`${this.apiUrl}?shopOwnerId=${shopOwnerId}`);
+    getCustomers(): Observable<Customer[]> {
+        return this.http.get<Customer[]>(this.apiUrl);
     }
 
-    searchCustomers(mobile: string, shopOwnerId: number): Observable<Customer[]> {
-        return this.http.get<Customer[]>(`${this.apiUrl}/search?mobile=${mobile}&shopOwnerId=${shopOwnerId}`);
+    searchCustomers(mobile: string): Observable<Customer[]> {
+        return this.http.get<Customer[]>(`${this.apiUrl}/search?mobile=${mobile}`);
     }
 
     createOrUpdateCustomer(customer: Customer): Observable<{ id: number }> {

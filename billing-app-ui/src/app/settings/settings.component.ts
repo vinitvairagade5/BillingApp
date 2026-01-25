@@ -175,7 +175,7 @@ export class SettingsComponent implements OnInit {
       });
 
       if (user.gstRates) {
-        this.gstRatesArray = user.gstRates.split(',').map(r => parseFloat(r)).sort((a, b) => a - b);
+        this.gstRatesArray = user.gstRates.split(',').map(r => parseFloat(r)).sort((a: number, b: number) => a - b);
       }
     }
   }
@@ -184,7 +184,7 @@ export class SettingsComponent implements OnInit {
     const rate = parseFloat(value);
     if (!isNaN(rate) && !this.gstRatesArray.includes(rate)) {
       this.gstRatesArray.push(rate);
-      this.gstRatesArray.sort((a, b) => a - b);
+      this.gstRatesArray.sort((a: number, b: number) => a - b);
     }
   }
 

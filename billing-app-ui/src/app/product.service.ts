@@ -20,8 +20,8 @@ export class ProductService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Product`;
 
-    getProducts(shopOwnerId: number): Observable<Item[]> {
-        return this.http.get<Item[]>(`${this.apiUrl}?shopOwnerId=${shopOwnerId}`);
+    getProducts(): Observable<Item[]> {
+        return this.http.get<Item[]>(this.apiUrl);
     }
 
     createProduct(product: Item): Observable<{ id: number }> {
@@ -32,7 +32,7 @@ export class ProductService {
         return this.http.put(this.apiUrl, product);
     }
 
-    deleteProduct(id: number, shopOwnerId: number): Observable<any> {
-        return this.http.delete(`${this.apiUrl}/${id}?shopOwnerId=${shopOwnerId}`);
+    deleteProduct(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/${id}`);
     }
 }

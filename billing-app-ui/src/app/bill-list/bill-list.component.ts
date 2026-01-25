@@ -176,17 +176,12 @@ export class BillListComponent implements OnInit {
   private authService = inject(AuthService); // Injected AuthService
   bills: any[] = []; // Changed type from Bill[] to any[]
 
-  // Use dynamic shopOwnerId from auth service
-  get shopOwnerId(): number {
-    return this.authService.currentUserValue?.id ?? 1;
-  }
-
-  ngOnInit(): void { // Changed return type to void
+  ngOnInit(): void {
     this.loadBills();
   }
 
   loadBills() {
-    this.invoiceService.getBills(this.shopOwnerId).subscribe({
+    this.invoiceService.getBills().subscribe({
       next: (data) => this.bills = data,
       error: (err) => console.error('Failed to load bills', err)
     });

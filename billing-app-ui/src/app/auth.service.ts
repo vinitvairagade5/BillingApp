@@ -11,7 +11,24 @@ export interface User {
     gstin?: string;
     logoUrl?: string;
     gstRates?: string;
+    subscriptionType?: string;
+    subscriptionExpiry?: string;
+    referralCode?: string;
+    referredById?: number;
     passwordHash?: string;
+    isAdmin?: boolean;
+}
+
+export interface AuthResponse {
+    token: string;
+    expiry: string;
+    user: User;
+}
+
+export interface ApiResult<T> {
+    success: boolean;
+    data: T;
+    message?: string;
 }
 
 @Injectable({
@@ -31,14 +48,18 @@ export class AuthService {
         return this.currentUserSubject.value;
     }
 
-    login(username: string, passwordHash: string): Observable<User> {
-        return this.http.post<User>(`${this.apiUrl}/login`, { username, passwordHash }).pipe(
-            tap(user => this.setUser(user))
+    login(username: string, passwordHash: string): Observable<ApiResult<AuthResponse>> {
+        return this.http.post<ApiResult<AuthResponse>>(`${this.apiUrl}/login`, { username, passwordHash }).pipe(
+            tap(result => {
+                if (result.success && result.data) {
+                    this.setAuthData(result.data);
+                }
+            })
         );
     }
 
-    register(user: Partial<User>): Observable<{ id: number }> {
-        return this.http.post<{ id: number }>(`${this.apiUrl}/register`, user);
+    register(user: Partial<User>): Observable<ApiResult<number>> {
+        return this.http.post<ApiResult<number>>(`${this.apiUrl}/register`, user);
     }
 
     updateProfile(user: User): Observable<any> {
@@ -52,13 +73,27 @@ export class AuthService {
         this.currentUserSubject.next(null);
     }
 
+    private setAuthData(authData: AuthResponse) {
+        localStorage.setItem('billpro_user', JSON.stringify(authData));
+        this.currentUserSubject.next(authData.user);
+    }
+
     private setUser(user: User) {
-        localStorage.setItem('billpro_user', JSON.stringify(user));
+        const authDataJson = localStorage.getItem('billpro_user');
+        if (authDataJson) {
+            const authData = JSON.parse(authDataJson) as AuthResponse;
+            authData.user = user;
+            localStorage.setItem('billpro_user', JSON.stringify(authData));
+        }
         this.currentUserSubject.next(user);
     }
 
     private getUserFromStorage(): User | null {
-        const userJson = localStorage.getItem('billpro_user');
-        return userJson ? JSON.parse(userJson) : null;
+        const authDataJson = localStorage.getItem('billpro_user');
+        if (authDataJson) {
+            const authData = JSON.parse(authDataJson) as AuthResponse;
+            return authData.user;
+        }
+        return null;
     }
 }

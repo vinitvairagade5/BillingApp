@@ -60,8 +60,8 @@ export class InvoiceService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Invoice`;
 
-    getBills(shopOwnerId: number): Observable<Bill[]> {
-        return this.http.get<Bill[]>(`${this.apiUrl}?shopOwnerId=${shopOwnerId}`);
+    getBills(): Observable<Bill[]> {
+        return this.http.get<Bill[]>(this.apiUrl);
     }
 
     getById(id: number): Observable<any> {
@@ -83,19 +83,19 @@ export class InvoiceService {
         return this.http.get<{ url: string }>(`${this.apiUrl}/${id}/whatsapp`);
     }
 
-    searchCustomers(shopOwnerId: number, query: string): Observable<Customer[]> {
-        return this.http.get<Customer[]>(`${this.apiUrl}/customers/search?shopOwnerId=${shopOwnerId}&query=${query}`);
+    searchCustomers(query: string): Observable<Customer[]> {
+        return this.http.get<Customer[]>(`${this.apiUrl}/customers/search?query=${query}`);
     }
 
-    searchItems(shopOwnerId: number, query: string): Observable<Item[]> {
-        return this.http.get<Item[]>(`${this.apiUrl}/items/search?shopOwnerId=${shopOwnerId}&query=${query}`);
+    searchItems(query: string): Observable<Item[]> {
+        return this.http.get<Item[]>(`${this.apiUrl}/items/search?query=${query}`);
     }
 
     createInvoice(bill: CreateBill): Observable<{ id: number, billNumber: string }> {
         return this.http.post<{ id: number, billNumber: string }>(this.apiUrl, bill);
     }
 
-    getDashboardStats(shopOwnerId: number): Observable<any> {
-        return this.http.get<any>(`${this.apiUrl}/dashboard?shopOwnerId=${shopOwnerId}`);
+    getDashboardStats(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/dashboard`);
     }
 }

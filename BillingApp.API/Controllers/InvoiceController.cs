@@ -3,20 +3,26 @@ using BillingApp.Core.Data;
 using BillingApp.Core.Entities;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using BillingApp.Core.Controllers;
+using BillingApp.Core.Abstractions;
 
 namespace BillingApp.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class InvoiceController : ControllerBase
+[Authorize]
+public class InvoiceController : BaseApiController
 {
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly Services.IPdfService _pdfService;
+    private readonly ISubscriptionService _subscriptionService;
+    private readonly ILedgerService _ledgerService;
 
-    public InvoiceController(IDbConnectionFactory connectionFactory, Services.IPdfService pdfService)
+    public InvoiceController(IDbConnectionFactory connectionFactory, Services.IPdfService pdfService, ISubscriptionService subscriptionService, ILedgerService ledgerService)
     {
         _connectionFactory = connectionFactory;
         _pdfService = pdfService;
+        _subscriptionService = subscriptionService;
+        _ledgerService = ledgerService;
     }
 
     [HttpGet("{id}/pdf")]
@@ -31,9 +37,11 @@ public class InvoiceController : ControllerBase
 
     private async Task<Bill?> GetFullBillByIdInternal(int id)
     {
+        var userId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var bill = await connection.QuerySingleOrDefaultAsync<Bill>(
-            "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id", new { Id = id });
+            "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id AND \"ShopOwnerId\" = @UserId", 
+            new { Id = id, UserId = userId });
 
         if (bill == null) return null;
 
@@ -43,7 +51,8 @@ public class InvoiceController : ControllerBase
         bill.Items = items.ToList();
 
         bill.ShopOwner = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT \"Id\", \"ShopName\", \"Username\", \"Address\", \"GSTIN\", \"LogoUrl\" FROM \"Users\" WHERE \"Id\" = @ShopOwnerId", new { bill.ShopOwnerId });
+            "SELECT \"Id\", \"ShopName\", \"Username\", \"Address\", \"GSTIN\", \"LogoUrl\" FROM \"Users\" WHERE \"Id\" = @UserId", 
+            new { UserId = userId });
 
         bill.Customer = await connection.QuerySingleOrDefaultAsync<Customer>(
              "SELECT * FROM \"Customers\" WHERE \"Id\" = @CustomerId", new { bill.CustomerId });
@@ -52,8 +61,9 @@ public class InvoiceController : ControllerBase
     }
 
     [HttpGet("dashboard")]
-    public async Task<IActionResult> GetDashboardStats(int shopOwnerId)
+    public async Task<IActionResult> GetDashboardStats()
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         
         var totalSales = await connection.ExecuteScalarAsync<decimal>(
@@ -64,6 +74,13 @@ public class InvoiceController : ControllerBase
             
         var totalInvoices = await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { shopOwnerId });
+
+        var totalUdhaar = await connection.ExecuteScalarAsync<decimal>(@"
+            SELECT 
+                COALESCE(SUM(CASE WHEN ""Type"" = 'DEBIT' THEN ""Amount"" ELSE 0 END), 0) -
+                COALESCE(SUM(CASE WHEN ""Type"" = 'CREDIT' THEN ""Amount"" ELSE 0 END), 0)
+            FROM ""CustomerLedger""
+            WHERE ""ShopOwnerId"" = @ShopOwnerId", new { shopOwnerId });
 
         var topProducts = await connection.QueryAsync<dynamic>(@"
             SELECT ""ItemName"" as Name, SUM(""Quantity"") as TotalQuantity, SUM(""Total"") as TotalRevenue
@@ -78,13 +95,15 @@ public class InvoiceController : ControllerBase
             TotalSales = totalSales,
             TotalGST = totalGST,
             TotalInvoices = totalInvoices,
+            TotalUdhaar = totalUdhaar,
             TopProducts = topProducts
         });
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Bill>> Get(int shopOwnerId)
+    public async Task<IEnumerable<Bill>> Get()
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = "SELECT * FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId ORDER BY \"Date\" DESC";
         return await connection.QueryAsync<Bill>(sql, new { ShopOwnerId = shopOwnerId });
@@ -101,7 +120,14 @@ public class InvoiceController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Bill bill)
     {
-        Console.WriteLine($"[DEBUG] Received Create Invitation for ShopOwnerId: {bill.ShopOwnerId}, CustomerId: {bill.CustomerId}");
+        var shopOwnerId = GetUserId();
+        
+        // Phase 2 Gatekeeping: Check Limits
+        var limitCheck = await _subscriptionService.CheckInvoiceLimitAsync(shopOwnerId);
+        if (!limitCheck.Success)
+            return BadRequest(limitCheck.Message);
+
+        Console.WriteLine($"[DEBUG] Received Create Invitation for ShopOwnerId: {shopOwnerId}, CustomerId: {bill.CustomerId}");
         foreach(var item in bill.Items) {
             Console.WriteLine($"[DEBUG] Item: {item.ItemName}, Price: {item.Price}, Qty: {item.Quantity}");
         }
@@ -112,6 +138,7 @@ public class InvoiceController : ControllerBase
 
         try
         {
+            bill.ShopOwnerId = shopOwnerId;
             // 1. Generate Bill Number
             var count = await connection.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", 
@@ -122,10 +149,10 @@ public class InvoiceController : ControllerBase
             var billSql = @"
                 INSERT INTO ""Bills"" (
                     ""BillNumber"", ""Date"", ""CustomerId"", ""SubTotal"", ""Discount"", 
-                    ""TotalCGST"", ""TotalSGST"", ""TotalIGST"", ""TotalAmount"", ""ShopOwnerId""
+                    ""TotalCGST"", ""TotalSGST"", ""TotalIGST"", ""TotalAmount"", ""PaymentMethod"", ""ShopOwnerId""
                 ) VALUES (
                     @BillNumber, @Date, @CustomerId, @SubTotal, @Discount, 
-                    @TotalCGST, @TotalSGST, @TotalIGST, @TotalAmount, @ShopOwnerId
+                    @TotalCGST, @TotalSGST, @TotalIGST, @TotalAmount, @PaymentMethod, @ShopOwnerId
                 ) RETURNING ""Id""";
 
             var billId = await connection.ExecuteScalarAsync<int>(billSql, bill, transaction);
@@ -144,6 +171,27 @@ public class InvoiceController : ControllerBase
             {
                 item.BillId = billId;
                 await connection.ExecuteAsync(itemSql, item, transaction);
+            }
+
+            // Phase 3: Automatic Ledger entry for Udhaar
+            if (bill.PaymentMethod == "CREDIT")
+            {
+                var ledgerEntry = new CustomerLedger
+                {
+                    CustomerId = bill.CustomerId,
+                    BillId = billId,
+                    Date = bill.Date,
+                    Type = "DEBIT",
+                    Amount = bill.TotalAmount,
+                    Description = $"Credit sale (Bill #{bill.BillNumber})",
+                    ShopOwnerId = shopOwnerId
+                };
+                
+                var ledgerSql = @"
+                    INSERT INTO ""CustomerLedger"" (""CustomerId"", ""BillId"", ""Date"", ""Type"", ""Amount"", ""Description"", ""ShopOwnerId"") 
+                    VALUES (@CustomerId, @BillId, @Date, @Type, @Amount, @Description, @ShopOwnerId)";
+                
+                await connection.ExecuteAsync(ledgerSql, ledgerEntry, transaction);
             }
 
             transaction.Commit();
@@ -201,16 +249,18 @@ public class InvoiceController : ControllerBase
     }
 
     [HttpGet("customers/search")]
-    public async Task<IEnumerable<Customer>> SearchCustomers(int shopOwnerId, string query)
+    public async Task<IEnumerable<Customer>> SearchCustomers(string query)
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = "SELECT * FROM \"Customers\" WHERE \"ShopOwnerId\" = @ShopOwnerId AND (\"Name\" ILIKE @Query OR \"Mobile\" ILIKE @Query) LIMIT 10";
         return await connection.QueryAsync<Customer>(sql, new { ShopOwnerId = shopOwnerId, Query = $"%{query}%" });
     }
 
     [HttpGet("items/search")]
-    public async Task<IEnumerable<Item>> SearchItems(int shopOwnerId, string query)
+    public async Task<IEnumerable<Item>> SearchItems(string query)
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = "SELECT * FROM \"Items\" WHERE \"ShopOwnerId\" = @ShopOwnerId AND \"Name\" ILIKE @Query LIMIT 10";
         return await connection.QueryAsync<Item>(sql, new { ShopOwnerId = shopOwnerId, Query = $"%{query}%" });

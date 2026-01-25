@@ -2,12 +2,13 @@ using BillingApp.Core.Data;
 using BillingApp.Core.Entities;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using BillingApp.Core.Controllers;
 
 namespace BillingApp.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class CustomerController : ControllerBase
+[Authorize]
+public class CustomerController : BaseApiController
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
@@ -17,16 +18,18 @@ public class CustomerController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Customer>> Get(int shopOwnerId)
+    public async Task<IEnumerable<Customer>> Get()
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Customer>(
             "SELECT * FROM \"Customers\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { ShopOwnerId = shopOwnerId });
     }
 
     [HttpGet("search")]
-    public async Task<IEnumerable<Customer>> Search(string mobile, int shopOwnerId)
+    public async Task<IEnumerable<Customer>> Search(string mobile)
     {
+        var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Customer>(
             "SELECT * FROM \"Customers\" WHERE \"Mobile\" LIKE @Mobile AND \"ShopOwnerId\" = @ShopOwnerId", 
@@ -36,6 +39,7 @@ public class CustomerController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Customer customer)
     {
+        customer.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
             INSERT INTO ""Customers"" (""Name"", ""Mobile"", ""Address"", ""ShopOwnerId"")
