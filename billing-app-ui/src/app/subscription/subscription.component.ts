@@ -205,14 +205,17 @@ export class SubscriptionComponent implements OnInit {
 
     this.subService.redeemCode(code).subscribe({
       next: (res) => {
-        this.loading = false;
         if (res.success) {
           this.successMessage = res.message || 'Upgrade successful!';
           this.redeemForm.reset();
-          // Profile update normally handled by backend, but we might want to refresh user data
-          alert(this.successMessage);
-          window.location.reload(); // Simple way to refresh all state
+
+          // Fetch latest profile info to update local state (handles subscription status update)
+          this.authService.refreshProfile().subscribe(() => {
+            this.loading = false;
+            alert(this.successMessage);
+          });
         } else {
+          this.loading = false;
           this.errorMessage = res.message || 'Invalid code';
         }
       },

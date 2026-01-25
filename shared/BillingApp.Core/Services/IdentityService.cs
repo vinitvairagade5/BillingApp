@@ -38,7 +38,16 @@ public class IdentityService : IIdentityService
         {
             Token = token,
             Expiry = DateTime.UtcNow.AddDays(7),
-            User = new UserDto { Id = user.Id, Username = user.Username, ShopName = user.ShopName, IsAdmin = user.IsAdmin }
+            User = new UserDto 
+            { 
+                Id = user.Id, 
+                Username = user.Username, 
+                ShopName = user.ShopName, 
+                IsAdmin = user.IsAdmin,
+                SubscriptionType = user.SubscriptionType,
+                SubscriptionExpiry = user.SubscriptionExpiry,
+                ReferralCode = user.ReferralCode
+            }
         });
     }
 

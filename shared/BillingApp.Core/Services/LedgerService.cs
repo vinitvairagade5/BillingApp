@@ -53,7 +53,7 @@ public class LedgerService : ILedgerService
         return await connection.QueryAsync<CustomerLedger>(sql, new { customerId, shopOwnerId });
     }
 
-    public async Task<IEnumerable<dynamic>> GetAllBalancesAsync(int shopOwnerId)
+    public async Task<IEnumerable<CustomerBalanceDto>> GetAllBalancesAsync(int shopOwnerId)
     {
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
@@ -71,6 +71,6 @@ public class LedgerService : ILedgerService
                    COALESCE(SUM(CASE WHEN l.""Type"" = 'CREDIT' THEN l.""Amount"" ELSE 0 END), 0) != 0
             ORDER BY Balance DESC";
         
-        return await connection.QueryAsync<dynamic>(sql, new { shopOwnerId });
+        return await connection.QueryAsync<CustomerBalanceDto>(sql, new { shopOwnerId });
     }
 }

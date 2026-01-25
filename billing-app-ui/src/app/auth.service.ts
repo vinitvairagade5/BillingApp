@@ -62,6 +62,12 @@ export class AuthService {
         return this.http.post<ApiResult<number>>(`${this.apiUrl}/register`, user);
     }
 
+    refreshProfile(): Observable<User> {
+        return this.http.get<User>(`${this.apiUrl}/profile`).pipe(
+            tap(user => this.setUser(user))
+        );
+    }
+
     updateProfile(user: User): Observable<any> {
         return this.http.put(`${this.apiUrl}/profile`, user).pipe(
             tap(() => this.setUser(user))

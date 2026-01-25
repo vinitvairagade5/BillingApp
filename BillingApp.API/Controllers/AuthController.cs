@@ -1,6 +1,7 @@
 using BillingApp.Core.Data;
 using BillingApp.Core.Entities;
 using BillingApp.Core.Abstractions;
+using BillingApp.Core.Models;
 using BillingApp.Core.Controllers;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,30 @@ public class AuthController : BaseApiController
     {
         _identityService = identityService;
         _connectionFactory = connectionFactory;
+    }
+
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetProfile()
+    {
+        var userId = GetUserId();
+        using var connection = _connectionFactory.CreateConnection();
+        var user = await connection.QuerySingleOrDefaultAsync<User>(
+            "SELECT * FROM \"Users\" WHERE \"Id\" = @userId", new { userId });
+        
+        if (user == null) return NotFound();
+
+        var dto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            ShopName = user.ShopName,
+            IsAdmin = user.IsAdmin,
+            SubscriptionType = user.SubscriptionType,
+            SubscriptionExpiry = user.SubscriptionExpiry,
+            ReferralCode = user.ReferralCode
+        };
+
+        return Ok(dto);
     }
 
     [HttpPost("register")]

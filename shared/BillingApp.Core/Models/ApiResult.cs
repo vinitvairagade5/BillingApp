@@ -27,4 +27,7 @@ public class UserDto
     public string Username { get; set; } = string.Empty;
     public string ShopName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
+    public string? SubscriptionType { get; set; }
+    public DateTime? SubscriptionExpiry { get; set; }
+    public string? ReferralCode { get; set; }
 }

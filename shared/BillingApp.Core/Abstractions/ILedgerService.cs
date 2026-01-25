@@ -8,5 +8,5 @@ public interface ILedgerService
     Task<ApiResult<bool>> RecordTransactionAsync(CustomerLedger entry);
     Task<decimal> GetCustomerBalanceAsync(int customerId, int shopOwnerId);
     Task<IEnumerable<CustomerLedger>> GetCustomerHistoryAsync(int customerId, int shopOwnerId);
-    Task<IEnumerable<dynamic>> GetAllBalancesAsync(int shopOwnerId);
+    Task<IEnumerable<CustomerBalanceDto>> GetAllBalancesAsync(int shopOwnerId);
 }
