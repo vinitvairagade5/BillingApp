@@ -9,31 +9,25 @@ namespace BillingApp.Core.Services;
 public class SubscriptionService : ISubscriptionService
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly ISubscriptionRepository _repository;
 
-    public SubscriptionService(IDbConnectionFactory connectionFactory)
+    public SubscriptionService(IDbConnectionFactory connectionFactory, ISubscriptionRepository repository)
     {
         _connectionFactory = connectionFactory;
+        _repository = repository;
     }
 
     public async Task<ApiResult<bool>> CheckInvoiceLimitAsync(int userId)
     {
-        using var connection = _connectionFactory.CreateConnection();
-        
-        // 1. Check if user is PRO
-        var user = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT \"SubscriptionType\", \"SubscriptionExpiry\" FROM \"Users\" WHERE \"Id\" = @userId", 
-            new { userId });
+        var user = await _repository.GetUserAsync(userId);
 
         if (user == null) return ApiResult<bool>.Failure("User not found.");
 
         bool isPro = user.SubscriptionType == "PRO" && user.SubscriptionExpiry > DateTime.UtcNow;
         if (isPro) return ApiResult<bool>.Ok(true); // Unlimited for PRO
 
-        // 2. Count invoices for FREE users (Limit: 10)
-        var count = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM \"Bills\" WHERE \"ShopOwnerId\" = @userId", 
-            new { userId });
-
+        var count = await _repository.GetInvoiceCountAsync(userId);
+        
         if (count >= 10)
             return ApiResult<bool>.Failure("Free limit reached (10 invoices). Please upgrade to PRO.");
 
@@ -49,35 +43,23 @@ public class SubscriptionService : ISubscriptionService
         try
         {
             // 1. Validate Code
-            var activationCode = await connection.QuerySingleOrDefaultAsync<ActivationCode>(
-                "SELECT * FROM \"ActivationCodes\" WHERE \"Code\" = @code AND \"IsRedeemed\" = FALSE", 
-                new { code }, transaction);
+            var activationCode = await _repository.GetValidActivationCodeAsync(code, connection, transaction);
 
             if (activationCode == null)
                 return ApiResult<bool>.Failure("Invalid or already redeemed activation code.");
 
             // 2. Update Subscription
-            var user = await connection.QuerySingleOrDefaultAsync<User>(
-                "SELECT \"SubscriptionExpiry\" FROM \"Users\" WHERE \"Id\" = @userId", 
-                new { userId }, transaction);
+            var user = await _repository.GetUserAsync(userId, connection, transaction);
 
-            DateTime currentExpiry = user.SubscriptionExpiry ?? DateTime.UtcNow;
+            DateTime currentExpiry = user?.SubscriptionExpiry ?? DateTime.UtcNow;
             if (currentExpiry < DateTime.UtcNow) currentExpiry = DateTime.UtcNow;
 
             DateTime newExpiry = currentExpiry.AddDays(activationCode.DurationDays);
 
-            await connection.ExecuteAsync(
-                @"UPDATE ""Users"" 
-                  SET ""SubscriptionType"" = 'PRO', ""SubscriptionExpiry"" = @newExpiry 
-                  WHERE ""Id"" = @userId", 
-                new { newExpiry, userId }, transaction);
+            await _repository.UpdateUserSubscriptionAsync(userId, "PRO", newExpiry, connection, transaction);
 
             // 3. Mark Code as Redeemed
-            await connection.ExecuteAsync(
-                @"UPDATE ""ActivationCodes"" 
-                  SET ""IsRedeemed"" = TRUE, ""RedeemedByUserId"" = @userId, ""RedeemedAt"" = @now 
-                  WHERE ""Id"" = @id", 
-                new { userId, now = DateTime.UtcNow, id = activationCode.Id }, transaction);
+            await _repository.MarkCodeRedeemedAsync(activationCode.Id, userId, DateTime.UtcNow, connection, transaction);
 
             transaction.Commit();
             return ApiResult<bool>.Ok(true, "Plan upgraded to PRO successfully!");
@@ -91,27 +73,19 @@ public class SubscriptionService : ISubscriptionService
 
     public async Task<bool> IsProAsync(int userId)
     {
-        using var connection = _connectionFactory.CreateConnection();
-        var user = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT \"SubscriptionType\", \"SubscriptionExpiry\" FROM \"Users\" WHERE \"Id\" = @userId", 
-            new { userId });
-
+        var user = await _repository.GetUserAsync(userId);
         return user != null && user.SubscriptionType == "PRO" && user.SubscriptionExpiry > DateTime.UtcNow;
     }
 
     public async Task<string> EnsureReferralCodeAsync(int userId)
     {
-        using var connection = _connectionFactory.CreateConnection();
-        var code = await connection.ExecuteScalarAsync<string>(
-            "SELECT \"ReferralCode\" FROM \"Users\" WHERE \"Id\" = @userId", new { userId });
+        var code = await _repository.GetReferralCodeAsync(userId);
 
         if (!string.IsNullOrEmpty(code)) return code;
 
         // Generate simple unique code (8 chars)
         code = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
-        await connection.ExecuteAsync(
-            "UPDATE \"Users\" SET \"ReferralCode\" = @code WHERE \"Id\" = @userId", 
-            new { code, userId });
+        await _repository.SetReferralCodeAsync(userId, code);
 
         return code;
     }
@@ -136,12 +110,7 @@ public class SubscriptionService : ISubscriptionService
                     CreatedAt = DateTime.UtcNow
                 };
 
-                var sql = @"
-                    INSERT INTO ""ActivationCodes"" (""Code"", ""DurationDays"", ""CreatedAt"") 
-                    VALUES (@Code, @DurationDays, @CreatedAt) 
-                    RETURNING *";
-                
-                var inserted = await connection.QuerySingleAsync<ActivationCode>(sql, activationCode, transaction);
+                var inserted = await _repository.CreateActivationCodeAsync(activationCode, connection, transaction);
                 codes.Add(inserted);
             }
 
@@ -157,7 +126,37 @@ public class SubscriptionService : ISubscriptionService
 
     public async Task<IEnumerable<ActivationCode>> GetAllActivationCodesAsync()
     {
-        using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<ActivationCode>("SELECT * FROM \"ActivationCodes\" ORDER BY \"CreatedAt\" DESC");
+        return await _repository.GetAllActivationCodesAsync();
+    }
+
+    public async Task<ReferralStats> GetReferralStatsAsync(int userId)
+    {
+        var referredUsersList = (await _repository.GetReferredUsersAsync(userId)).ToList();
+        
+        // Calculate stats
+        var totalReferrals = referredUsersList.Count;
+        var activeProReferrals = referredUsersList.Count(u => 
+            u.SubscriptionType == "PRO" && 
+            u.SubscriptionExpiry.HasValue && 
+            u.SubscriptionExpiry.Value > DateTime.UtcNow);
+        
+        // Bonus days: 7 days for each active PRO referral
+        var bonusDaysEarned = activeProReferrals * 7;
+        
+        // Mark users as PRO for display
+        foreach (var user in referredUsersList)
+        {
+            user.IsPro = user.SubscriptionType == "PRO" && 
+                        user.SubscriptionExpiry.HasValue && 
+                        user.SubscriptionExpiry.Value > DateTime.UtcNow;
+        }
+        
+        return new ReferralStats
+        {
+            TotalReferrals = totalReferrals,
+            ActiveProReferrals = activeProReferrals,
+            BonusDaysEarned = bonusDaysEarned,
+            RecentReferrals = referredUsersList.Take(10).ToList()
+        };
     }
 }

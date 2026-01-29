@@ -30,4 +30,5 @@ public class UserDto
     public string? SubscriptionType { get; set; }
     public DateTime? SubscriptionExpiry { get; set; }
     public string? ReferralCode { get; set; }
+    public string? UpiId { get; set; }
 }

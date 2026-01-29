@@ -10,6 +10,7 @@ import { SubscriptionComponent } from './subscription/subscription.component';
 import { AdminComponent } from './admin/admin.component';
 import { UdhaarListComponent } from './udhaar/udhaar-list.component';
 import { CustomerLedgerComponent } from './udhaar/customer-ledger.component';
+import { ReportDashboardComponent } from './reports/reports.component';
 import { authGuard } from './auth.guard';
 
 import { BillDetailComponent } from './bill-detail/bill-detail.component';
@@ -26,5 +27,6 @@ export const routes: Routes = [
     { path: 'subscription', component: SubscriptionComponent, canActivate: [authGuard] },
     { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
     { path: 'udhaar', component: UdhaarListComponent, canActivate: [authGuard] },
-    { path: 'udhaar/:customerId', component: CustomerLedgerComponent, canActivate: [authGuard] }
+    { path: 'udhaar/:customerId', component: CustomerLedgerComponent, canActivate: [authGuard] },
+    { path: 'reports', component: ReportDashboardComponent, canActivate: [authGuard] }
 ];

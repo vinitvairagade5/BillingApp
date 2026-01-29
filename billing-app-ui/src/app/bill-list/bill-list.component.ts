@@ -4,10 +4,12 @@ import { InvoiceService, Bill } from '../invoice.service';
 import { AuthService } from '../auth.service';
 import { RouterModule } from '@angular/router';
 
+import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
+
 @Component({
   selector: 'app-bill-list',
   standalone: true,
-  imports: [CommonModule, DatePipe, CurrencyPipe, RouterModule],
+  imports: [CommonModule, DatePipe, CurrencyPipe, RouterModule, PaymentModalComponent],
   template: `
     <div class="dashboard-content">
       <header class="page-header">
@@ -90,6 +92,9 @@ import { RouterModule } from '@angular/router';
                     <button class="btn-action download" (click)="downloadPdf(bill.id)" title="Download PDF">
                       📄 PDF
                     </button>
+                    <button class="btn-action pay" (click)="openPayment(bill)" title="Pay via UPI">
+                      💸 Pay
+                    </button>
                     <button class="btn-action whatsapp" (click)="shareWhatsapp(bill.id)" title="Share on WhatsApp">
                       💬 WhatsApp
                     </button>
@@ -105,9 +110,18 @@ import { RouterModule } from '@angular/router';
                 </td>
               </tr>
             </tbody>
-          </table>
-        </div>
-      </div>
+            </table>
+            </div>
+
+          <app-payment-modal
+        [isOpen]="isPaymentModalOpen"
+        [amount]="selectedBillForPayment?.totalAmount || 0"
+        [shopUpiId]="shopUpiId"
+        [shopName]="shopName"
+        (closeEvent)="closePaymentModal()"
+        (confirmEvent)="onPaymentConfirmed()"
+      ></app-payment-modal>
+    </div>
     </div>
   `,
   styles: [`
@@ -160,8 +174,10 @@ import { RouterModule } from '@angular/router';
     
     .action-group { display: flex; gap: 8px; justify-content: center; }
     .btn-action { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 4px; }
-    .btn-action.view { color: #1e40af; background: #eff6ff; border-color: #dbeafe; }
+    .btn-action.view.view { color: #1e40af; background: #eff6ff; border-color: #dbeafe; }
     .btn-action.view:hover { background: #dbeafe; }
+    .btn-action.pay { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+    .btn-action.pay:hover { background: #d1fae5; }
     .btn-action:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px -1px var(--primary-glow); }
     
     .empty-state { padding: 80px !important; text-align: center; }
@@ -174,9 +190,20 @@ import { RouterModule } from '@angular/router';
 export class BillListComponent implements OnInit {
   private invoiceService = inject(InvoiceService);
   private authService = inject(AuthService); // Injected AuthService
-  bills: any[] = []; // Changed type from Bill[] to any[]
+  bills: any[] = [];
+
+  // Payment State
+  isPaymentModalOpen = false;
+  selectedBillForPayment: any = null;
+  shopUpiId = '';
+  shopName = '';
 
   ngOnInit(): void {
+    const user = this.authService.currentUserValue;
+    if (user) {
+      this.shopUpiId = user.upiId || '';
+      this.shopName = user.shopName || '';
+    }
     this.loadBills();
   }
 
@@ -213,5 +240,28 @@ export class BillListComponent implements OnInit {
       },
       error: (err) => console.error('Failed to get WhatsApp URL', err)
     });
+  }
+
+  openPayment(bill: any) {
+    if (!this.shopUpiId) {
+      alert('Please setup your UPI ID in Settings first!');
+      return;
+    }
+    this.selectedBillForPayment = bill;
+    this.isPaymentModalOpen = true;
+  }
+
+  closePaymentModal() {
+    this.isPaymentModalOpen = false;
+    this.selectedBillForPayment = null;
+  }
+
+  onPaymentConfirmed() {
+    // Ideally call backend to mark as paid
+    alert('Payment Confirmed! Marking bill as PAID localy.');
+    if (this.selectedBillForPayment) {
+      this.selectedBillForPayment.status = 'PAID'; // Update local status
+    }
+    this.closePaymentModal();
   }
 }

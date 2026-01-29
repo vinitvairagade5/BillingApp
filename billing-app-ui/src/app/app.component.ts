@@ -45,6 +45,10 @@ import { AuthService } from './auth.service';
              <span class="icon">📝</span>
              <span>Udhaar</span>
           </a>
+          <a routerLink="/reports" routerLinkActive="active" class="nav-link">
+             <span class="icon">📊</span>
+             <span>Reports</span>
+          </a>
           <a routerLink="/admin" routerLinkActive="active" class="nav-link" *ngIf="user?.isAdmin">
              <span class="icon">🛠️</span>
              <span>Admin</span>

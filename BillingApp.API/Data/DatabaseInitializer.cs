@@ -58,6 +58,17 @@ public class DatabaseInitializer
                     _logger.LogInformation($"Found User: ID={user.Id}, Username={user.Username}");
                 }
             }
+
+            // Migration: Add UpiId column if not exists
+            var upiColumnExists = await connection.ExecuteScalarAsync<bool>(
+                "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Users' AND column_name='UpiId')");
+            
+            if (!upiColumnExists)
+            {
+                _logger.LogInformation("Migrating: Adding UpiId column to Users table...");
+                await connection.ExecuteAsync("ALTER TABLE \"Users\" ADD COLUMN \"UpiId\" TEXT NULL");
+                _logger.LogInformation("Migration: UpiId column added.");
+            }
         }
         catch (Exception ex)
         {

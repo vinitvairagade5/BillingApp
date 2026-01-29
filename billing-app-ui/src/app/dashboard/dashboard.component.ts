@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { InvoiceService } from '../invoice.service';
-import { AuthService } from '../auth.service';
+import { AuthService, User } from '../auth.service';
 
 @Component({
     selector: 'app-dashboard',
@@ -23,13 +23,50 @@ export class DashboardComponent implements OnInit {
         topProducts: []
     };
     recentBills: any[] = [];
+    currentUser: User | null = null;
 
     ngOnInit(): void {
+        this.currentUser = this.authService.currentUserValue;
+
         this.invoiceService.getDashboardStats().subscribe(data => {
             this.stats = data;
         });
         this.invoiceService.getBills().subscribe(data => {
             this.recentBills = data.slice(0, 5);
         });
+    }
+
+    get isPro(): boolean {
+        if (!this.currentUser?.subscriptionType) return false;
+        if (this.currentUser.subscriptionType !== 'PRO') return false;
+        if (!this.currentUser.subscriptionExpiry) return false;
+        return new Date(this.currentUser.subscriptionExpiry) > new Date();
+    }
+
+    get subscriptionStatus(): string {
+        return this.isPro ? 'PRO' : 'FREE';
+    }
+
+    get invoiceUsage(): string {
+        if (this.isPro) return 'Unlimited';
+        const used = this.stats.totalInvoices || 0;
+        return `${used}/10`;
+    }
+
+    get expiryDate(): string | null {
+        if (!this.isPro || !this.currentUser?.subscriptionExpiry) return null;
+        return new Date(this.currentUser.subscriptionExpiry).toLocaleDateString('en-IN');
+    }
+
+    get isNearLimit(): boolean {
+        return !this.isPro && this.stats.totalInvoices >= 8;
+    }
+
+    get isAtLimit(): boolean {
+        return !this.isPro && this.stats.totalInvoices >= 10;
+    }
+
+    navigateToSubscription(): void {
+        this.router.navigate(['/subscription']);
     }
 }

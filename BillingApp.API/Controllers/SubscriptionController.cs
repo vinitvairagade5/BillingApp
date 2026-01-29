@@ -38,4 +38,12 @@ public class SubscriptionController : BaseApiController
         var isPro = await _subscriptionService.IsProAsync(userId);
         return Ok(new { IsPro = isPro });
     }
+
+    [HttpGet("referral-stats")]
+    public async Task<IActionResult> GetReferralStats()
+    {
+        var userId = GetUserId();
+        var stats = await _subscriptionService.GetReferralStatsAsync(userId);
+        return Ok(stats);
+    }
 }

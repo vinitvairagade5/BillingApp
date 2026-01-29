@@ -5,11 +5,12 @@ import { RouterModule, Router } from '@angular/router';
 import { InvoiceService, Customer, Item, CreateBill } from '../invoice.service';
 import { CustomerService } from '../customer.service';
 import { AuthService } from '../auth.service';
+import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 
 @Component({
   selector: 'app-invoice-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PaymentModalComponent],
   template: `
     <div class="invoice-page animation-fade-in">
       <div class="limit-warning-banner glass" *ngIf="limitReached && !isPro">
@@ -188,7 +189,7 @@ import { AuthService } from '../auth.service';
                        <span class="icon">💵</span>
                        <span class="label">Cash</span>
                     </div>
-                    <div class="pay-option" [class.active]="invoiceForm.get('paymentMethod')?.value === 'UPI'" (click)="invoiceForm.patchValue({paymentMethod: 'UPI'})">
+                    <div class="pay-option" [class.active]="invoiceForm.get('paymentMethod')?.value === 'UPI'" (click)="onPaymentMethodSelect('UPI')">
                        <span class="icon">📱</span>
                        <span class="label">UPI</span>
                     </div>
@@ -281,6 +282,16 @@ import { AuthService } from '../auth.service';
         </div>
       </div>
     </div>
+
+    <!-- Payment Modal -->
+    <app-payment-modal
+      [isOpen]="isPaymentModalOpen"
+      [amount]="invoiceForm.get('totalAmount')?.value || 0"
+      [shopUpiId]="shopUpiId"
+      [shopName]="shopName"
+      (closeEvent)="closePaymentModal()"
+      (confirmEvent)="onPaymentConfirmed()"
+    ></app-payment-modal>
   `,
   styles: [`
     .invoice-page { padding: 40px; padding-bottom: 100px; max-width: 1400px; margin: 0 auto; }
@@ -447,7 +458,13 @@ export class InvoiceCreateComponent implements OnInit {
   isSubmitting: boolean = false;
   limitReached: boolean = false;
   isPro: boolean = false;
+
   availableGstRates: number[] = [0, 5, 12, 18, 28];
+
+  // Payment Modal State
+  isPaymentModalOpen: boolean = false;
+  shopUpiId: string = '';
+  shopName: string = '';
 
   ngOnInit() {
     this.initForm();
@@ -462,6 +479,9 @@ export class InvoiceCreateComponent implements OnInit {
       if (user.gstRates) {
         this.availableGstRates = user.gstRates.split(',').map(r => parseFloat(r)).sort((a: number, b: number) => a - b);
       }
+
+      this.shopUpiId = user.upiId || '';
+      this.shopName = user.shopName || '';
 
       if (!this.isPro) {
         this.invoiceService.getDashboardStats().subscribe(stats => {
@@ -704,5 +724,32 @@ export class InvoiceCreateComponent implements OnInit {
 
   goToBills() {
     this.router.navigate(['/bills']);
+  }
+
+  onPaymentMethodSelect(method: string) {
+    this.invoiceForm.patchValue({ paymentMethod: method });
+
+    if (method === 'UPI') {
+      if (!this.shopUpiId) {
+        alert('Please set up your UPI ID in Settings to use UPI payments.');
+        return;
+      }
+      // Only open if amount > 0
+      if (this.invoiceForm.get('totalAmount')?.value > 0) {
+        this.isPaymentModalOpen = true;
+      } else {
+        // Maybe alert? Or just select it.
+        console.log('Total amount is 0, just selecting UPI');
+      }
+    }
+  }
+
+  closePaymentModal() {
+    this.isPaymentModalOpen = false;
+  }
+
+  onPaymentConfirmed() {
+    this.isPaymentModalOpen = false;
+    // Payment is confirmed visually. User can now save.
   }
 }

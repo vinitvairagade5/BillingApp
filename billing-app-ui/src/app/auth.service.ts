@@ -17,6 +17,7 @@ export interface User {
     referredById?: number;
     passwordHash?: string;
     isAdmin?: boolean;
+    upiId?: string;
 }
 
 export interface AuthResponse {

@@ -1,6 +1,7 @@
 using BillingApp.Core.Data;
 using BillingApp.Core.Abstractions;
 using BillingApp.Core.Services;
+using BillingApp.Core.Data.Repositories;
 using BillingApp.API.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +18,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ILedgerService, LedgerService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 builder.Services.AddScoped<BillingApp.API.Services.IPdfService, BillingApp.API.Services.PdfService>();
 

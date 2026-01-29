@@ -43,6 +43,12 @@ import { AuthService, User } from '../auth.service';
               </div>
 
               <div class="form-group">
+                <label>UPI ID (for Payments)</label>
+                <input type="text" formControlName="upiId" class="premium-input" placeholder="e.g. yourshop@okicici">
+                <p class="helper-text">Customers will scan a QR code generated from this ID to pay you directly.</p>
+              </div>
+
+              <div class="form-group">
                 <label>Logo URL</label>
                 <input type="text" formControlName="logoUrl" class="premium-input" placeholder="https://example.com/logo.png">
                 <p class="helper-text">Enter a direct link to your shop logo (PNG/JPG recommended).</p>
@@ -161,7 +167,8 @@ export class SettingsComponent implements OnInit {
     shopName: ['', Validators.required],
     gstin: [''],
     address: [''],
-    logoUrl: ['']
+    logoUrl: [''],
+    upiId: ['']
   });
 
   ngOnInit() {
@@ -171,7 +178,8 @@ export class SettingsComponent implements OnInit {
         shopName: user.shopName,
         gstin: user.gstin,
         address: user.address,
-        logoUrl: user.logoUrl
+        logoUrl: user.logoUrl,
+        upiId: user.upiId
       });
 
       if (user.gstRates) {
@@ -222,7 +230,8 @@ export class SettingsComponent implements OnInit {
       shopName: this.profileForm.get('shopName')?.value!,
       gstin: this.profileForm.get('gstin')?.value!,
       address: this.profileForm.get('address')?.value!,
-      logoUrl: this.profileForm.get('logoUrl')?.value!
+      logoUrl: this.profileForm.get('logoUrl')?.value!,
+      upiId: this.profileForm.get('upiId')?.value!
     };
 
     this.authService.updateProfile(updatedUser).subscribe({

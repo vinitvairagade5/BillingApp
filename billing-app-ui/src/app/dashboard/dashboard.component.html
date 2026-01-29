@@ -35,6 +35,50 @@
         </div>
     </div>
 
+    <!-- Subscription Status Card -->
+    <div class="subscription-status-card" [class.pro]="isPro" [class.warning]="isNearLimit" [class.danger]="isAtLimit">
+        <div class="subscription-header">
+            <div class="subscription-badge" [class.badge-pro]="isPro" [class.badge-free]="!isPro">
+                {{ subscriptionStatus }}
+            </div>
+            <h3>Subscription Status</h3>
+        </div>
+        <div class="subscription-body">
+            <div class="subscription-info">
+                <div class="info-item">
+                    <span class="label">Plan:</span>
+                    <span class="value">{{ subscriptionStatus }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Invoice Usage:</span>
+                    <span class="value" [class.text-warning]="isNearLimit" [class.text-danger]="isAtLimit">
+                        {{ invoiceUsage }}
+                    </span>
+                </div>
+                <div class="info-item" *ngIf="isPro && expiryDate">
+                    <span class="label">Expires On:</span>
+                    <span class="value">{{ expiryDate }}</span>
+                </div>
+            </div>
+            <div class="subscription-actions">
+                <button *ngIf="!isPro" class="btn btn-primary" (click)="navigateToSubscription()">
+                    ⚡ Upgrade to PRO
+                </button>
+                <button *ngIf="isPro" class="btn btn-secondary" (click)="navigateToSubscription()">
+                    Manage Subscription
+                </button>
+            </div>
+        </div>
+        <div class="subscription-alert" *ngIf="isNearLimit && !isPro">
+            <span class="alert-icon">⚠️</span>
+            <span>You're approaching your free plan limit. Upgrade to PRO for unlimited invoices!</span>
+        </div>
+        <div class="subscription-alert danger" *ngIf="isAtLimit">
+            <span class="alert-icon">🚫</span>
+            <span>You've reached your free plan limit (10 invoices). Upgrade to PRO to continue creating invoices.</span>
+        </div>
+    </div>
+
     <div class="dashboard-grid">
         <div class="card recent-invoices">
             <div class="card-header">

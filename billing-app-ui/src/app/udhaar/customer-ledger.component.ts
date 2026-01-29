@@ -4,11 +4,14 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LedgerService, LedgerEntry } from '../ledger.service';
 
+import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
+import { AuthService } from '../auth.service';
+
 @Component({
-    selector: 'app-customer-ledger',
-    standalone: true,
-    imports: [CommonModule, RouterModule, ReactiveFormsModule],
-    template: `
+  selector: 'app-customer-ledger',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, PaymentModalComponent],
+  template: `
     <div class="ledger-page animation-fade-in">
       <header class="page-header">
         <div class="header-left">
@@ -77,16 +80,31 @@ import { LedgerService, LedgerEntry } from '../ledger.service';
                    <label>Description (Optional)</label>
                    <input type="text" formControlName="description" class="premium-input" placeholder="e.g. Paid in Cash">
                 </div>
-                <button type="submit" class="btn btn-primary btn-block" [disabled]="paymentForm.invalid || loading">
-                   {{ loading ? 'Recording...' : 'Record Credit Entry' }}
-                </button>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" (click)="openUpiModal()" title="Pay via UPI">
+                        📱 UPI
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-block" [disabled]="paymentForm.invalid || loading">
+                       {{ loading ? 'Recording...' : 'Record Credit Entry' }}
+                    </button>
+                </div>
              </form>
           </section>
         </aside>
       </div>
+      
+      <app-payment-modal
+        [isOpen]="isPaymentModalOpen"
+        [amount]="paymentAmount"
+        [shopUpiId]="shopUpiId"
+        [shopName]="shopName"
+        (closeEvent)="closePaymentModal()"
+        (confirmEvent)="onPaymentConfirmed()"
+      ></app-payment-modal>
     </div>
   `,
-    styles: [`
+  styles: [`
     .ledger-page { padding-bottom: 40px; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: white; padding: 24px 32px; border-radius: 24px; }
     
@@ -122,7 +140,12 @@ import { LedgerService, LedgerEntry } from '../ledger.service';
     .form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
     .premium-input { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 15px; }
 
-    .btn-block { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn-block { flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
+    .btn-secondary { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; padding: 14px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-secondary:hover { background: #dbeafe; }
+    .btn-primary { background: #2563eb; color: white; transition: var(--transition); }
+    .btn-primary:hover { background: #1d4ed8; }
     
     .empty-state { text-align: center; color: #94a3b8; padding: 40px !important; }
 
@@ -131,58 +154,99 @@ import { LedgerService, LedgerEntry } from '../ledger.service';
   `]
 })
 export class CustomerLedgerComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private fb = inject(FormBuilder);
-    private ledgerService = inject(LedgerService);
+  private route = inject(ActivatedRoute);
+  private fb = inject(FormBuilder);
+  private ledgerService = inject(LedgerService);
+  private authService = inject(AuthService);
 
-    customerId!: number;
-    balance = 0;
-    history: LedgerEntry[] = [];
-    loading = false;
+  customerId!: number;
+  balance = 0;
+  history: LedgerEntry[] = [];
+  loading = false;
 
-    paymentForm = this.fb.group({
-        amount: [0, [Validators.required, Validators.min(1)]],
-        description: ['Payment Received', Validators.required]
+  // UPI State
+  isPaymentModalOpen = false;
+  shopUpiId = '';
+  shopName = '';
+  paymentAmount = 0;
+
+  paymentForm = this.fb.group({
+    amount: [0, [Validators.required, Validators.min(1)]],
+    description: ['Payment Received', Validators.required]
+  });
+
+  ngOnInit() {
+    this.customerId = Number(this.route.snapshot.paramMap.get('customerId'));
+
+    const user = this.authService.currentUserValue;
+    if (user) {
+      this.shopUpiId = user.upiId || '';
+      this.shopName = user.shopName || '';
+    }
+
+    this.loadLedger();
+  }
+
+  loadLedger() {
+    this.ledgerService.getCustomerLedger(this.customerId).subscribe(res => {
+      this.balance = res.balance;
+      this.history = res.history;
     });
+  }
 
-    ngOnInit() {
-        this.customerId = Number(this.route.snapshot.paramMap.get('customerId'));
-        this.loadLedger();
+  onRecordPayment() {
+    if (this.paymentForm.invalid) return;
+
+    this.loading = true;
+    const formValue = this.paymentForm.value;
+
+    const entry: Partial<LedgerEntry> = {
+      customerId: this.customerId,
+      amount: formValue.amount!,
+      description: formValue.description!,
+      type: 'CREDIT'
+    };
+
+    this.ledgerService.addManualEntry(entry).subscribe({
+      next: (res) => {
+        this.loading = false;
+        if (res.success) {
+          alert('Payment recorded successfully!');
+          this.paymentForm.reset({ amount: 0, description: 'Payment Received' });
+          this.loadLedger();
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        alert('Error: ' + (err.error?.message || 'Failed to record payment'));
+      }
+    });
+  }
+
+  openUpiModal() {
+    const amount = this.paymentForm.get('amount')?.value || 0;
+    if (amount <= 0) {
+      alert('Please enter a valid amount first.');
+      return;
+    }
+    if (!this.shopUpiId) {
+      alert('Please configure your UPI ID in Settings first.');
+      return;
     }
 
-    loadLedger() {
-        this.ledgerService.getCustomerLedger(this.customerId).subscribe(res => {
-            this.balance = res.balance;
-            this.history = res.history;
-        });
-    }
+    this.paymentAmount = amount;
+    this.isPaymentModalOpen = true;
+  }
 
-    onRecordPayment() {
-        if (this.paymentForm.invalid) return;
+  closePaymentModal() {
+    this.isPaymentModalOpen = false;
+  }
 
-        this.loading = true;
-        const formValue = this.paymentForm.value;
-
-        const entry: Partial<LedgerEntry> = {
-            customerId: this.customerId,
-            amount: formValue.amount!,
-            description: formValue.description!,
-            type: 'CREDIT'
-        };
-
-        this.ledgerService.addManualEntry(entry).subscribe({
-            next: (res) => {
-                this.loading = false;
-                if (res.success) {
-                    alert('Payment recorded successfully!');
-                    this.paymentForm.reset({ amount: 0, description: 'Payment Received' });
-                    this.loadLedger();
-                }
-            },
-            error: (err) => {
-                this.loading = false;
-                alert('Error: ' + (err.error?.message || 'Failed to record payment'));
-            }
-        });
-    }
+  onPaymentConfirmed() {
+    this.isPaymentModalOpen = false;
+    // Auto-fill description
+    this.paymentForm.patchValue({ description: 'Payment Received via UPI' });
+    // Trigger record payment
+    this.onRecordPayment();
+  }
 }

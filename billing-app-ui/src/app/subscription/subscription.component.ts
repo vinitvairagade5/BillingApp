@@ -83,6 +83,56 @@ import { InvoiceService } from '../invoice.service';
                   </div>
                </div>
             </div>
+
+            <!-- Referral Statistics -->
+            <div class="referral-stats" *ngIf="referralStats">
+              <h4 class="stats-title">Your Referral Performance</h4>
+              <div class="stats-grid-mini">
+                <div class="stat-mini">
+                  <div class="stat-icon-mini">👥</div>
+                  <div class="stat-content">
+                    <div class="stat-value-mini">{{ referralStats.totalReferrals }}</div>
+                    <div class="stat-label-mini">Total Referrals</div>
+                  </div>
+                </div>
+                <div class="stat-mini">
+                  <div class="stat-icon-mini">⭐</div>
+                  <div class="stat-content">
+                    <div class="stat-value-mini">{{ referralStats.activeProReferrals }}</div>
+                    <div class="stat-label-mini">Active PRO Users</div>
+                  </div>
+                </div>
+                <div class="stat-mini">
+                  <div class="stat-icon-mini">🎁</div>
+                  <div class="stat-content">
+                    <div class="stat-value-mini">{{ referralStats.bonusDaysEarned }}</div>
+                    <div class="stat-label-mini">Bonus Days Earned</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Referrals Table -->
+              <div class="recent-referrals" *ngIf="referralStats.recentReferrals?.length > 0">
+                <h5 class="referrals-subtitle">Recent Referrals</h5>
+                <div class="referrals-table">
+                  <div class="referral-row" *ngFor="let ref of referralStats.recentReferrals">
+                    <div class="referral-info">
+                      <div class="referral-name">{{ ref.shopName }}</div>
+                      <div class="referral-username">{{ '@' + ref.username }}</div>
+                    </div>
+                    <div class="referral-status">
+                      <span class="status-badge" [class.pro]="ref.isPro">
+                        {{ ref.isPro ? 'PRO' : 'FREE' }}
+                      </span>
+                      <div class="referral-date">{{ ref.createdAt | date:'shortDate' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="no-referrals" *ngIf="!referralStats.recentReferrals || referralStats.recentReferrals.length === 0">
+                <p>No referrals yet. Start sharing your code to earn rewards!</p>
+              </div>
+            </div>
           </section>
         </div>
 
@@ -149,6 +199,41 @@ import { InvoiceService } from '../invoice.service';
     .error-msg { color: var(--danger); font-size: 14px; font-weight: 600; margin-top: 12px; }
     .success-msg { color: var(--success); font-size: 14px; font-weight: 600; margin-top: 12px; }
 
+    /* Referral Statistics */
+    .referral-stats { margin-top: 32px; padding-top: 32px; border-top: 2px dashed #e2e8f0; }
+    .stats-title { margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #0f172a; }
+    
+    .stats-grid-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-mini { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; transition: var(--transition); }
+    .stat-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+    .stat-icon-mini { font-size: 28px; }
+    .stat-content { flex: 1; }
+    .stat-value-mini { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+    .stat-label-mini { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+
+    .referrals-subtitle { margin: 0 0 16px 0; font-size: 14px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .referrals-table { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+    .referral-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; transition: var(--transition); }
+    .referral-row:last-child { border-bottom: none; }
+    .referral-row:hover { background: #f8fafc; }
+    
+    .referral-info { flex: 1; }
+    .referral-name { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .referral-username { font-size: 13px; color: #64748b; }
+    
+    .referral-status { display: flex; align-items: center; gap: 12px; }
+    .status-badge { padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800; background: #f1f5f9; color: #64748b; letter-spacing: 0.5px; }
+    .status-badge.pro { background: var(--primary); color: white; }
+    .referral-date { font-size: 12px; color: #94a3b8; }
+
+    .no-referrals { text-align: center; padding: 32px; color: #94a3b8; font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .stats-grid-mini { grid-template-columns: 1fr; }
+      .referral-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .referral-status { width: 100%; justify-content: space-between; }
+    }
+
     .animation-fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   `]
@@ -164,6 +249,7 @@ export class SubscriptionComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  referralStats: any = null;
 
   redeemForm = this.fb.group({
     code: ['', [Validators.required, Validators.minLength(4)]]
@@ -191,6 +277,11 @@ export class SubscriptionComponent implements OnInit {
     // Fetch usage stats
     this.invoiceService.getDashboardStats().subscribe(stats => {
       this.invoiceCount = stats.totalInvoices || 0;
+    });
+
+    // Fetch referral stats
+    this.subService.getReferralStats().subscribe(stats => {
+      this.referralStats = stats;
     });
   }
 

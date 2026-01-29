@@ -37,7 +37,10 @@ public class AuthController : BaseApiController
             IsAdmin = user.IsAdmin,
             SubscriptionType = user.SubscriptionType,
             SubscriptionExpiry = user.SubscriptionExpiry,
-            ReferralCode = user.ReferralCode
+            SubscriptionType = user.SubscriptionType,
+            SubscriptionExpiry = user.SubscriptionExpiry,
+            ReferralCode = user.ReferralCode,
+            UpiId = user.UpiId
         };
 
         return Ok(dto);
@@ -66,7 +69,11 @@ public class AuthController : BaseApiController
             SET ""ShopName"" = @ShopName, 
                 ""Address"" = @Address, 
                 ""GSTIN"" = @GSTIN, 
+                ""Address"" = @Address, 
+                ""GSTIN"" = @GSTIN, 
                 ""LogoUrl"" = @LogoUrl,
+                ""GstRates"" = @GstRates,
+                ""UpiId"" = @UpiId
                 ""GstRates"" = @GstRates
             WHERE ""Id"" = @Id";
         

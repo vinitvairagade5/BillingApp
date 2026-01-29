@@ -9,6 +9,7 @@ public interface ISubscriptionService
     Task<ApiResult<bool>> CheckInvoiceLimitAsync(int userId);
     Task<bool> IsProAsync(int userId);
     Task<string> EnsureReferralCodeAsync(int userId);
+    Task<ReferralStats> GetReferralStatsAsync(int userId);
 
     // Admin Methods
     Task<ApiResult<IEnumerable<ActivationCode>>> GenerateActivationCodesAsync(int count, int durationDays);

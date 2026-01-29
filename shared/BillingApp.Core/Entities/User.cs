@@ -8,6 +8,7 @@ public class User
     public string ShopName { get; set; } = string.Empty;
     public string? Address { get; set; }
     public string? GSTIN { get; set; }
+    public string? UpiId { get; set; }
     public string? LogoUrl { get; set; }
     public string GstRates { get; set; } = "0,5,12,18,28";
     public string SubscriptionType { get; set; } = "FREE";
