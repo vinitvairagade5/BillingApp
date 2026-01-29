@@ -75,6 +75,10 @@ export class AuthService {
         );
     }
 
+    changePassword(passwordData: any): Observable<ApiResult<boolean>> {
+        return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/change-password`, passwordData);
+    }
+
     logout() {
         localStorage.removeItem('billpro_user');
         this.currentUserSubject.next(null);

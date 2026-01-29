@@ -37,8 +37,6 @@ public class AuthController : BaseApiController
             IsAdmin = user.IsAdmin,
             SubscriptionType = user.SubscriptionType,
             SubscriptionExpiry = user.SubscriptionExpiry,
-            SubscriptionType = user.SubscriptionType,
-            SubscriptionExpiry = user.SubscriptionExpiry,
             ReferralCode = user.ReferralCode,
             UpiId = user.UpiId
         };
@@ -69,16 +67,21 @@ public class AuthController : BaseApiController
             SET ""ShopName"" = @ShopName, 
                 ""Address"" = @Address, 
                 ""GSTIN"" = @GSTIN, 
-                ""Address"" = @Address, 
-                ""GSTIN"" = @GSTIN, 
                 ""LogoUrl"" = @LogoUrl,
                 ""GstRates"" = @GstRates,
                 ""UpiId"" = @UpiId
-                ""GstRates"" = @GstRates
             WHERE ""Id"" = @Id";
         
         await connection.ExecuteAsync(sql, user);
         return Ok(new { success = true });
+    }
+
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _identityService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+        return HandleResult(result);
     }
 }
 

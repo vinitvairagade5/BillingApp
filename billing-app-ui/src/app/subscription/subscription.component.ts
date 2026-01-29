@@ -265,6 +265,9 @@ export class SubscriptionComponent implements OnInit {
   ngOnInit() {
     this.authService.currentUser$.subscribe(u => this.user = u);
 
+    // Refresh profile to get latest referral rewards
+    this.authService.refreshProfile().subscribe();
+
     // Refresh referral code if missing
     if (this.user && !this.user.referralCode) {
       this.subService.getReferralCode().subscribe(res => {

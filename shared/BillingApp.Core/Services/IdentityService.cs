@@ -111,6 +111,32 @@ public class IdentityService : IIdentityService
         }
     }
 
+    public async Task<ApiResult<bool>> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        
+        // 1. Verify Current Password
+        var user = await connection.QuerySingleOrDefaultAsync<User>(
+            "SELECT * FROM \"Users\" WHERE \"Id\" = @userId", 
+            new { userId });
+
+        if (user == null) return ApiResult<bool>.Failure("User not found.");
+
+        // Note: Currently using plain checks as per existing Login flow. 
+        // In verify future, this should use proper hashing.
+        if (user.PasswordHash != currentPassword)
+        {
+            return ApiResult<bool>.Failure("Incorrect current password.");
+        }
+
+        // 2. Update Password
+        await connection.ExecuteAsync(
+            "UPDATE \"Users\" SET \"PasswordHash\" = @newPassword WHERE \"Id\" = @userId",
+            new { newPassword, userId });
+
+        return ApiResult<bool>.Ok(true);
+    }
+
     public string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");

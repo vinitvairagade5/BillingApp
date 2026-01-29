@@ -28,6 +28,11 @@ export class DashboardComponent implements OnInit {
     ngOnInit(): void {
         this.currentUser = this.authService.currentUserValue;
 
+        // Fetch fresh profile data to ensure subscription status is up to date (e.g. referral rewards)
+        this.authService.refreshProfile().subscribe(user => {
+            this.currentUser = user;
+        });
+
         this.invoiceService.getDashboardStats().subscribe(data => {
             this.stats = data;
         });

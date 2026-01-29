@@ -63,6 +63,40 @@ import { AuthService, User } from '../auth.service';
             </form>
           </section>
 
+          <!-- Change Password Section -->
+          <section class="section glass card mb-4">
+            <div class="section-header">
+              <span class="step-num">🔒</span>
+              <h3>Security / Change Password</h3>
+            </div>
+            
+            <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="profile-form">
+               <div class="form-group">
+                 <label>Current Password</label>
+                 <input type="password" formControlName="currentPassword" class="premium-input" placeholder="••••••">
+               </div>
+               
+               <div class="form-group">
+                 <label>New Password</label>
+                 <input type="password" formControlName="newPassword" class="premium-input" placeholder="•••••• (min 6 chars)">
+               </div>
+               
+               <div class="form-group">
+                 <label>Confirm New Password</label>
+                 <input type="password" formControlName="confirmPassword" class="premium-input" placeholder="••••••">
+                 <p class="error-text" *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched">
+                    Passwords do not match
+                 </p>
+               </div>
+               
+               <div class="profile-footer">
+                 <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || loading">
+                    Update Password
+                 </button>
+               </div>
+            </form>
+          </section>
+
           <!-- GST Rates Section -->
           <section class="section glass card">
             <div class="section-header">
@@ -154,6 +188,8 @@ import { AuthService, User } from '../auth.service';
 
     .animation-fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .error-text { color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 600; }
   `]
 })
 export class SettingsComponent implements OnInit {
@@ -170,6 +206,17 @@ export class SettingsComponent implements OnInit {
     logoUrl: [''],
     upiId: ['']
   });
+
+  passwordForm = this.fb.group({
+    currentPassword: ['', Validators.required],
+    newPassword: ['', [Validators.required, Validators.minLength(6)]],
+    confirmPassword: ['', Validators.required]
+  }, { validators: this.passwordMatchValidator });
+
+  passwordMatchValidator(g: any) {
+    return g.get('newPassword').value === g.get('confirmPassword').value
+      ? null : { 'mismatch': true };
+  }
 
   ngOnInit() {
     const user = this.authService.currentUserValue;
@@ -242,6 +289,29 @@ export class SettingsComponent implements OnInit {
       error: () => {
         this.loading = false;
         alert('Failed to update profile');
+      }
+    });
+  }
+
+  onChangePassword() {
+    if (this.passwordForm.invalid) return;
+
+    this.loading = true;
+    const { currentPassword, newPassword } = this.passwordForm.value;
+
+    this.authService.changePassword({ currentPassword, newPassword }).subscribe({
+      next: (res) => {
+        this.loading = false;
+        if (res.success) {
+          alert('Password changed successfully!');
+          this.passwordForm.reset();
+        } else {
+          alert(res.message || 'Failed to change password');
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        alert('Error: ' + (err.error?.message || 'Failed to change password'));
       }
     });
   }
