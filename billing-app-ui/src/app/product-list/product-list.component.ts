@@ -21,6 +21,12 @@ export class ProductListComponent implements OnInit {
     isSaving: boolean = false;
     editingProduct: Item | null = null;
 
+    // Pagination State
+    currentPage: number = 1;
+    pageSize: number = 10;
+    totalCount: number = 0;
+    totalPages: number = 0;
+
     newProduct: Item = {
         name: '',
         price: 0,
@@ -35,16 +41,37 @@ export class ProductListComponent implements OnInit {
     }
 
     loadProducts(): void {
-        this.productService.getProducts().subscribe(data => {
-            this.products = data;
+        this.productService.getProducts(this.currentPage, this.pageSize).subscribe(data => {
+            this.products = data.items;
+            this.totalCount = data.totalCount;
+            this.totalPages = data.totalPages;
         });
     }
 
+    // Server-side filtering would require API updates. 
+    // For now, filtering is limited to current page or we can add server-search later.
     get filteredProducts(): Item[] {
+        // If searchTerm is empty, showing all matches behavior.
+        // If searchTerm exists, filtering visible items.
+        // Ideally we should debounce and call search API.
         return this.products.filter(p =>
             p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
             (p.category && p.category.toLowerCase().includes(this.searchTerm.toLowerCase()))
         );
+    }
+
+    nextPage(): void {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.loadProducts();
+        }
+    }
+
+    prevPage(): void {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.loadProducts();
+        }
     }
 
     openAddModal(): void {

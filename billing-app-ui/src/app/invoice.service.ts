@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
+import { PaginatedResult } from './models/paginated-result';
+
 export interface Bill {
     id: number;
     billNumber: string;
@@ -12,6 +14,7 @@ export interface Bill {
     } | null;
     totalAmount: number;
 }
+
 
 export interface Customer {
     id: number;
@@ -60,8 +63,8 @@ export class InvoiceService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Invoice`;
 
-    getBills(): Observable<Bill[]> {
-        return this.http.get<Bill[]>(this.apiUrl);
+    getBills(page: number = 1, pageSize: number = 10): Observable<PaginatedResult<Bill>> {
+        return this.http.get<PaginatedResult<Bill>>(`${this.apiUrl}?page=${page}&pageSize=${pageSize}`);
     }
 
     getById(id: number): Observable<any> {

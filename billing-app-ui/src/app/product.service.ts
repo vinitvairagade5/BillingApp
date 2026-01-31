@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
+import { PaginatedResult } from './models/paginated-result';
+
 export interface Item {
     id?: number;
     name: string;
@@ -13,6 +15,7 @@ export interface Item {
     shopOwnerId: number;
 }
 
+
 @Injectable({
     providedIn: 'root'
 })
@@ -20,8 +23,8 @@ export class ProductService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Product`;
 
-    getProducts(): Observable<Item[]> {
-        return this.http.get<Item[]>(this.apiUrl);
+    getProducts(page: number = 1, pageSize: number = 10): Observable<PaginatedResult<Item>> {
+        return this.http.get<PaginatedResult<Item>>(`${this.apiUrl}?page=${page}&pageSize=${pageSize}`);
     }
 
     createProduct(product: Item): Observable<{ id: number }> {

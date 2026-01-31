@@ -79,12 +79,12 @@ public class IdentityService : IIdentityService
                 {
                     user.ReferredById = inviter.Id;
                     user.SubscriptionType = "PRO";
-                    user.SubscriptionExpiry = DateTime.UtcNow.AddDays(30);
+                    user.SubscriptionExpiry = DateTime.UtcNow.AddDays(7);
 
-                    // Reward Inviter: Add 30 days to their current expiry or from now
+                    // Reward Inviter: Add 7 days to their current expiry or from now
                     DateTime inviterCurrentExpiry = inviter.SubscriptionExpiry ?? DateTime.UtcNow;
                     if (inviterCurrentExpiry < DateTime.UtcNow) inviterCurrentExpiry = DateTime.UtcNow;
-                    DateTime newInviterExpiry = inviterCurrentExpiry.AddDays(30);
+                    DateTime newInviterExpiry = inviterCurrentExpiry.AddDays(7);
 
                     await connection.ExecuteAsync(
                         "UPDATE \"Users\" SET \"SubscriptionType\" = 'PRO', \"SubscriptionExpiry\" = @newInviterExpiry WHERE \"Id\" = @Id",

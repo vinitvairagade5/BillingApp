@@ -10,48 +10,48 @@ import { AuthService } from './auth.service';
   template: `
     <div class="app-layout" [class.no-sidebar]="!user">
       <!-- Sidebar -->
-      <aside class="sidebar glass" *ngIf="user">
-        <div class="logo-area">
+      <aside class="sidebar glass" *ngIf="user" [class.collapsed]="isSidebarCollapsed">
+        <div class="logo-area" (click)="toggleSidebar()" title="Toggle Sidebar">
           <div class="logo-icon">B</div>
           <span class="logo-text">Bill<span>Pro</span></span>
         </div>
         
         <nav class="nav-menu">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" (click)="collapseSidebar()">
             <span class="icon">📊</span>
-            <span>Dashboard</span>
+            <span class="link-text">Dashboard</span>
           </a>
-          <a routerLink="/bills" routerLinkActive="active" class="nav-link">
+          <a routerLink="/bills" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
             <span class="icon">📜</span>
-            <span>Bills</span>
+            <span class="link-text">Bills</span>
           </a>
-          <a routerLink="/products" routerLinkActive="active" class="nav-link">
+          <a routerLink="/products" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
             <span class="icon">📦</span>
-            <span>Products</span>
+            <span class="link-text">Products</span>
           </a>
-          <a routerLink="/customers" routerLinkActive="active" class="nav-link">
+          <a routerLink="/customers" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
             <span class="icon">👥</span>
-            <span>Customers</span>
+            <span class="link-text">Customers</span>
           </a>
-          <a routerLink="/subscription" routerLinkActive="active" class="nav-link">
+          <a routerLink="/subscription" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
             <span class="icon">💎</span>
-            <span>Subscription</span>
+            <span class="link-text">Subscription</span>
           </a>
-          <a routerLink="/settings" routerLinkActive="active" class="nav-link">
+          <a routerLink="/settings" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
              <span class="icon">⚙️</span>
-             <span>Settings</span>
+             <span class="link-text">Settings</span>
           </a>
-          <a routerLink="/udhaar" routerLinkActive="active" class="nav-link">
+          <a routerLink="/udhaar" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
              <span class="icon">📝</span>
-             <span>Udhaar</span>
+             <span class="link-text">Udhaar</span>
           </a>
-          <a routerLink="/reports" routerLinkActive="active" class="nav-link">
+          <a routerLink="/reports" routerLinkActive="active" class="nav-link" (click)="collapseSidebar()">
              <span class="icon">📊</span>
-             <span>Reports</span>
+             <span class="link-text">Reports</span>
           </a>
-          <a routerLink="/admin" routerLinkActive="active" class="nav-link" *ngIf="user?.isAdmin">
+          <a routerLink="/admin" routerLinkActive="active" class="nav-link" *ngIf="user?.isAdmin" (click)="collapseSidebar()">
              <span class="icon">🛠️</span>
-             <span>Admin</span>
+             <span class="link-text">Admin</span>
           </a>
         </nav>
 
@@ -104,13 +104,25 @@ import { AuthService } from './auth.service';
       flex-direction: column;
       border-right: 1px solid var(--border-color);
       z-index: 100;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      overflow-x: hidden;
+      white-space: nowrap;
     }
 
+    .sidebar.collapsed {
+      width: 88px;
+      padding: 32px 16px;
+    }
+    
     .logo-area {
       display: flex;
       align-items: center;
-      gap: 12px;
       margin-bottom: 48px;
+      cursor: pointer;
+      min-height: 48px;
+    }
+    .sidebar.collapsed .logo-area {
+      justify-content: center;
     }
 
     .logo-icon {
@@ -125,6 +137,34 @@ import { AuthService } from './auth.service';
       font-weight: 800;
       font-size: 20px;
       box-shadow: 0 4px 12px var(--primary-glow);
+      flex-shrink: 0;
+      transition: all 0.3s;
+      margin-right: 12px;
+    }
+    
+    .sidebar.collapsed .logo-icon {
+      transform: scale(1.1);
+      margin-right: 0;
+    }
+
+    /* Text Elements */
+    .logo-text, .link-text, .user-info {
+      opacity: 1;
+      visibility: visible;
+      max-width: 180px;
+      transform: translateX(0);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .link-text,
+    .sidebar.collapsed .user-info {
+      opacity: 0;
+      visibility: hidden;
+      max-width: 0;
+      margin: 0;
+      pointer-events: none;
+      transform: translateX(-10px);
     }
 
     .logo-text {
@@ -148,17 +188,29 @@ import { AuthService } from './auth.service';
     .nav-link {
       display: flex;
       align-items: center;
-      gap: 12px;
       padding: 12px 16px;
       border-radius: 12px;
       text-decoration: none;
       color: #64748b;
       font-weight: 500;
-      transition: var(--transition);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      white-space: nowrap;
+      height: 48px; 
+    }
+    .sidebar.collapsed .nav-link {
+      justify-content: center;
+      padding: 12px 0;
     }
 
     .nav-link .icon {
       font-size: 18px;
+      flex-shrink: 0;
+      transition: all 0.3s;
+      margin-right: 12px;
+    }
+    .sidebar.collapsed .nav-link .icon {
+      font-size: 22px;
+      margin-right: 0;
     }
 
     .nav-link:hover:not(.disabled) {
@@ -172,21 +224,20 @@ import { AuthService } from './auth.service';
       box-shadow: 0 4px 12px var(--primary-glow);
     }
 
-    .nav-link.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
     .sidebar-footer {
       margin-top: auto;
       padding-top: 24px;
       border-top: 1px solid var(--border-color);
+      transition: opacity 0.3s;
     }
 
     .user-profile {
       display: flex;
       align-items: center;
-      gap: 12px;
+      min-height: 40px;
+    }
+    .sidebar.collapsed .user-profile {
+      justify-content: center;
     }
 
     .avatar {
@@ -199,6 +250,16 @@ import { AuthService } from './auth.service';
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+    .sidebar.collapsed .avatar {
+      margin-right: 0;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
     }
 
     .user-name {
@@ -225,6 +286,8 @@ import { AuthService } from './auth.service';
       display: flex;
       flex-direction: column;
       gap: 24px;
+      min-width: 0;
+      transition: padding 0.3s;
     }
 
     .top-bar {
@@ -291,9 +354,18 @@ export class AppComponent {
   private router = inject(Router);
 
   user: any = null;
+  isSidebarCollapsed: boolean = false;
 
   constructor() {
     this.authService.currentUser$.subscribe(u => this.user = u);
+  }
+
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  collapseSidebar() {
+    this.isSidebarCollapsed = true;
   }
 
   logout() {

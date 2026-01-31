@@ -21,6 +21,12 @@ export class CustomerListComponent implements OnInit {
     isSaving: boolean = false;
     editingCustomer: Customer | null = null;
 
+    // Pagination State
+    currentPage: number = 1;
+    pageSize: number = 10;
+    totalCount: number = 0;
+    totalPages: number = 0;
+
     newCustomer: Customer = {
         name: '',
         mobile: '',
@@ -33,8 +39,10 @@ export class CustomerListComponent implements OnInit {
     }
 
     loadCustomers(): void {
-        this.customerService.getCustomers().subscribe(data => {
-            this.customers = data;
+        this.customerService.getCustomers(this.currentPage, this.pageSize).subscribe(data => {
+            this.customers = data.items;
+            this.totalCount = data.totalCount;
+            this.totalPages = data.totalPages;
         });
     }
 
@@ -43,6 +51,20 @@ export class CustomerListComponent implements OnInit {
             c.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
             c.mobile.includes(this.searchTerm)
         );
+    }
+
+    nextPage(): void {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.loadCustomers();
+        }
+    }
+
+    prevPage(): void {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.loadCustomers();
+        }
     }
 
     openAddModal(): void {

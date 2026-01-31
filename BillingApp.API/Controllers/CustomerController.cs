@@ -18,12 +18,24 @@ public class CustomerController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Customer>> Get()
+    public async Task<BillingApp.Core.Models.PaginatedResult<Customer>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<Customer>(
-            "SELECT * FROM \"Customers\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { ShopOwnerId = shopOwnerId });
+        var offset = (page - 1) * pageSize;
+
+        var sql = @"
+            SELECT * FROM ""Customers"" 
+            WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            ORDER BY ""Id"" DESC 
+            OFFSET @Offset LIMIT @Limit";
+
+        var countSql = @"SELECT COUNT(*) FROM ""Customers"" WHERE ""ShopOwnerId"" = @ShopOwnerId";
+
+        var items = await connection.QueryAsync<Customer>(sql, new { ShopOwnerId = shopOwnerId, Offset = offset, Limit = pageSize });
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { ShopOwnerId = shopOwnerId });
+
+        return new BillingApp.Core.Models.PaginatedResult<Customer>(items, totalCount, page, pageSize);
     }
 
     [HttpGet("search")]

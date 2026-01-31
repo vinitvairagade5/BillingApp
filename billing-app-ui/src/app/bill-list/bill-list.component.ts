@@ -9,7 +9,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
 @Component({
   selector: 'app-bill-list',
   standalone: true,
-  imports: [CommonModule, DatePipe, CurrencyPipe, RouterModule, PaymentModalComponent],
+  imports: [CommonModule, DatePipe, CurrencyPipe, RouterModule],
   template: `
     <div class="dashboard-content">
       <header class="page-header">
@@ -28,7 +28,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
           <div class="stat-icon blue">📜</div>
           <div class="stat-info">
             <span class="stat-label">Total Invoices</span>
-            <span class="stat-value">{{ bills.length }}</span>
+            <span class="stat-value">{{ getTotalInvoices() }}</span>
           </div>
         </div>
         <div class="stat-card glass">
@@ -50,9 +50,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
       <div class="card table-card glass">
         <div class="card-header">
           <h3>Recent Transactions</h3>
-          <div class="filter-actions">
-            <button class="btn-text">View All</button>
-          </div>
+          <!-- Removed View All Button -->
         </div>
         <div class="table-container">
           <table class="premium-table">
@@ -92,9 +90,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
                     <button class="btn-action download" (click)="downloadPdf(bill.id)" title="Download PDF">
                       📄 PDF
                     </button>
-                    <button class="btn-action pay" (click)="openPayment(bill)" title="Pay via UPI">
-                      💸 Pay
-                    </button>
+                    <!-- Removed Pay Button -->
                     <button class="btn-action whatsapp" (click)="shareWhatsapp(bill.id)" title="Share on WhatsApp">
                       💬 WhatsApp
                     </button>
@@ -111,16 +107,18 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
               </tr>
             </tbody>
             </table>
+            </div> <!-- End table-container -->
+            
+            <div class="pagination-footer">
+                <button class="btn-paginate" (click)="prevPage()" [disabled]="currentPage === 1">
+                  <span class="icon">⬅️</span> Previous
+                </button>
+                <span class="page-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+                <button class="btn-paginate" (click)="nextPage()" [disabled]="currentPage === totalPages">
+                  Next <span class="icon">➡️</span>
+                </button>
             </div>
-
-          <app-payment-modal
-        [isOpen]="isPaymentModalOpen"
-        [amount]="selectedBillForPayment?.totalAmount || 0"
-        [shopUpiId]="shopUpiId"
-        [shopName]="shopName"
-        (closeEvent)="closePaymentModal()"
-        (confirmEvent)="onPaymentConfirmed()"
-      ></app-payment-modal>
+          <!-- End table-card -->
     </div>
     </div>
   `,
@@ -151,82 +149,154 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
     .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
 
     /* Table Card */
-    .table-card { border-radius: 24px; border: none; overflow: hidden; }
-    .card-header { padding: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-    .card-header h3 { margin: 0; font-size: 18px; }
+    .table-card { 
+        border: 1px solid rgba(255, 255, 255, 0.6); 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); 
+        border-radius: 20px; 
+        background: rgba(255, 255, 255, 0.7); 
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+    }
     
-    .premium-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .premium-table th { padding: 16px 24px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; background: rgba(248, 250, 252, 0.5); }
-    .premium-table td { padding: 20px 24px; border-bottom: 1px solid rgba(241, 245, 249, 0.8); }
+    .card-header { padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226, 232, 240, 0.6); }
+    .card-header h3 { margin: 0; font-size: 18px; color: #1e293b; letter-spacing: -0.01em; }
     
-    .invoice-info { display: flex; flex-direction: column; }
-    .bill-num { font-weight: 700; color: var(--primary); font-size: 15px; }
-    .bill-date { font-size: 13px; color: #64748b; }
+    .premium-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
+    .premium-table th { padding: 16px 32px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; background: rgba(248, 250, 252, 0.5); border-bottom: 1px solid var(--border-color); }
+    .premium-table td { padding: 20px 32px; border-bottom: 1px solid rgba(241, 245, 249, 0.8); transition: background-color 0.2s ease; }
     
-    .cust-name { font-weight: 600; color: #1e293b; }
+    /* Hover Effect */
+    .premium-table tbody tr:hover td {
+        background-color: rgba(239, 246, 255, 0.4);
+    }
+    /* Remove border from last row */
+    .premium-table tbody tr:last-child td { border-bottom: none; }
+
+    .invoice-info { display: flex; flex-direction: column; gap: 2px; }
+    .bill-num { font-weight: 700; color: var(--primary); font-size: 15px; letter-spacing: -0.01em; }
+    .bill-date { font-size: 13px; color: #94a3b8; font-weight: 500; }
+    .cust-name { font-weight: 600; color: #334155; }
     
-    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .status-badge.success { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    .status-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+    .status-badge.success { background: #dcfce7; color: #15803d; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
     
-    .amount-cell { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #0f172a; font-size: 16px; }
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
+    .amount-cell { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #0f172a; font-size: 15px; }
     
     .action-group { display: flex; gap: 8px; justify-content: center; }
-    .btn-action { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 4px; }
-    .btn-action.view.view { color: #1e40af; background: #eff6ff; border-color: #dbeafe; }
-    .btn-action.view:hover { background: #dbeafe; }
-    .btn-action.pay { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
-    .btn-action.pay:hover { background: #d1fae5; }
-    .btn-action:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px -1px var(--primary-glow); }
+    .btn-action { 
+        padding: 8px 14px; 
+        border-radius: 10px; 
+        border: 1px solid transparent; 
+        background: white; 
+        font-size: 12px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        display: flex; align-items: center; gap: 6px; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        color: #475569;
+    }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
     
-    .empty-state { padding: 80px !important; text-align: center; }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty-content p { color: #64748b; font-size: 16px; font-weight: 500; }
+    /* Specific Button Colors */
+    .btn-action.view:hover { color: #2563eb; border-color: #dbeafe; background: #eff6ff; }
+    .btn-action.download:hover { color: #4b5563; border-color: #e5e7eb; background: #f9fafb; }
+    .btn-action.pay:hover { color: #059669; border-color: #d1fae5; background: #ecfdf5; }
+    .btn-action.whatsapp:hover { color: #16a34a; border-color: #dcfce7; background: #f0fdf4; }
 
-    .btn-text { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; font-size: 14px; }
+    .pagination-footer { 
+        padding: 20px 32px; 
+        border-top: 1px solid rgba(226, 232, 240, 0.6); 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .page-info { font-size: 13px; font-weight: 600; color: #64748b; background: rgba(255,255,255,0.5); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); }
+    .btn-paginate { 
+        padding: 8px 16px; 
+        border-radius: 12px; 
+        border: 1px solid rgba(226, 232, 240, 0.8); 
+        background: white; 
+        color: #475569; 
+        font-weight: 600; 
+        font-size: 13px; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        display: flex; align-items: center; gap: 8px; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btn-paginate:hover:not(:disabled) { 
+        border-color: var(--primary); 
+        color: var(--primary); 
+        background: #f8fafc; 
+        transform: translateY(-1px); 
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1); 
+    }
+    .btn-paginate:disabled { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; box-shadow: none; }
   `]
 })
 export class BillListComponent implements OnInit {
   private invoiceService = inject(InvoiceService);
   private authService = inject(AuthService); // Injected AuthService
   bills: any[] = [];
+  dashboardStats: any = {};
 
-  // Payment State
-  isPaymentModalOpen = false;
-  selectedBillForPayment: any = null;
-  shopUpiId = '';
-  shopName = '';
+  // Pagination State
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalCount: number = 0;
+  totalPages: number = 0;
 
   ngOnInit(): void {
-    const user = this.authService.currentUserValue;
-    if (user) {
-      this.shopUpiId = user.upiId || '';
-      this.shopName = user.shopName || '';
-    }
+    // Payment specific user data fetching removed
     this.loadBills();
+    this.loadDashboardStats();
   }
 
   loadBills() {
-    this.invoiceService.getBills().subscribe({
-      next: (data) => this.bills = data,
+    this.invoiceService.getBills(this.currentPage, this.pageSize).subscribe({
+      next: (data) => {
+        this.bills = data.items;
+        this.totalCount = data.totalCount;
+        this.totalPages = data.totalPages;
+      },
       error: (err) => console.error('Failed to load bills', err)
     });
   }
 
+  loadDashboardStats() {
+    this.invoiceService.getDashboardStats().subscribe({
+      next: (data) => this.dashboardStats = data,
+      error: (err) => console.error('Failed to load stats', err)
+    });
+  }
+
   getTotalRevenue(): number {
-    return this.bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+    return this.dashboardStats.totalSales || 0;
   }
 
   getMonthlyRevenue(): number {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    return this.bills
-      .filter(bill => {
-        const date = new Date(bill.date);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-      })
-      .reduce((sum, bill) => sum + bill.totalAmount, 0);
+    return this.dashboardStats.monthlySales || 0;
+  }
+
+  getTotalInvoices(): number {
+    return this.dashboardStats.totalInvoices || 0;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadBills();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadBills();
+    }
   }
 
   downloadPdf(id: number) {
@@ -240,28 +310,5 @@ export class BillListComponent implements OnInit {
       },
       error: (err) => console.error('Failed to get WhatsApp URL', err)
     });
-  }
-
-  openPayment(bill: any) {
-    if (!this.shopUpiId) {
-      alert('Please setup your UPI ID in Settings first!');
-      return;
-    }
-    this.selectedBillForPayment = bill;
-    this.isPaymentModalOpen = true;
-  }
-
-  closePaymentModal() {
-    this.isPaymentModalOpen = false;
-    this.selectedBillForPayment = null;
-  }
-
-  onPaymentConfirmed() {
-    // Ideally call backend to mark as paid
-    alert('Payment Confirmed! Marking bill as PAID localy.');
-    if (this.selectedBillForPayment) {
-      this.selectedBillForPayment.status = 'PAID'; // Update local status
-    }
-    this.closePaymentModal();
   }
 }

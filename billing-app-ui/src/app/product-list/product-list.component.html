@@ -40,6 +40,12 @@
       </tbody>
     </table>
   </div>
+
+  <div class="pagination-controls">
+    <button class="btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+    <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+    <button class="btn-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+  </div>
 </div>
 
 <!-- Modal -->

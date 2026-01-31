@@ -122,3 +122,19 @@ h6 {
     padding: 12px 20px;
   }
 }
+
+/* Pagination Styles */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-controls span {
+  font-weight: 600;
+  color: var(--secondary);
+}

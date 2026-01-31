@@ -83,16 +83,24 @@ public class InvoiceController : BaseApiController
             WHERE ""ShopOwnerId"" = @ShopOwnerId", new { shopOwnerId });
 
         var topProducts = await connection.QueryAsync<dynamic>(@"
-            SELECT ""ItemName"" as Name, SUM(""Quantity"") as TotalQuantity, SUM(""Total"") as TotalRevenue
+            SELECT ""ItemName"" as ""name"", SUM(""Quantity"") as ""totalQuantity"", SUM(""Total"") as ""totalRevenue""
             FROM ""BillItems"" bi
             JOIN ""Bills"" b ON bi.""BillId"" = b.""Id""
             WHERE b.""ShopOwnerId"" = @ShopOwnerId
             GROUP BY ""ItemName""
-            ORDER BY TotalRevenue DESC
+            ORDER BY ""totalRevenue"" DESC
             LIMIT 5", new { shopOwnerId });
+
+        var monthlySales = await connection.ExecuteScalarAsync<decimal>(@"
+            SELECT COALESCE(SUM(""TotalAmount""), 0) 
+            FROM ""Bills"" 
+            WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            AND EXTRACT(MONTH FROM ""Date"") = EXTRACT(MONTH FROM CURRENT_DATE)
+            AND EXTRACT(YEAR FROM ""Date"") = EXTRACT(YEAR FROM CURRENT_DATE)", new { shopOwnerId });
 
         return Ok(new {
             TotalSales = totalSales,
+            MonthlySales = monthlySales,
             TotalGST = totalGST,
             TotalInvoices = totalInvoices,
             TotalUdhaar = totalUdhaar,
@@ -101,12 +109,24 @@ public class InvoiceController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Bill>> Get()
+    public async Task<BillingApp.Core.Models.PaginatedResult<Bill>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
-        var sql = "SELECT * FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId ORDER BY \"Date\" DESC";
-        return await connection.QueryAsync<Bill>(sql, new { ShopOwnerId = shopOwnerId });
+        var offset = (page - 1) * pageSize;
+        
+        var sql = @"
+            SELECT * FROM ""Bills"" 
+            WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            ORDER BY ""Date"" DESC 
+            OFFSET @Offset LIMIT @Limit";
+
+        var countSql = @"SELECT COUNT(*) FROM ""Bills"" WHERE ""ShopOwnerId"" = @ShopOwnerId";
+
+        var items = await connection.QueryAsync<Bill>(sql, new { ShopOwnerId = shopOwnerId, Offset = offset, Limit = pageSize });
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { ShopOwnerId = shopOwnerId });
+
+        return new BillingApp.Core.Models.PaginatedResult<Bill>(items, totalCount, page, pageSize);
     }
 
     [HttpGet("{id}")]

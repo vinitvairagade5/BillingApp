@@ -191,3 +191,18 @@ tr:hover {
     justify-content: flex-end;
     margin-top: 2rem;
 }
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 16px;
+    border-top: 1px solid #edf2f7;
+}
+
+.pagination-controls span {
+    font-weight: 600;
+    color: #475569;
+}

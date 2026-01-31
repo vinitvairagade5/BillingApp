@@ -71,7 +71,7 @@ import { InvoiceService } from '../invoice.service';
               <span class="step-num">🎁</span>
               <h3>Refer & Earn</h3>
             </div>
-            <p class="section-desc">Invite other shop owners. When they sign up using your link, both of you get <b>30 days of PRO</b> for free!</p>
+            <p class="section-desc">Invite other shop owners. When they sign up using your link, both of you get <b>7 days of PRO</b> for free!</p>
             
             <div class="referral-box">
                <div class="code-display">

@@ -36,8 +36,8 @@ export class DashboardComponent implements OnInit {
         this.invoiceService.getDashboardStats().subscribe(data => {
             this.stats = data;
         });
-        this.invoiceService.getBills().subscribe(data => {
-            this.recentBills = data.slice(0, 5);
+        this.invoiceService.getBills(1, 5).subscribe(data => {
+            this.recentBills = data.items;
         });
     }
 

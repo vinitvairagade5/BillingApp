@@ -140,8 +140,8 @@ public class SubscriptionService : ISubscriptionService
             u.SubscriptionExpiry.HasValue && 
             u.SubscriptionExpiry.Value > DateTime.UtcNow);
         
-        // Bonus days: 30 days for each active PRO referral
-        var bonusDaysEarned = activeProReferrals * 30;
+        // Bonus days: 7 days for each active PRO referral
+        var bonusDaysEarned = activeProReferrals * 7;
         
         // Mark users as PRO for display
         foreach (var user in referredUsersList)
