@@ -31,4 +31,8 @@ public class UserDto
     public DateTime? SubscriptionExpiry { get; set; }
     public string? ReferralCode { get; set; }
     public string? UpiId { get; set; }
+    public string? Address { get; set; }
+    public string? GSTIN { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? GstRates { get; set; }
 }

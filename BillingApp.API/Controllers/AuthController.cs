@@ -38,7 +38,11 @@ public class AuthController : BaseApiController
             SubscriptionType = user.SubscriptionType,
             SubscriptionExpiry = user.SubscriptionExpiry,
             ReferralCode = user.ReferralCode,
-            UpiId = user.UpiId
+            UpiId = user.UpiId,
+            Address = user.Address,
+            GSTIN = user.GSTIN,
+            LogoUrl = user.LogoUrl,
+            GstRates = user.GstRates
         };
 
         return Ok(dto);

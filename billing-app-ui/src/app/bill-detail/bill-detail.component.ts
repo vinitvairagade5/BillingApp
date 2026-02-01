@@ -94,8 +94,8 @@ import { AuthService } from '../auth.service';
                 <td class="text-center text-muted small">{{ item.hsnCode || '-' }}</td>
                 <td class="text-center">₹{{ item.price | number:'1.2-2' }}</td>
                 <td class="text-center">{{ item.quantity }}</td>
-                <td class="text-center text-muted">{{ (item.cgst + item.sgst + item.igst) / (item.price * item.quantity) * 100 | number:'1.0-0' }}%</td>
-                <td class="text-center fw-bold">₹{{ item.total | number:'1.2-2' }}</td>
+                <td class="text-center text-muted">{{ getGstRate(item) | number:'1.0-0' }}%</td>
+                <td class="text-right fw-bold">₹{{ item.total | number:'1.2-2' }}</td>
               </tr>
             </tbody>
           </table>
@@ -120,15 +120,15 @@ import { AuthService } from '../auth.service';
               <span>₹{{ bill.subTotal | number:'1.2-2' }}</span>
             </div>
             <div class="summary-item" *ngIf="bill.totalCGST">
-              <span>CGST</span>
+              <span>CGST ({{ (bill.subTotal ? (bill.totalCGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
               <span>₹{{ bill.totalCGST | number:'1.2-2' }}</span>
             </div>
             <div class="summary-item" *ngIf="bill.totalSGST">
-              <span>SGST</span>
+              <span>SGST ({{ (bill.subTotal ? (bill.totalSGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
               <span>₹{{ bill.totalSGST | number:'1.2-2' }}</span>
             </div>
             <div class="summary-item" *ngIf="bill.totalIGST">
-              <span>IGST</span>
+              <span>IGST ({{ (bill.subTotal ? (bill.totalIGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
               <span>₹{{ bill.totalIGST | number:'1.2-2' }}</span>
             </div>
             <div class="grand-total-row">
@@ -351,13 +351,40 @@ import { AuthService } from '../auth.service';
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     /* Print Styles */
+    /* Print Styles */
     @media print {
-        :host { background: white; padding: 0; }
-        .page-container { max-width: 100%; margin: 0; padding: 0; }
-        .no-print { display: none !important; }
-        .invoice-paper { box-shadow: none; border: none; padding: 20px; }
-        .totals-box { background: none; border: 1px solid #e2e8f0; }
-        body { -webkit-print-color-adjust: exact; }
+        :host { 
+            display: block; 
+            background: white; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .page-container { 
+            width: 100%; 
+            margin: 0; 
+            padding: 0;
+            max-width: none; 
+            box-shadow: none; 
+        }
+
+        .invoice-paper { 
+            padding: 20px 40px !important; 
+            border: none; 
+            box-shadow: none; 
+        }
+
+        .no-print { 
+            display: none !important; 
+        }
+        
+        /* Ensure background colors print */
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+        }
     }
     `]
 })
@@ -390,6 +417,14 @@ export class BillDetailComponent implements OnInit {
 
   downloadPdf() {
     if (this.bill) this.invoiceService.downloadPdf(this.bill.id);
+  }
+
+  // Helper to calculate GST Rate safely
+  getGstRate(item: any): number {
+    if (!item.price || !item.quantity || item.price === 0) return 0;
+    const totalTax = (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0);
+    const baseAmount = item.price * item.quantity;
+    return (totalTax / baseAmount) * 100;
   }
 
   shareOnWhatsapp() {
