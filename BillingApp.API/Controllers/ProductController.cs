@@ -18,23 +18,27 @@ public class ProductController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<BillingApp.Core.Models.PaginatedResult<Item>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<BillingApp.Core.Models.PaginatedResult<Item>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
     {
         var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         
         var offset = (page - 1) * pageSize;
+        var searchParam = string.IsNullOrWhiteSpace(search) ? null : $"%{search}%";
 
-        var sql = @"
+        var whereClause = @"WHERE ""ShopOwnerId"" = @ShopOwnerId 
+                            AND (@Search IS NULL OR ""Name"" ILIKE @Search OR ""Category"" ILIKE @Search)";
+
+        var sql = $@"
             SELECT * FROM ""Items"" 
-            WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            {whereClause}
             ORDER BY ""Id"" DESC 
             OFFSET @Offset LIMIT @Limit";
 
-        var countSql = @"SELECT COUNT(*) FROM ""Items"" WHERE ""ShopOwnerId"" = @ShopOwnerId";
+        var countSql = $@"SELECT COUNT(*) FROM ""Items"" {whereClause}";
 
-        var items = await connection.QueryAsync<Item>(sql, new { ShopOwnerId = shopOwnerId, Offset = offset, Limit = pageSize });
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { ShopOwnerId = shopOwnerId });
+        var items = await connection.QueryAsync<Item>(sql, new { ShopOwnerId = shopOwnerId, Offset = offset, Limit = pageSize, Search = searchParam });
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { ShopOwnerId = shopOwnerId, Search = searchParam });
 
         return new BillingApp.Core.Models.PaginatedResult<Item>(items, totalCount, page, pageSize);
     }

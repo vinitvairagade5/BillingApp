@@ -5,7 +5,8 @@
   </div>
 
   <div class="search-bar">
-    <input type="text" [(ngModel)]="searchTerm" placeholder="Search products by name or category...">
+    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+      placeholder="Search products by name or category...">
   </div>
 
   <div class="table-container">

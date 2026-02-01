@@ -45,23 +45,21 @@ export class ProductListComponent implements OnInit {
     }
 
     loadProducts(): void {
-        this.productService.getProducts(this.currentPage, this.pageSize).subscribe(data => {
+        this.productService.getProducts(this.currentPage, this.pageSize, this.searchTerm).subscribe(data => {
             this.products = data.items;
             this.totalCount = data.totalCount;
             this.totalPages = data.totalPages;
         });
     }
 
-    // Server-side filtering would require API updates. 
-    // For now, filtering is limited to current page or we can add server-search later.
+    onSearch(): void {
+        this.currentPage = 1;
+        this.loadProducts();
+    }
+
+    // Removed client-side filtering getter causing index mismatches. Now using server-side search.
     get filteredProducts(): Item[] {
-        // If searchTerm is empty, showing all matches behavior.
-        // If searchTerm exists, filtering visible items.
-        // Ideally we should debounce and call search API.
-        return this.products.filter(p =>
-            p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            (p.category && p.category.toLowerCase().includes(this.searchTerm.toLowerCase()))
-        );
+        return this.products;
     }
 
     nextPage(): void {

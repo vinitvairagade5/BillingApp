@@ -25,8 +25,12 @@ export class ProductService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Product`;
 
-    getProducts(page: number = 1, pageSize: number = 10): Observable<PaginatedResult<Item>> {
-        return this.http.get<PaginatedResult<Item>>(`${this.apiUrl}?page=${page}&pageSize=${pageSize}`);
+    getProducts(page: number = 1, pageSize: number = 10, search: string = ''): Observable<PaginatedResult<Item>> {
+        let url = `${this.apiUrl}?page=${page}&pageSize=${pageSize}`;
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
+        return this.http.get<PaginatedResult<Item>>(url);
     }
 
     createProduct(product: Item): Observable<{ id: number }> {

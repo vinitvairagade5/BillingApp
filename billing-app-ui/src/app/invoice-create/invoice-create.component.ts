@@ -7,6 +7,7 @@ import { CustomerService } from '../customer.service';
 import { AuthService } from '../auth.service';
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 import { NotificationService } from '../notification.service';
+import { ProductService } from '../product.service';
 
 @Component({
   selector: 'app-invoice-create',
@@ -125,10 +126,13 @@ import { NotificationService } from '../notification.service';
                          (input)="onItemSearch($event, i)"
                          autocomplete="off"
                        >
-                       <div class="dropdown-menu show w-100 mt-1 border-0 shadow-premium rounded-4 overflow-hidden" *ngIf="itemSearchIndex === i && itemResults.length > 0" style="position: absolute; z-index: 1050;">
+                       <div class="dropdown-menu show w-100 mt-1 border-0 shadow-premium rounded-4 overflow-hidden" *ngIf="itemSearchIndex === i && (itemResults.length > 0 || (itemSearchQuery && itemSearchQuery.length >= 2))" style="position: absolute; z-index: 1050;">
                          <button class="dropdown-item p-2 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)">
                            <div class="fw-bold">{{ res.name }}</div>
                            <small class="text-muted">₹{{ res.price }} • Stock: {{ res.stockQuantity }}</small>
+                         </button>
+                         <button class="dropdown-item p-3 bg-light text-primary fw-bold d-flex align-items-center gap-2" type="button" *ngIf="itemResults.length === 0 && itemSearchQuery.length >= 2" (click)="openQuickProductModal()">
+                            <span>➕</span> Add "{{ itemSearchQuery }}" as new product
                          </button>
                        </div>
                     </div>
@@ -272,6 +276,53 @@ import { NotificationService } from '../notification.service';
       </div>
     </div>
     <div class="modal-backdrop fade show" *ngIf="showQuickCustomerModal"></div>
+
+    <!-- Quick Add Product Modal -->
+    <div class="modal fade" [class.show]="showQuickProductModal" [style.display]="showQuickProductModal ? 'block' : 'none'" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-premium rounded-4 p-2">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Quick Add Product</h5>
+            <button type="button" class="btn-close" (click)="closeQuickProductModal()"></button>
+          </div>
+          <div class="modal-body">
+            <form [formGroup]="quickProductForm" (ngSubmit)="saveQuickProduct()">
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted small">Product Name</label>
+                <input type="text" formControlName="name" class="form-control premium-input">
+              </div>
+              <div class="row">
+                  <div class="col-6 mb-3">
+                    <label class="form-label fw-bold text-muted small">Price (₹)</label>
+                    <input type="number" formControlName="price" class="form-control premium-input">
+                  </div>
+                  <div class="col-6 mb-3">
+                    <label class="form-label fw-bold text-muted small">Stock Qty</label>
+                    <input type="number" formControlName="stockQuantity" class="form-control premium-input">
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-6 mb-3">
+                    <label class="form-label fw-bold text-muted small">GST %</label>
+                    <select formControlName="gstRate" class="form-control premium-input">
+                        <option *ngFor="let rate of availableGstRates" [value]="rate">{{ rate }}%</option>
+                    </select>
+                  </div>
+                  <div class="col-6 mb-3">
+                    <label class="form-label fw-bold text-muted small">HSN Code</label>
+                    <input type="text" formControlName="hsnCode" class="form-control premium-input">
+                  </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-light text-muted fw-bold" (click)="closeQuickProductModal()">Cancel</button>
+            <button type="button" class="btn btn-primary fw-bold px-4" (click)="saveQuickProduct()" [disabled]="quickProductForm.invalid">Save Product</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show" *ngIf="showQuickProductModal"></div>
 
     <!-- Success & Share Modal -->
     <div class="modal fade" [class.show]="showSuccessModal" [style.display]="showSuccessModal ? 'block' : 'none'" tabindex="-1">
@@ -441,6 +492,7 @@ import { NotificationService } from '../notification.service';
 export class InvoiceCreateComponent implements OnInit {
   private fb = inject(FormBuilder);
   private invoiceService = inject(InvoiceService);
+  private productService = inject(ProductService);
   private customerService = inject(CustomerService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
@@ -448,13 +500,16 @@ export class InvoiceCreateComponent implements OnInit {
 
   invoiceForm!: FormGroup;
   quickCustomerForm!: FormGroup;
+  quickProductForm!: FormGroup;
   selectedCustomer: Customer | null = null;
   customerResults: Customer[] = [];
   customerSearchQuery: string = '';
   itemResults: Item[] = [];
   itemSearchIndex: number | null = null;
+  itemSearchQuery: string = '';
 
   showQuickCustomerModal: boolean = false;
+  showQuickProductModal: boolean = false;
   showSuccessModal: boolean = false;
   createdBillId: number | null = null;
   createdBillNumber: string = '';
@@ -472,6 +527,7 @@ export class InvoiceCreateComponent implements OnInit {
   ngOnInit() {
     this.initForm();
     this.initQuickCustomerForm();
+    this.initQuickProductForm();
     this.addItem();
 
     // Load dynamic GST rates and check subscription status
@@ -516,6 +572,16 @@ export class InvoiceCreateComponent implements OnInit {
       name: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       address: ['']
+    });
+  }
+
+  initQuickProductForm() {
+    this.quickProductForm = this.fb.group({
+      name: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0.01)]],
+      stockQuantity: [0, [Validators.required, Validators.min(0)]],
+      gstRate: [18],
+      hsnCode: ['']
     });
   }
 
@@ -605,12 +671,54 @@ export class InvoiceCreateComponent implements OnInit {
   onItemSearch(event: any, index: number) {
     const query = event.target.value;
     this.itemSearchIndex = index;
+    this.itemSearchQuery = query;
     if (query.length < 2) {
       this.itemResults = [];
       return;
     }
     this.invoiceService.searchItems(query).subscribe(res => {
       this.itemResults = res;
+    });
+  }
+
+  openQuickProductModal() {
+    this.showQuickProductModal = true;
+    this.quickProductForm.patchValue({
+      name: this.itemSearchQuery,
+      price: 0,
+      stockQuantity: 10,
+      gstRate: 18
+    });
+  }
+
+  closeQuickProductModal() {
+    this.showQuickProductModal = false;
+    this.quickProductForm.reset();
+  }
+
+  saveQuickProduct() {
+    if (this.quickProductForm.invalid) return;
+
+    const shopOwnerId = this.authService.currentUserValue?.id || 0;
+    const product = { ...this.quickProductForm.value, shopOwnerId };
+
+    this.productService.createProduct(product).subscribe({
+      next: (res) => {
+        const newItem: Item = {
+          id: res.id,
+          ...product
+        };
+
+        if (this.itemSearchIndex !== null) {
+          this.selectItem(newItem, this.itemSearchIndex);
+        }
+        this.closeQuickProductModal();
+        this.notificationService.success('Product added successfully!');
+      },
+      error: (err) => {
+        console.error('Error creating product', err);
+        this.notificationService.error('Failed to create product.');
+      }
     });
   }
 

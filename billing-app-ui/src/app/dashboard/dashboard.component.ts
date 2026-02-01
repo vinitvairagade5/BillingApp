@@ -20,7 +20,8 @@ export class DashboardComponent implements OnInit {
         totalSales: 0,
         totalGST: 0,
         totalInvoices: 0,
-        topProducts: []
+        topProducts: [],
+        lowStockItems: []
     };
     recentBills: any[] = [];
     currentUser: User | null = null;

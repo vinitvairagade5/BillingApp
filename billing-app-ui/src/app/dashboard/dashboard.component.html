@@ -75,7 +75,8 @@
         </div>
         <div class="subscription-alert danger" *ngIf="isAtLimit">
             <span class="alert-icon">🚫</span>
-            <span>You've reached your free plan limit (10 invoices). Upgrade to PRO to continue creating invoices.</span>
+            <span>You've reached your free plan limit (10 invoices). Upgrade to PRO to continue creating
+                invoices.</span>
         </div>
     </div>
 
@@ -128,6 +129,37 @@
                         <tr *ngFor="let product of stats.topProducts">
                             <td>{{ product.name }}</td>
                             <td class="text-right">₹{{ product.totalRevenue | number:'1.2-2' }}</td>
+                        </tr>
+                        <tr *ngIf="!stats.topProducts?.length">
+                            <td colspan="2" class="text-center text-muted">No sales yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card low-stock">
+            <h2>⚠️ Low Stock Alerts</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-center">Limit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of stats.lowStockItems">
+                            <td>{{ item.Name }}</td>
+                            <td class="text-center font-weight-bold" [class.text-danger]="item.StockQuantity === 0"
+                                [class.text-warning]="item.StockQuantity > 0">
+                                {{ item.StockQuantity }}
+                            </td>
+                            <td class="text-center text-muted">{{ item.LowStockThreshold }}</td>
+                        </tr>
+                        <tr *ngIf="!stats.lowStockItems?.length">
+                            <td colspan="3" class="text-center text-muted">No low stock items</td>
                         </tr>
                     </tbody>
                 </table>

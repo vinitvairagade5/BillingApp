@@ -98,13 +98,22 @@ public class InvoiceController : BaseApiController
             AND EXTRACT(MONTH FROM ""Date"") = EXTRACT(MONTH FROM CURRENT_DATE)
             AND EXTRACT(YEAR FROM ""Date"") = EXTRACT(YEAR FROM CURRENT_DATE)", new { shopOwnerId });
 
+        var lowStockItems = await connection.QueryAsync<dynamic>(@"
+            SELECT ""Name"", ""StockQuantity"", ""LowStockThreshold""
+            FROM ""Items""
+            WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            AND ""StockQuantity"" <= ""LowStockThreshold""
+            ORDER BY ""StockQuantity"" ASC
+            LIMIT 5", new { shopOwnerId });
+
         return Ok(new {
             TotalSales = totalSales,
             MonthlySales = monthlySales,
             TotalGST = totalGST,
             TotalInvoices = totalInvoices,
             TotalUdhaar = totalUdhaar,
-            TopProducts = topProducts
+            TopProducts = topProducts,
+            LowStockItems = lowStockItems
         });
     }
 

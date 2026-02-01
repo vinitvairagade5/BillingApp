@@ -5,216 +5,402 @@ import { InvoiceService } from '../invoice.service';
 import { AuthService } from '../auth.service';
 
 @Component({
-    selector: 'app-bill-detail',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
-    <div class="detail-page animation-fade-in" *ngIf="bill">
-      <header class="page-header">
-        <div class="header-info">
-          <button class="btn-back" routerLink="/bills">← Back to Bills</button>
-          <h1>Invoice Details</h1>
-          <p class="subtitle">{{ bill.billNumber }} • {{ bill.date | date:'mediumDate' }}</p>
-        </div>
-        <div class="header-actions">
+  selector: 'app-bill-detail',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
+    <div class="page-container animation-fade-in" *ngIf="bill">
+      
+      <!-- Action Bar (No Print) -->
+      <header class="action-bar no-print">
+        <button class="btn-back" routerLink="/bills">← Back</button>
+        <div class="actions">
           <button class="btn btn-whatsapp" (click)="shareOnWhatsapp()">
-            <span class="icon">📱</span> WhatsApp
+            <span class="icon">📱</span> Share WhatsApp
           </button>
           <button class="btn btn-primary" (click)="downloadPdf()">
-            <span class="icon">📄</span> Download PDF
+            <span class="icon">⬇️</span> Download PDF
+          </button>
+          <button class="btn btn-print" (click)="printInvoice()">
+            <span class="icon">🖨️</span> Print
           </button>
         </div>
       </header>
 
-      <div class="bill-container glass card">
-        <!-- Shop & Customer Header -->
-        <div class="bill-header">
-          <div class="shop-info">
-            <h2 class="shop-name">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h2>
-            <p>{{ bill.shopOwner?.address }}</p>
-            <p *ngIf="bill.shopOwner?.gstin"><strong>GSTIN:</strong> {{ bill.shopOwner?.gstin }}</p>
-          </div>
-          <div class="bill-meta">
-            <div class="meta-item">
-              <span class="label">Invoice No:</span>
-              <span class="value">#{{ bill.billNumber }}</span>
+      <!-- Invoice Paper -->
+      <div class="invoice-paper shadow-premium">
+        
+        <!-- Header Section -->
+        <div class="invoice-header">
+          <div class="brand-section">
+            <h1 class="shop-name">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
+            <div class="shop-details">
+              <p>{{ bill.shopOwner?.address }}</p>
+              <p *ngIf="bill.shopOwner?.gstin"><strong>GSTIN:</strong> {{ bill.shopOwner?.gstin }}</p>
+              <p *ngIf="bill.shopOwner?.mobile"><strong>Phone:</strong> {{ bill.shopOwner?.mobile }}</p>
             </div>
-            <div class="meta-item">
-              <span class="label">Date:</span>
-              <span class="value">{{ bill.date | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="invoice-meta">
+            <h2 class="invoice-title">TAX INVOICE</h2>
+            <div class="meta-grid">
+              <div class="meta-row">
+                <span class="label">Invoice No:</span>
+                <span class="value fw-bold">#{{ bill.billNumber }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Date:</span>
+                <span class="value">{{ bill.date | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="meta-row payment-status" [class.paid]="bill.paymentMethod !== 'CREDIT'" [class.due]="bill.paymentMethod === 'CREDIT'">
+                <span class="label">Status:</span>
+                <span class="badge">{{ bill.paymentMethod === 'CREDIT' ? 'PAYMENT DUE' : 'PAID' }}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="customer-info-section">
-          <h3>Bill To:</h3>
-          <div class="customer-card">
-            <h4>{{ bill.customer?.name }}</h4>
-            <p>{{ bill.customer?.mobile }}</p>
-            <p>{{ bill.customer?.address }}</p>
+        <hr class="divider">
+
+        <!-- Customer Section -->
+        <div class="bill-to-section">
+          <div class="section-label">BILLED TO</div>
+          <div class="customer-details">
+            <h3 class="customer-name">{{ bill.customer?.name }}</h3>
+            <p *ngIf="bill.customer?.mobile">{{ bill.customer?.mobile }}</p>
+            <p *ngIf="bill.customer?.address" class="address">{{ bill.customer?.address }}</p>
           </div>
         </div>
 
         <!-- Items Table -->
-        <div class="table-responsive">
-          <table class="items-table">
+        <div class="table-container">
+          <table class="premium-table">
             <thead>
               <tr>
-                <th>Description</th>
-                <th class="text-right">Price</th>
-                <th class="text-right">Qty</th>
-                <th class="text-right">GST %</th>
-                <th class="text-right">Total</th>
+                <th style="width: 5%">#</th>
+                <th style="width: 40%">Item Description</th>
+                <th class="text-center" style="width: 10%">HSN</th>
+                <th class="text-center" style="width: 15%">Price</th>
+                <th class="text-center" style="width: 10%">Qty</th>
+                <th class="text-center" style="width: 10%">GST</th>
+                <th class="text-center" style="width: 10%">Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of bill.items">
+              <tr *ngFor="let item of bill.items; let i = index">
+                <td>{{ i + 1 }}</td>
                 <td>
                   <div class="item-name">{{ item.itemName }}</div>
-                  <small class="hsn" *ngIf="item.hsnCode">HSN: {{ item.hsnCode }}</small>
                 </td>
-                <td class="text-right">₹{{ item.price | number:'1.2-2' }}</td>
-                <td class="text-right">{{ item.quantity }}</td>
-                <td class="text-right">{{ (item.cgst + item.sgst + item.igst) / (item.price * item.quantity) * 100 | number:'1.0-0' }}%</td>
-                <td class="text-right font-bold">₹{{ item.total | number:'1.2-2' }}</td>
+                <td class="text-center text-muted small">{{ item.hsnCode || '-' }}</td>
+                <td class="text-center">₹{{ item.price | number:'1.2-2' }}</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-center text-muted">{{ (item.cgst + item.sgst + item.igst) / (item.price * item.quantity) * 100 | number:'1.0-0' }}%</td>
+                <td class="text-center fw-bold">₹{{ item.total | number:'1.2-2' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Summary -->
-        <div class="bill-summary">
-          <div class="summary-spacer"></div>
-          <div class="summary-details">
-            <div class="summary-row">
+        <!-- Summary Section -->
+        <div class="footer-section">
+          <div class="payment-info">
+             <div class="info-box">
+                <p class="label">PAYMENT METHOD</p>
+                <p class="value">{{ bill.paymentMethod || 'CASH' }}</p>
+             </div>
+             <div class="terms-box">
+                <p class="label">TERMS & CONDITIONS</p>
+                <p class="small text-muted">1. Goods once sold will not be taken back.<br>2. Interest at 18% p.a. will be charged if not paid by due date.</p>
+             </div>
+          </div>
+
+          <div class="totals-box glass">
+            <div class="summary-item">
               <span>Subtotal</span>
               <span>₹{{ bill.subTotal | number:'1.2-2' }}</span>
             </div>
-            <div class="summary-row" *ngIf="bill.totalCGST">
+            <div class="summary-item" *ngIf="bill.totalCGST">
               <span>CGST</span>
               <span>₹{{ bill.totalCGST | number:'1.2-2' }}</span>
             </div>
-            <div class="summary-row" *ngIf="bill.totalSGST">
+            <div class="summary-item" *ngIf="bill.totalSGST">
               <span>SGST</span>
               <span>₹{{ bill.totalSGST | number:'1.2-2' }}</span>
             </div>
-            <div class="summary-row" *ngIf="bill.totalIGST">
+            <div class="summary-item" *ngIf="bill.totalIGST">
               <span>IGST</span>
               <span>₹{{ bill.totalIGST | number:'1.2-2' }}</span>
             </div>
-            <div class="divider"></div>
-            <div class="summary-row grand-total">
-              <span>Grand Total</span>
-              <span>₹{{ bill.totalAmount | number:'1.2-2' }}</span>
+            <div class="grand-total-row">
+              <span>TOTAL</span>
+              <span class="amount">₹{{ bill.totalAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="amount-in-words">
+               <!-- Placeholder for amount in words if implemented on backend -->
+               <small>(Inclusive of all taxes)</small>
             </div>
           </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="signature-section">
+          <div class="signature-box">
+            <p>For {{ bill.shopOwner?.shopName }}</p>
+            <div class="digital-sign">
+               <span class="sign-icon">✅</span>
+               <span class="sign-text">Digitally Signed</span>
+            </div>
+            <p class="auth-sign">Authorized Signatory</p>
+          </div>
+        </div>
+
+        <div class="footer-branding">
+          Powered by <strong>Vinshri Billing</strong>
         </div>
       </div>
     </div>
 
     <div class="loading-state" *ngIf="!bill && !error">
        <div class="spinner"></div>
-       <p>Loading Invoice...</p>
     </div>
 
     <div class="error-state" *ngIf="error">
-       <div class="error-icon">❌</div>
-       <h2>Invoice Not Found</h2>
+       <h2>❌ Invoice Not Found</h2>
        <p>{{ error }}</p>
-       <button class="btn btn-primary" routerLink="/bills">Back to Bills</button>
+       <button class="btn btn-primary" routerLink="/bills">Back</button>
     </div>
   `,
-    styles: [`
-    .detail-page { padding: 40px; max-width: 1000px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
-    .btn-back { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 8px; display: block; font-size: 14px; }
-    .page-header h1 { margin: 0; font-size: 28px; }
-    .subtitle { color: #64748b; margin: 4px 0 0 0; }
-    .header-actions { display: flex; gap: 12px; }
+  styles: [`
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    .bill-container { padding: 48px; min-height: 600px; }
+    :host {
+        display: block;
+        background: #f1f5f9;
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+        color: #0f172a;
+        padding-bottom: 40px;
+    }
+
+    .page-container {
+        max-width: 850px; /* A4 Width approx */
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Action Bar */
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .btn-back {
+        background: none;
+        border: none;
+        color: #64748b;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-back:hover { color: #0f172a; }
+    .actions { display: flex; gap: 12px; }
+
+    /* Invoice Paper */
+    .invoice-paper {
+        background: white;
+        padding: 48px;
+        border-radius: 4px; /* Slight radius but sharp enough for paper feel */
+        position: relative;
+    }
+    .shadow-premium {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Header */
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 32px;
+    }
+    .shop-name {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.02em;
+    }
+    .shop-details p { margin: 2px 0; font-size: 14px; color: #475569; }
     
-    .bill-header { display: flex; justify-content: space-between; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 2px solid #f1f5f9; }
-    .shop-name { margin: 0 0 8px 0; font-size: 28px; color: var(--primary); letter-spacing: -0.02em; }
-    .shop-info p { margin: 2px 0; color: #64748b; font-size: 15px; }
-    
-    .bill-meta { text-align: right; }
-    .meta-item { margin-bottom: 8px; }
-    .meta-item .label { color: #94a3b8; font-weight: 600; margin-right: 8px; font-size: 13px; text-transform: uppercase; }
-    .meta-item .value { font-weight: 700; color: #1e293b; font-size: 16px; }
+    .invoice-title {
+        font-size: 20px;
+        font-weight: 700;
+        text-align: right;
+        margin: 0 0 16px 0;
+        color: #94a3b8;
+        letter-spacing: 0.1em;
+    }
+    .meta-grid { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .meta-row { display: flex; gap: 12px; font-size: 14px; }
+    .meta-row .label { color: #64748b; font-weight: 500; }
+    .meta-row .value { color: #0f172a; }
 
-    .customer-info-section { margin-bottom: 40px; }
-    .customer-info-section h3 { font-size: 14px; text-transform: uppercase; color: #94a3b8; margin-bottom: 16px; letter-spacing: 0.05em; }
-    .customer-card { background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; width: fit-content; min-width: 300px; }
-    .customer-card h4 { margin: 0 0 8px 0; font-size: 18px; }
-    .customer-card p { margin: 4px 0; color: #64748b; font-size: 14px; }
+    .payment-status .badge {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .payment-status.paid .badge { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .payment-status.due .badge { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
-    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-    .items-table th { text-align: left; padding: 16px; border-bottom: 2px solid #f1f5f9; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .items-table td { padding: 20px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-    .item-name { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
-    .hsn { font-size: 11px; color: #94a3b8; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    .divider { border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+
+    /* Customer */
+    .bill-to-section { margin-bottom: 40px; }
+    .section-label { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .customer-name { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
+    .customer-details p { margin: 0; color: #475569; font-size: 14px; }
+    .customer-details .address { max-width: 300px; line-height: 1.4; margin-top: 4px; }
+
+    /* Table */
+    .table-container { margin-bottom: 40px; }
+    .premium-table { width: 100%; border-collapse: collapse; }
+    .premium-table th {
+        text-align: left;
+        padding: 12px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .premium-table td {
+        padding: 16px 8px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 14px;
+        vertical-align: top;
+        color: #334155;
+    }
+    .premium-table tr:last-child td { border-bottom: none; }
+    .item-name { font-weight: 500; color: #0f172a; }
+
+    /* Footer Stats */
+    .footer-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 60px;
+    }
+    .payment-info { flex: 1; padding-right: 40px; display: flex; flex-direction: column; gap: 24px; }
+    .info-box .label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
+    .info-box .value { font-size: 14px; font-weight: 600; }
+
+    .totals-box {
+        width: 300px;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+    }
+    .totals-box .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #64748b; }
+    .grand-total-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 16px; padding-top: 16px; border-top: 2px solid #cbd5e1;
+        font-weight: 800; color: #0f172a; font-size: 18px;
+    }
+    .amount-in-words { text-align: right; margin-top: 8px; font-size: 11px; color: #94a3b8; }
+
+    /* Signature */
+    .signature-section { display: flex; justify-content: flex-end; margin-bottom: 40px; page-break-inside: avoid; }
+    .signature-box { text-align: center; width: 200px; }
+    .signature-box p { font-size: 12px; font-weight: 600; margin: 0; color: #0f172a; }
+    .digital-sign { 
+        height: 60px; margin: 8px 0; background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 4px;
+        display: flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; font-size: 12px; font-weight: 600;
+    }
+    .auth-sign { font-size: 10px !important; color: #94a3b8 !important; font-weight: 500 !important; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .footer-branding {
+        text-align: center;
+        font-size: 10px;
+        color: #cbd5e1;
+        margin-top: 40px;
+    }
+
+    /* Utilities */
+    .text-center { text-align: center; }
     .text-right { text-align: right; }
-    .font-bold { font-weight: 700; }
-
-    .bill-summary { display: flex; margin-top: 40px; }
-    .summary-spacer { flex: 1; }
-    .summary-details { width: 340px; }
-    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; color: #64748b; font-weight: 500; }
-    .divider { height: 1px; background: #e2e8f0; margin: 16px 0; }
-    .grand-total { font-size: 24px; color: var(--primary); font-weight: 800; }
-
-    .btn { padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-whatsapp { background: #25d366; color: white; }
-    .btn-whatsapp:hover { background: #128c7e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-
-    .loading-state, .error-state { padding: 100px; text-align: center; }
-    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto 16px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .text-muted { color: #94a3b8; }
+    .fw-bold { font-weight: 700; }
+    .small { font-size: 12px; }
     
-    .error-icon { font-size: 48px; margin-bottom: 16px; }
+    /* Buttons */
+    .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; gap: 8px; font-size: 14px; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(var(--primary-rgb), 0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 10px -1px rgba(var(--primary-rgb), 0.4); }
+    .btn-whatsapp { background: #25d366; color: white; }
+    .btn-whatsapp:hover { background: #128c7e; }
+    .btn-print { background: white; border: 1px solid #e2e8f0; color: #475569; }
+    .btn-print:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-    .animation-fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  `]
+    .loading-state { height: 80vh; display: flex; align-items: center; justify-content: center; }
+    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Print Styles */
+    @media print {
+        :host { background: white; padding: 0; }
+        .page-container { max-width: 100%; margin: 0; padding: 0; }
+        .no-print { display: none !important; }
+        .invoice-paper { box-shadow: none; border: none; padding: 20px; }
+        .totals-box { background: none; border: 1px solid #e2e8f0; }
+        body { -webkit-print-color-adjust: exact; }
+    }
+    `]
 })
 export class BillDetailComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private invoiceService = inject(InvoiceService);
-    private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private invoiceService = inject(InvoiceService);
+  private router = inject(Router);
 
-    bill: any = null;
-    error: string | null = null;
+  bill: any = null;
+  error: string | null = null;
 
-    ngOnInit() {
-        const id = this.route.snapshot.paramMap.get('id');
-        if (id) {
-            this.loadBill(Number(id));
-        } else {
-            this.error = "Invalid Invoice ID";
-        }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadBill(Number(id));
+    } else {
+      this.error = "Invalid Invoice ID";
     }
+  }
 
-    loadBill(id: number) {
-        this.invoiceService.getById(id).subscribe({
-            next: (res) => this.bill = res,
-            error: (err) => {
-                console.error(err);
-                this.error = "Could not load invoice. It might have been deleted.";
-            }
-        });
-    }
+  loadBill(id: number) {
+    this.invoiceService.getById(id).subscribe({
+      next: (res) => this.bill = res,
+      error: (err) => {
+        console.error(err);
+        this.error = "Could not load invoice. It might have been deleted.";
+      }
+    });
+  }
 
-    downloadPdf() {
-        if (this.bill) this.invoiceService.downloadPdf(this.bill.id);
-    }
+  downloadPdf() {
+    if (this.bill) this.invoiceService.downloadPdf(this.bill.id);
+  }
 
-    shareOnWhatsapp() {
-        if (this.bill) {
-            this.invoiceService.getWhatsappUrl(this.bill.id).subscribe(res => {
-                window.open(res.url, '_blank');
-            });
-        }
+  shareOnWhatsapp() {
+    if (this.bill) {
+      this.invoiceService.getWhatsappUrl(this.bill.id).subscribe(res => {
+        window.open(res.url, '_blank');
+      });
     }
+  }
+
+  printInvoice() {
+    window.print();
+  }
 }
