@@ -45,8 +45,8 @@ public class ProductController : BaseApiController
         item.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
-            INSERT INTO ""Items"" (""Name"", ""Price"", ""Category"", ""HSNCode"", ""GSTRate"", ""ShopOwnerId"")
-            VALUES (@Name, @Price, @Category, @HSNCode, @GSTRate, @ShopOwnerId)
+            INSERT INTO ""Items"" (""Name"", ""Price"", ""Category"", ""HSNCode"", ""GSTRate"", ""ShopOwnerId"", ""StockQuantity"", ""LowStockThreshold"")
+            VALUES (@Name, @Price, @Category, @HSNCode, @GSTRate, @ShopOwnerId, @StockQuantity, @LowStockThreshold)
             RETURNING ""Id""";
         
         var id = await connection.ExecuteScalarAsync<int>(sql, item);
@@ -61,7 +61,8 @@ public class ProductController : BaseApiController
         var sql = @"
             UPDATE ""Items"" 
             SET ""Name"" = @Name, ""Price"" = @Price, ""Category"" = @Category, 
-                ""HSNCode"" = @HSNCode, ""GSTRate"" = @GSTRate
+                ""HSNCode"" = @HSNCode, ""GSTRate"" = @GSTRate, 
+                ""StockQuantity"" = @StockQuantity, ""LowStockThreshold"" = @LowStockThreshold
             WHERE ""Id"" = @Id AND ""ShopOwnerId"" = @ShopOwnerId";
             
         var affected = await connection.ExecuteAsync(sql, item);

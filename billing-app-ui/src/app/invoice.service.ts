@@ -29,6 +29,8 @@ export interface Item {
     price: number;
     hsnCode?: string;
     gstRate: number;
+    stockQuantity: number;
+    lowStockThreshold?: number;
 }
 
 export interface BillItem {

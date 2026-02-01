@@ -6,6 +6,7 @@ import { LedgerService, LedgerEntry } from '../ledger.service';
 
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 import { AuthService } from '../auth.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-customer-ledger',
@@ -158,6 +159,7 @@ export class CustomerLedgerComponent implements OnInit {
   private fb = inject(FormBuilder);
   private ledgerService = inject(LedgerService);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   customerId!: number;
   balance = 0;
@@ -211,14 +213,14 @@ export class CustomerLedgerComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         if (res.success) {
-          alert('Payment recorded successfully!');
+          this.notificationService.success('Payment recorded successfully!');
           this.paymentForm.reset({ amount: 0, description: 'Payment Received' });
           this.loadLedger();
         }
       },
       error: (err) => {
         this.loading = false;
-        alert('Error: ' + (err.error?.message || 'Failed to record payment'));
+        this.notificationService.error('Error: ' + (err.error?.message || 'Failed to record payment'));
       }
     });
   }
@@ -226,11 +228,11 @@ export class CustomerLedgerComponent implements OnInit {
   openUpiModal() {
     const amount = this.paymentForm.get('amount')?.value || 0;
     if (amount <= 0) {
-      alert('Please enter a valid amount first.');
+      this.notificationService.warning('Please enter a valid amount first.');
       return;
     }
     if (!this.shopUpiId) {
-      alert('Please configure your UPI ID in Settings first.');
+      this.notificationService.warning('Please configure your UPI ID in Settings first.');
       return;
     }
 

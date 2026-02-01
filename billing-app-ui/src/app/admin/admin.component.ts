@@ -2,12 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminService, ActivationCode } from '../admin.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
-    selector: 'app-admin',
-    standalone: true,
-    imports: [CommonModule, ReactiveFormsModule],
-    template: `
+  selector: 'app-admin',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
     <div class="admin-page animation-fade-in">
       <header class="page-header">
         <div>
@@ -84,7 +85,7 @@ import { AdminService, ActivationCode } from '../admin.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .admin-page { padding-bottom: 40px; }
     .page-header { margin-bottom: 32px; }
     .page-header h1 { margin: 0; font-size: 32px; }
@@ -122,45 +123,46 @@ import { AdminService, ActivationCode } from '../admin.service';
   `]
 })
 export class AdminComponent implements OnInit {
-    private adminService = inject(AdminService);
-    private fb = inject(FormBuilder);
+  private adminService = inject(AdminService);
+  private fb = inject(FormBuilder);
+  private notificationService = inject(NotificationService);
 
-    codes: ActivationCode[] = [];
-    loading = false;
+  codes: ActivationCode[] = [];
+  loading = false;
 
-    genForm = this.fb.group({
-        count: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
-        durationDays: [365, [Validators.required]]
+  genForm = this.fb.group({
+    count: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
+    durationDays: [365, [Validators.required]]
+  });
+
+  ngOnInit() {
+    this.loadCodes();
+  }
+
+  loadCodes() {
+    this.adminService.getAllCodes().subscribe(res => {
+      this.codes = res;
     });
+  }
 
-    ngOnInit() {
-        this.loadCodes();
-    }
+  onGenerate() {
+    if (this.genForm.invalid) return;
 
-    loadCodes() {
-        this.adminService.getAllCodes().subscribe(res => {
-            this.codes = res;
-        });
-    }
+    this.loading = true;
+    const { count, durationDays } = this.genForm.value;
 
-    onGenerate() {
-        if (this.genForm.invalid) return;
-
-        this.loading = true;
-        const { count, durationDays } = this.genForm.value;
-
-        this.adminService.generateCodes(count!, durationDays!).subscribe({
-            next: (res) => {
-                this.loading = false;
-                if (res.success) {
-                    alert('Codes generated successfully!');
-                    this.loadCodes();
-                }
-            },
-            error: (err) => {
-                this.loading = false;
-                alert('Failed to generate codes: ' + (err.error?.message || err.message));
-            }
-        });
-    }
+    this.adminService.generateCodes(count!, durationDays!).subscribe({
+      next: (res) => {
+        this.loading = false;
+        if (res.success) {
+          this.notificationService.success('Codes generated successfully!');
+          this.loadCodes();
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.notificationService.error('Failed to generate codes: ' + (err.error?.message || err.message));
+      }
+    });
+  }
 }

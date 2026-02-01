@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomerService, Customer } from '../customer.service';
 import { AuthService } from '../auth.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
     selector: 'app-customer-list',
@@ -14,6 +15,7 @@ import { AuthService } from '../auth.service';
 export class CustomerListComponent implements OnInit {
     private customerService = inject(CustomerService);
     private authService = inject(AuthService);
+    private notificationService = inject(NotificationService);
 
     customers: Customer[] = [];
     searchTerm: string = '';
@@ -99,7 +101,7 @@ export class CustomerListComponent implements OnInit {
             error: (err) => {
                 this.isSaving = false;
                 console.error('Error saving customer', err);
-                alert('Failed to save customer');
+                this.notificationService.error('Failed to save customer');
             }
         });
     }

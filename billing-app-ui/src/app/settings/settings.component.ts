@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, User } from '../auth.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-settings',
@@ -195,6 +196,7 @@ import { AuthService, User } from '../auth.service';
 export class SettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   loading = false;
   gstRatesArray: number[] = [0, 5, 12, 18, 28];
@@ -258,11 +260,11 @@ export class SettingsComponent implements OnInit {
     this.authService.updateProfile(updatedUser).subscribe({
       next: () => {
         this.loading = false;
-        alert('GST rates updated successfully!');
+        this.notificationService.success('GST rates updated successfully!');
       },
       error: () => {
         this.loading = false;
-        alert('Failed to update GST rates');
+        this.notificationService.error('Failed to update GST rates');
       }
     });
   }
@@ -284,11 +286,11 @@ export class SettingsComponent implements OnInit {
     this.authService.updateProfile(updatedUser).subscribe({
       next: () => {
         this.loading = false;
-        alert('Profile updated successfully!');
+        this.notificationService.success('Profile updated successfully!');
       },
       error: () => {
         this.loading = false;
-        alert('Failed to update profile');
+        this.notificationService.error('Failed to update profile');
       }
     });
   }
@@ -303,15 +305,15 @@ export class SettingsComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         if (res.success) {
-          alert('Password changed successfully!');
+          this.notificationService.success('Password changed successfully!');
           this.passwordForm.reset();
         } else {
-          alert(res.message || 'Failed to change password');
+          this.notificationService.error(res.message || 'Failed to change password');
         }
       },
       error: (err) => {
         this.loading = false;
-        alert('Error: ' + (err.error?.message || 'Failed to change password'));
+        this.notificationService.error('Error: ' + (err.error?.message || 'Failed to change password'));
       }
     });
   }

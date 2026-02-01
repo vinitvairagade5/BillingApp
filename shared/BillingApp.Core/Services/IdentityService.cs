@@ -26,11 +26,44 @@ public class IdentityService : IIdentityService
     {
         using var connection = _connectionFactory.CreateConnection();
         var user = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT * FROM \"Users\" WHERE \"Username\" = @Username AND \"PasswordHash\" = @PasswordHash", 
-            new { Username = username, PasswordHash = password });
+            "SELECT * FROM \"Users\" WHERE \"Username\" = @Username", 
+            new { Username = username });
 
         if (user == null) 
             return ApiResult<AuthResponse>.Failure("Invalid credentials.");
+
+        bool isValid = false;
+        bool needsUpgrade = false;
+
+        // 1. Try BCrypt Verify
+        try
+        {
+            isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        }
+        catch
+        {
+            // Not a valid hash, likely legacy plain text
+            isValid = false;
+        }
+
+        // 2. Fallback to Plain Text (Legacy Support)
+        if (!isValid && user.PasswordHash == password)
+        {
+            isValid = true;
+            needsUpgrade = true;
+        }
+
+        if (!isValid) return ApiResult<AuthResponse>.Failure("Invalid credentials.");
+
+        // 3. Auto-Upgrade to Hash if needed
+        if (needsUpgrade)
+        {
+            var newHash = BCrypt.Net.BCrypt.HashPassword(password);
+            await connection.ExecuteAsync("UPDATE \"Users\" SET \"PasswordHash\" = @Hash WHERE \"Id\" = @Id", new { Hash = newHash, Id = user.Id });
+            user.PasswordHash = newHash; // Update local object for token if needed (though not used in token)
+        }
+
+
 
         var token = GenerateJwtToken(user);
         
@@ -95,6 +128,9 @@ public class IdentityService : IIdentityService
             // 2. Generate their OWN referral code for future invites
             user.ReferralCode = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
 
+            // 3. Hash Password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+
             var sql = @"
                 INSERT INTO ""Users"" (""Username"", ""PasswordHash"", ""ShopName"", ""ReferralCode"", ""ReferredById"", ""SubscriptionType"", ""SubscriptionExpiry"") 
                 VALUES (@Username, @PasswordHash, @ShopName, @ReferralCode, @ReferredById, @SubscriptionType, @SubscriptionExpiry) 
@@ -122,17 +158,22 @@ public class IdentityService : IIdentityService
 
         if (user == null) return ApiResult<bool>.Failure("User not found.");
 
-        // Note: Currently using plain checks as per existing Login flow. 
-        // In verify future, this should use proper hashing.
-        if (user.PasswordHash != currentPassword)
+        // Note: Check legacy plain text or hash
+        bool isValid = false;
+        try { isValid = BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash); } catch { }
+        
+        if (!isValid && user.PasswordHash == currentPassword) isValid = true;
+
+        if (!isValid)
         {
             return ApiResult<bool>.Failure("Incorrect current password.");
         }
 
-        // 2. Update Password
+        // 2. Update Password with Hash
+        string newHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await connection.ExecuteAsync(
-            "UPDATE \"Users\" SET \"PasswordHash\" = @newPassword WHERE \"Id\" = @userId",
-            new { newPassword, userId });
+            "UPDATE \"Users\" SET \"PasswordHash\" = @newHash WHERE \"Id\" = @userId",
+            new { newHash, userId });
 
         return ApiResult<bool>.Ok(true);
     }

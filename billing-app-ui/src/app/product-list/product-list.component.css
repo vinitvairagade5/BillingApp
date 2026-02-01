@@ -112,6 +112,29 @@ tr:hover {
     margin-right: 0.5rem;
 }
 
+.low-stock {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.badge-warning {
+    background-color: #f1c40f;
+    color: #333;
+    font-size: 0.7em;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.badge-danger {
+    background-color: #c0392b;
+    color: white;
+    font-size: 0.7em;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
 /* Modal Styles */
 .modal {
     display: none;

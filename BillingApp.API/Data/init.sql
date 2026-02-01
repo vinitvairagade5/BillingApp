@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS "ActivationCodes" (
 CREATE INDEX IF NOT EXISTS "IX_Customers_Mobile" ON "Customers"("Mobile");
 CREATE INDEX IF NOT EXISTS "IX_Bills_Date" ON "Bills"("Date");
 
+
 -- Migrations (Idempotent)
 ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Address" TEXT;
 ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "GSTIN" VARCHAR(20);
@@ -82,6 +83,10 @@ ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "LogoUrl" TEXT;
 ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "HSNCode" VARCHAR(20);
 ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "GSTRate" DECIMAL(5,2) DEFAULT 0;
 ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "GstRates" VARCHAR(100) DEFAULT '0,5,12,18,28';
+
+-- Inventory Migrations
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "StockQuantity" INT DEFAULT 0;
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "LowStockThreshold" INT DEFAULT 5;
 
 ALTER TABLE "Bills" ADD COLUMN IF NOT EXISTS "Discount" DECIMAL(18,2) DEFAULT 0;
 ALTER TABLE "Bills" ADD COLUMN IF NOT EXISTS "TotalCGST" DECIMAL(18,2) DEFAULT 0;
@@ -140,20 +145,20 @@ SELECT 'Sonal Singh', '9555444333', 'Sector 15, Dwarka, Delhi', "Id" FROM "Users
 ON CONFLICT ("Mobile", "ShopOwnerId") DO NOTHING;
 
 -- Seed Items
-INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId")
-SELECT 'Smart LED TV 43"', 24500.00, 'Electronics', '8528', 18, "Id" FROM "Users" WHERE "Username" = 'admin'
+INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
+SELECT 'Smart LED TV 43"', 24500.00, 'Electronics', '8528', 18, "Id", 15 FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId")
-SELECT 'Wireless Mouse', 850.00, 'Accessories', '8471', 12, "Id" FROM "Users" WHERE "Username" = 'admin'
+INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
+SELECT 'Wireless Mouse', 850.00, 'Accessories', '8471', 12, "Id", 50 FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId")
-SELECT 'USB-C Charging Cable', 450.00, 'Accessories', '8544', 18, "Id" FROM "Users" WHERE "Username" = 'admin'
+INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
+SELECT 'USB-C Charging Cable', 450.00, 'Accessories', '8544', 18, "Id", 20 FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId")
-SELECT 'Bluetooth Earbuds', 1999.00, 'Electronics', '8518', 18, "Id" FROM "Users" WHERE "Username" = 'admin'
+INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
+SELECT 'Bluetooth Earbuds', 1999.00, 'Electronics', '8518', 18, "Id", 12 FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT DO NOTHING;
 
 -- Fix global unique constraint on BillNumber (Migration)

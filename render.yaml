@@ -5,7 +5,7 @@ services:
     env: docker
     region: singapore
     plan: free
-    branch: main
+    branch: development
     rootDir: . # The Dockerfile is in the repo root (which is local src)
                  # It copies BillingApp.API inside.
     envVars:
@@ -20,7 +20,7 @@ services:
   - type: web
     name: billing-app-ui
     env: static
-    branch: main
+    branch: development
     rootDir: billing-app-ui
     buildCommand: npm install && npm run build -- --configuration production
     staticPublishPath: dist/billing-app-ui/browser

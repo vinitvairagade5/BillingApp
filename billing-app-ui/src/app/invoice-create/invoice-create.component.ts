@@ -6,6 +6,7 @@ import { InvoiceService, Customer, Item, CreateBill } from '../invoice.service';
 import { CustomerService } from '../customer.service';
 import { AuthService } from '../auth.service';
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-invoice-create',
@@ -127,7 +128,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
                        <div class="dropdown-menu show w-100 mt-1 border-0 shadow-premium rounded-4 overflow-hidden" *ngIf="itemSearchIndex === i && itemResults.length > 0" style="position: absolute; z-index: 1050;">
                          <button class="dropdown-item p-2 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)">
                            <div class="fw-bold">{{ res.name }}</div>
-                           <small class="text-muted">₹{{ res.price }} • HSN: {{ res.hsnCode }}</small>
+                           <small class="text-muted">₹{{ res.price }} • Stock: {{ res.stockQuantity }}</small>
                          </button>
                        </div>
                     </div>
@@ -137,9 +138,16 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
                       <input type="number" formControlName="price" class="form-control premium-input text-md-center" (input)="calculateItemTotal(i)">
                     </div>
                     
-                    <div class="grid-col-qty mb-2 mb-md-0">
+                    <div class="grid-col-qty mb-2 mb-md-0 position-relative">
                       <label class="d-md-none small text-muted fw-bold mb-1">Qty</label>
-                      <input type="number" formControlName="quantity" class="form-control premium-input text-md-center" (input)="calculateItemTotal(i)">
+                      <input type="number" formControlName="quantity" class="form-control premium-input text-md-center" (input)="calculateItemTotal(i)"
+                             [class.is-invalid]="item.get('quantity')?.hasError('insufficientStock')">
+                      <div class="invalid-feedback position-absolute text-nowrap" style="top: 100%; left: 0; font-size: 0.7rem;" *ngIf="item.get('quantity')?.hasError('insufficientStock')">
+                         Only {{ item.get('stockQuantity')?.value }} left!
+                      </div>
+                      <small *ngIf="item.get('stockQuantity')?.value !== null && !item.get('quantity')?.hasError('insufficientStock')" class="text-muted d-block text-center" style="font-size: 0.7rem;">
+                        Stock: {{ item.get('stockQuantity')?.value }}
+                      </small>
                     </div>
                     
                     <div class="grid-col-gst mb-2 mb-md-0">
@@ -435,6 +443,7 @@ export class InvoiceCreateComponent implements OnInit {
   private invoiceService = inject(InvoiceService);
   private customerService = inject(CustomerService);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   invoiceForm!: FormGroup;
@@ -525,7 +534,8 @@ export class InvoiceCreateComponent implements OnInit {
       cgst: [0],
       sgst: [0],
       igst: [0],
-      total: [0]
+      total: [0],
+      stockQuantity: [null] // Track stock
     });
     this.items.push(itemGroup);
   }
@@ -577,7 +587,7 @@ export class InvoiceCreateComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error saving quick customer', err);
-        alert('Failed to add customer. Mobile number might already exist.');
+        this.notificationService.error('Failed to add customer. Mobile number might already exist.');
       }
     });
   }
@@ -605,7 +615,7 @@ export class InvoiceCreateComponent implements OnInit {
   }
 
   selectItem(item: Item, index: number) {
-    const itemGroup = this.items.at(index);
+    const itemGroup = this.items.at(index) as FormGroup;
     itemGroup.patchValue({
       itemId: item.id,
       itemName: item.name,
@@ -613,6 +623,17 @@ export class InvoiceCreateComponent implements OnInit {
       hsnCode: item.hsnCode,
       gstRate: item.gstRate || 18
     });
+
+    // Store available stock in a temporary property on the control for validation in template/TS
+    // Since we can't easily add ad-hoc properties to AbstractControl, we might need a separate tracker or just use a custom validator.
+    // For simplicity, let's just use the item object reference if needed or add a hidden control.
+    // Let's add 'stockQuantity' control to the formGroup
+    if (!itemGroup.contains('stockQuantity')) {
+      itemGroup.addControl('stockQuantity', this.fb.control(item.stockQuantity));
+    } else {
+      itemGroup.patchValue({ stockQuantity: item.stockQuantity });
+    }
+
     this.itemResults = [];
     this.itemSearchIndex = null;
     this.calculateItemTotal(index);
@@ -623,6 +644,18 @@ export class InvoiceCreateComponent implements OnInit {
     const price = itemGroup.get('price')?.value || 0;
     const quantity = itemGroup.get('quantity')?.value || 0;
     const gstRate = itemGroup.get('gstRate')?.value || 0;
+    const stockQuantity = itemGroup.get('stockQuantity')?.value;
+
+    // Stock Validation Warning
+    if (stockQuantity !== undefined && quantity > stockQuantity) {
+      itemGroup.get('quantity')?.setErrors({ 'insufficientStock': true });
+    } else {
+      if (itemGroup.get('quantity')?.hasError('insufficientStock')) {
+        itemGroup.get('quantity')?.setErrors(null);
+        // Re-run other validators if any? Min(1) is standard.
+        if (quantity < 1) itemGroup.get('quantity')?.setErrors({ 'min': true });
+      }
+    }
 
     const subTotal = price * quantity;
     const totalGST = (subTotal * gstRate) / 100;
@@ -682,7 +715,7 @@ export class InvoiceCreateComponent implements OnInit {
         this.isSubmitting = false;
         console.error('Error creating invoice', err);
         const errorMsg = err.error?.message || err.error || 'Failed to create invoice. Please check your internet or server connection.';
-        alert(errorMsg);
+        this.notificationService.error(errorMsg);
       }
     });
   }
@@ -725,7 +758,7 @@ export class InvoiceCreateComponent implements OnInit {
 
     if (method === 'UPI') {
       if (!this.shopUpiId) {
-        alert('Please set up your UPI ID in Settings to use UPI payments.');
+        this.notificationService.warning('Please set up your UPI ID in Settings to use UPI payments.');
         return;
       }
       // Only open if amount > 0

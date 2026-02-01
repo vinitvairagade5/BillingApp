@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SubscriptionService } from '../subscription.service';
 import { AuthService, User } from '../auth.service';
 import { InvoiceService } from '../invoice.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-subscription',
@@ -243,6 +244,7 @@ export class SubscriptionComponent implements OnInit {
   private subService = inject(SubscriptionService);
   private authService = inject(AuthService);
   private invoiceService = inject(InvoiceService);
+  private notificationService = inject(NotificationService);
 
   user: User | null = null;
   invoiceCount = 0;
@@ -306,7 +308,7 @@ export class SubscriptionComponent implements OnInit {
           // Fetch latest profile info to update local state (handles subscription status update)
           this.authService.refreshProfile().subscribe(() => {
             this.loading = false;
-            alert(this.successMessage);
+            this.notificationService.success(this.successMessage);
           });
         } else {
           this.loading = false;
@@ -323,7 +325,7 @@ export class SubscriptionComponent implements OnInit {
   copyCode() {
     if (this.user?.referralCode) {
       navigator.clipboard.writeText(this.user.referralCode);
-      alert('Referral code copied to clipboard!');
+      this.notificationService.success('Referral code copied to clipboard!');
     }
   }
 
@@ -332,7 +334,7 @@ export class SubscriptionComponent implements OnInit {
       const baseUrl = window.location.origin;
       const referralLink = `${baseUrl}/login?ref=${this.user.referralCode}`;
       navigator.clipboard.writeText(referralLink);
-      alert('Referral link copied to clipboard!');
+      this.notificationService.success('Referral link copied to clipboard!');
     }
   }
 }

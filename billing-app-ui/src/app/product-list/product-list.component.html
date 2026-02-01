@@ -16,6 +16,7 @@
           <th>Category</th>
           <th>Price</th>
           <th>GST Rate (%)</th>
+          <th>Stock</th>
           <th>HSN Code</th>
           <th>Actions</th>
         </tr>
@@ -26,6 +27,11 @@
           <td>{{ product.category || 'N/A' }}</td>
           <td>{{ product.price | currency:'INR' }}</td>
           <td>{{ product.gstRate }}%</td>
+          <td [class.low-stock]="product.stockQuantity <= (product.lowStockThreshold || 5)">
+            {{ product.stockQuantity }}
+            <span *ngIf="product.stockQuantity <= (product.lowStockThreshold || 5)" class="badge-warning">Low</span>
+            <span *ngIf="product.stockQuantity <= 0" class="badge-danger">Out</span>
+          </td>
           <td>{{ product.hsnCode || 'N/A' }}</td>
           <td class="actions">
             <button class="btn-icon" (click)="openEditModal(product)" title="Edit">
@@ -62,20 +68,26 @@
         <input type="text" [(ngModel)]="newProduct.name" name="name" required [disabled]="isSaving">
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Price</label>
-          <input type="number" [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving">
-        </div>
-        <div class="form-group">
-          <label>GST Rate (%)</label>
-          <select [(ngModel)]="newProduct.gstRate" name="gstRate" [disabled]="isSaving">
-            <option [ngValue]="0">0%</option>
-            <option [ngValue]="5">5%</option>
-            <option [ngValue]="12">12%</option>
-            <option [ngValue]="18">18%</option>
-            <option [ngValue]="28">28%</option>
-          </select>
-        </div>
+        <label>Price</label>
+        <input type="number" [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving">
+      </div>
+      <div class="form-group">
+        <label>Stock Quantity</label>
+        <input type="number" [(ngModel)]="newProduct.stockQuantity" name="stockQuantity" required [disabled]="isSaving">
+      </div>
+      <div class="form-group">
+        <label>Low Stock Limit</label>
+        <input type="number" [(ngModel)]="newProduct.lowStockThreshold" name="lowStockThreshold" [disabled]="isSaving">
+      </div>
+      <div class="form-group">
+        <label>GST Rate (%)</label>
+        <select [(ngModel)]="newProduct.gstRate" name="gstRate" [disabled]="isSaving">
+          <option [ngValue]="0">0%</option>
+          <option [ngValue]="5">5%</option>
+          <option [ngValue]="12">12%</option>
+          <option [ngValue]="18">18%</option>
+          <option [ngValue]="28">28%</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group">

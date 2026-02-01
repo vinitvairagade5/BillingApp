@@ -21,6 +21,7 @@
     "angularx-qrcode": "^18.0.2",
     "bootstrap": "^5.3.8",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.26.17",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },

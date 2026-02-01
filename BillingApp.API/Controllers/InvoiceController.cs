@@ -191,6 +191,35 @@ public class InvoiceController : BaseApiController
             {
                 item.BillId = billId;
                 await connection.ExecuteAsync(itemSql, item, transaction);
+
+                // Inventory Management: Deduct Stock
+                // We check existing stock first to ensure data integrity or raise error
+                // Option: Allow negative stock but warn? Or strict block?
+                // Let's implement strict block for now as per plan logic "Deduct stock". 
+                // Using atomic update for safety: "Update Items Set Stock = Stock - Qty Where Id = @Id AND Stock >= Qty"
+                // If row count is 0, it means insufficient stock (concurrently or just invalid).
+                
+                var updateStockSql = @"
+                    UPDATE ""Items"" 
+                    SET ""StockQuantity"" = ""StockQuantity"" - @Quantity 
+                    WHERE ""Id"" = @ItemId AND ""ShopOwnerId"" = @ShopOwnerId AND ""StockQuantity"" >= @Quantity";
+                
+                // We need ShopOwnerId here, which is in bill.ShopOwnerId
+                var stockAffected = await connection.ExecuteAsync(updateStockSql, 
+                    new { Quantity = item.Quantity, ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
+                
+                if (stockAffected == 0)
+                {
+                     // Check if item exists to give better error
+                     var currentStock = await connection.ExecuteScalarAsync<int?>(
+                        @"SELECT ""StockQuantity"" FROM ""Items"" WHERE ""Id"" = @ItemId AND ""ShopOwnerId"" = @ShopOwnerId",
+                        new { ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
+                     
+                     if (currentStock == null) throw new Exception($"Item with ID {item.ItemId} not found.");
+                     
+                     // If we are here, stock was insufficient
+                     throw new Exception($"Insufficient stock for item '{item.ItemName}'. Available: {currentStock}, Requested: {item.Quantity}");
+                }
             }
 
             // Phase 3: Automatic Ledger entry for Udhaar

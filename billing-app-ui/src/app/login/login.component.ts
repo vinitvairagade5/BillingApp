@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-login',
@@ -246,6 +247,7 @@ import { AuthService } from '../auth.service';
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   isRegister = false;
@@ -280,19 +282,19 @@ export class LoginComponent {
     const { username, password, shopName, referralCode } = this.authForm.value;
 
     if (this.isRegister) {
-      this.authService.register({ 
-        username: username!, 
-        passwordHash: password!, 
+      this.authService.register({
+        username: username!,
+        passwordHash: password!,
         shopName: shopName!,
         referralCode: referralCode || undefined
       }).subscribe({
         next: () => {
           this.isRegister = false;
           this.loading = false;
-          alert('Registration successful! Please login.');
+          this.notificationService.success('Registration successful! Please login.');
         },
         error: (err) => {
-          alert(err.error || 'Registration failed');
+          this.notificationService.error(err.error || 'Registration failed');
           this.loading = false;
         }
       });
@@ -302,7 +304,7 @@ export class LoginComponent {
           this.router.navigate(['/']);
         },
         error: (err) => {
-          alert('Invalid credentials');
+          this.notificationService.error('Invalid credentials');
           this.loading = false;
         }
       });

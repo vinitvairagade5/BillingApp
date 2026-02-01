@@ -13,6 +13,8 @@ export interface Item {
     hsnCode?: string;
     gstRate: number;
     shopOwnerId: number;
+    stockQuantity: number;
+    lowStockThreshold: number;
 }
 
 
