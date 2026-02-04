@@ -1,43 +1,42 @@
-.container {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
+/* Dashboard specific styles */
+/* Note: .container is now provided globally, but if we need specific override we can keep it or rely on global */
 
 h1 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    color: var(--text-primary, #333);
+    margin-bottom: var(--space-lg);
+    color: #0f172a;
+    /* Fallback or specific override */
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
 }
 
 .stat-card {
     background: white;
-    padding: 1.5rem;
-    border-radius: 16px;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s;
+    gap: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+    border: 1px solid var(--border-color);
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
     font-size: 2.5rem;
     width: 64px;
     height: 64px;
-    background: #f8f9fa;
-    border-radius: 12px;
+    background: var(--bg-main);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -45,98 +44,109 @@ h1 {
 
 .stat-info h3 {
     margin: 0;
-    font-size: 1rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: var(--secondary);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .stat-value {
-    margin: 0.25rem 0 0;
+    margin: var(--space-2xs) 0 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1a202c;
+    color: #1e293b;
 }
 
 .sales .stat-icon {
     background: #e6fffa;
+    color: #059669;
 }
 
 .gst .stat-icon {
     background: #fff5f5;
+    color: #dc2626;
 }
 
 .invoices .stat-icon {
     background: #ebf8ff;
+    color: #2563eb;
 }
 
-.dashboard-secondary {
+.udhaar .stat-icon {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-lg);
 }
 
 .top-products {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    /* Inherits card styles globally, just specificity if needed */
 }
 
-.top-products h2 {
-    margin: 0 0 1.5rem;
+.top-products h2,
+.recent-invoices h2,
+.low-stock h2 {
+    margin: 0 0 var(--space-lg);
     font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
 }
 
-th,
-td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+.card-header h2 {
+    margin-bottom: 0;
 }
 
-th {
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--primary);
     font-weight: 600;
-    color: #666;
-    background: #f8f9fa;
+    cursor: pointer;
 }
 
-@media (max-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.btn-view-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition-fast);
 }
 
-@media (max-width: 640px) {
-    .container {
-        padding: 1rem;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .stat-card {
-        padding: 1rem;
-    }
+.btn-view-sm:hover {
+    background: white;
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
-/* Subscription Status Card */
+/* Subscription Status Card - Enhanced */
 .subscription-status-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-premium);
     color: white;
     position: relative;
     overflow: hidden;
 }
 
+/* ... Animation Pulse Kept Identical ... */
 .subscription-status-card::before {
     content: '';
     position: absolute;
@@ -177,42 +187,43 @@ th {
 .subscription-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
     position: relative;
     z-index: 1;
 }
 
 .subscription-badge {
-    padding: 0.5rem 1.25rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 50px;
     font-weight: 700;
-    font-size: 0.875rem;
-    letter-spacing: 1px;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
     backdrop-filter: blur(10px);
 }
 
 .badge-pro {
     background: rgba(255, 255, 255, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .badge-free {
     background: rgba(0, 0, 0, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .subscription-header h3 {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+    color: white;
 }
 
 .subscription-body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    gap: var(--space-lg);
     position: relative;
     z-index: 1;
     flex-wrap: wrap;
@@ -220,7 +231,7 @@ th {
 
 .subscription-info {
     display: flex;
-    gap: 2rem;
+    gap: var(--space-xl);
     flex-wrap: wrap;
 }
 
@@ -241,26 +252,13 @@ th {
     font-weight: 700;
 }
 
-.text-warning {
-    color: #ffd43b !important;
-}
-
-.text-danger {
-    color: #ff6b6b !important;
-}
-
 .subscription-actions {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-md);
 }
 
 .subscription-actions .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
     border: none;
-    cursor: pointer;
-    transition: all 0.3s;
     backdrop-filter: blur(10px);
 }
 
@@ -278,7 +276,7 @@ th {
 .subscription-actions .btn-secondary {
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .subscription-actions .btn-secondary:hover {
@@ -287,43 +285,62 @@ th {
 }
 
 .subscription-alert {
-    margin-top: 1.5rem;
-    padding: 1rem 1.25rem;
+    margin-top: var(--space-lg);
+    padding: var(--space-md);
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-md);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     position: relative;
     z-index: 1;
 }
 
-.subscription-alert.danger {
-    background: rgba(255, 107, 107, 0.3);
-    border-color: rgba(255, 107, 107, 0.5);
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.alert-icon {
-    font-size: 1.5rem;
-}
+@media (max-width: 640px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 
-@media (max-width: 768px) {
     .subscription-body {
         flex-direction: column;
         align-items: flex-start;
     }
 
     .subscription-info {
+        gap: var(--space-md);
         width: 100%;
+        justify-content: space-between;
     }
 
     .subscription-actions {
         width: 100%;
+        flex-direction: column;
     }
 
     .subscription-actions .btn {
-        flex: 1;
+        width: 100%;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .btn-text {
+        align-self: flex-end;
     }
 }

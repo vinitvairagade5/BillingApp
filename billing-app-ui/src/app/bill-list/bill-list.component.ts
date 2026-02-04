@@ -52,7 +52,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
           <h3>Recent Transactions</h3>
           <!-- Removed View All Button -->
         </div>
-        <div class="table-container">
+        <div class="table-responsive">
           <table class="premium-table">
             <thead>
               <tr>
@@ -107,7 +107,7 @@ import { PaymentModalComponent } from '../payment-modal/payment-modal.component'
               </tr>
             </tbody>
             </table>
-            </div> <!-- End table-container -->
+            </div> <!-- End table-responsive -->
             
             <div class="pagination-footer">
                 <button class="btn-paginate" (click)="prevPage()" [disabled]="currentPage === 1">
