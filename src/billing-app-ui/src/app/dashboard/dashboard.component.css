@@ -1,0 +1,407 @@
+/* Dashboard specific styles */
+/* Note: .container is now provided globally, but if we need specific override we can keep it or rely on global */
+
+h1 {
+    margin-bottom: var(--space-lg);
+    color: #0f172a;
+    /* Fallback or specific override */
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+.stat-card {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+    border: 1px solid var(--border-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+    background: var(--bg-main);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    margin: var(--space-2xs) 0 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.sales .stat-icon {
+    background: #e6fffa;
+    color: #059669;
+}
+
+.gst .stat-icon {
+    background: #fff5f5;
+    color: #dc2626;
+}
+
+.invoices .stat-icon {
+    background: #ebf8ff;
+    color: #2563eb;
+}
+
+.udhaar .stat-icon {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-lg);
+}
+
+.top-products {
+    /* Inherits card styles globally, just specificity if needed */
+}
+
+.top-products h2,
+.recent-invoices h2,
+.low-stock h2 {
+    margin: 0 0 var(--space-lg);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.card-header h2 {
+    margin-bottom: 0;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-view-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-view-sm:hover {
+    background: white;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Subscription Status Card - Enhanced */
+.subscription-status-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-premium);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ... Animation Pulse Kept Identical ... */
+.subscription-status-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.subscription-status-card.pro {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.subscription-status-card.warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.subscription-status-card.danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+}
+
+.subscription-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    position: relative;
+    z-index: 1;
+}
+
+.subscription-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(10px);
+}
+
+.badge-pro {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.badge-free {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.subscription-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+}
+
+.subscription-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-lg);
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+}
+
+.subscription-info {
+    display: flex;
+    gap: var(--space-xl);
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-item .label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.info-item .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.subscription-actions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.subscription-actions .btn {
+    border: none;
+    backdrop-filter: blur(10px);
+}
+
+.subscription-actions .btn-primary {
+    background: rgba(255, 255, 255, 0.95);
+    color: #667eea;
+}
+
+.subscription-actions .btn-primary:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.subscription-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.subscription-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.subscription-alert {
+    margin-top: var(--space-lg);
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .stats-grid {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        gap: 0.75rem;
+        scroll-snap-type: x mandatory;
+        /* Hide scrollbar */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .stats-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Square Tiles for Scrolling Row */
+    .stat-card {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+        min-width: 130px;
+        scroll-snap-align: start;
+        border-right: 1px solid var(--border-color);
+        flex-shrink: 0;
+        min-height: auto;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;
+    }
+
+    .stat-info h3 {
+        font-size: 0.7rem;
+        white-space: nowrap;
+        margin-bottom: 0;
+        letter-spacing: 0;
+    }
+
+    .stat-value {
+        font-size: 1rem;
+        white-space: nowrap;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    /* Subscription Card Mobile Optimizations */
+    .subscription-body {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+
+    .subscription-info {
+        gap: var(--space-md);
+        width: 100%;
+        justify-content: flex-start;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        /* 2 columns for info items */
+    }
+
+    .subscription-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .subscription-actions .btn {
+        width: 100%;
+        padding: 0.6rem;
+    }
+
+    .card-header {
+        flex-direction: row;
+        /* Keep header items side-by-side but compact */
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+    }
+
+    .card-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .btn-text {
+        font-size: 0.85rem;
+    }
+}

@@ -1,0 +1,15 @@
+My STRONG recommendation for you
+
+If you want free now, safe later: for live web application
+
+Angular → Netlify
+
+ASP.NET Core → Fly.io
+
+PostgreSQL → Supabase
+
+Auth → ASP.NET Identity
+
+Email → Brevo
+
+Payments → Stripe

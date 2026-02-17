@@ -42,7 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: billing-ui
     ports:
-      - "4200:80"
+      - "80:80"
     depends_on:
       - billing-api
     networks:

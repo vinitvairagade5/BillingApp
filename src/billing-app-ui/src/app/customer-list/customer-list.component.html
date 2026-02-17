@@ -1,0 +1,71 @@
+<div class="container">
+    <div class="header">
+        <h1>Customers</h1>
+        <button class="btn-primary" (click)="openAddModal()">Add Customer</button>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search customers by name or mobile...">
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let customer of filteredCustomers">
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.mobile }}</td>
+                    <td>{{ customer.address || 'N/A' }}</td>
+                    <td class="actions">
+                        <button class="btn-icon" (click)="openEditModal(customer)" title="Edit">
+                            <span class="icon">✏️</span>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-controls">
+        <button class="btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <button class="btn-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" [class.open]="isModalOpen">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>{{ editingCustomer ? 'Edit Customer' : 'Add New Customer' }}</h2>
+            <button class="close-btn" (click)="closeModal()">&times;</button>
+        </div>
+        <form (ngSubmit)="saveCustomer()">
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" [(ngModel)]="newCustomer.name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" [(ngModel)]="newCustomer.mobile" name="mobile" required>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea [(ngModel)]="newCustomer.address" name="address" rows="3"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Cancel</button>
+                <button type="submit" class="btn-primary" [disabled]="isSaving">
+                    {{ isSaving ? 'Saving...' : 'Save Customer' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
