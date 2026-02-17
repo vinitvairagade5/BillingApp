@@ -51,5 +51,6 @@ jobs:
 
             # Pull latest images and restart
             # Note: We use 'docker compose' (v2) instead of 'docker-compose' (v1)
-            docker compose up -d --build
+            # Use sudo to avoid permission denied errors
+            sudo docker compose up -d --build
             docker image prune -f
