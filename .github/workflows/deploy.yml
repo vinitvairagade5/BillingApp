@@ -40,6 +40,13 @@ jobs:
                 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                 sudo usermod -aG docker $USER
             fi
+            
+            # Fix Oracle Cloud Ubuntu Firewall (iptables)
+            # By default, Oracle images have strict iptables rules. We need to open HTTP/HTTPS.
+            sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+            sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT
+            sudo iptables -I INPUT -p tcp --dport 81 -j ACCEPT
+            sudo netfilter-persistent save || echo "netfilter-persistent not found, rules not saved"
 
             cd /home/ubuntu/billing-app
             
