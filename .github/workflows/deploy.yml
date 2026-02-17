@@ -1,0 +1,55 @@
+name: Deploy Billing App to OCI
+
+on:
+  push:
+    branches: [ "development" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USERNAME }}
+          key: ${{ secrets.OCI_KEY }}
+          source: "."
+          target: "/home/ubuntu/billing-app"
+
+      - name: Deploy with Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USERNAME }}
+          key: ${{ secrets.OCI_KEY }}
+          script: |
+            # Install Docker if not exists (First run only)
+            if ! command -v docker &> /dev/null; then
+                sudo apt-get update
+                sudo apt-get install -y ca-certificates curl gnupg
+                sudo install -m 0755 -d /etc/apt/keyrings
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+                sudo chmod a+r /etc/apt/keyrings/docker.gpg
+                echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                sudo apt-get update
+                sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                sudo usermod -aG docker $USER
+            fi
+
+            cd /home/ubuntu/billing-app
+            
+            # Create .env file for secrets (In a real scenario, use GitHub Secrets to populate this)
+            # For now, we assume you might upload it manually once or use sed to replace values
+            if [ ! -f .env ]; then
+                cp .env.example .env
+            fi
+
+            # Pull latest images and restart
+            # Note: We use 'docker compose' (v2) instead of 'docker-compose' (v1)
+            docker compose up -d --build
+            docker image prune -f
