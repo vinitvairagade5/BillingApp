@@ -60,4 +60,12 @@ jobs:
             # Note: We use 'docker compose' (v2) instead of 'docker-compose' (v1)
             # Use sudo to avoid permission denied errors
             sudo docker compose up -d --build
+            
+            # Diagnostics
+            echo "--- Container Status ---"
+            sudo docker ps
+            echo "--- UI Logs ---"
+            sudo docker logs billing-ui --tail 20
+            echo "--- NPM Logs ---"
+            sudo docker logs npm --tail 20
             docker image prune -f
