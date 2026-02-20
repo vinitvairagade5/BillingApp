@@ -12,14 +12,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/billing-app-ui/package-lock.json
+
+      - name: Install UI Dependencies
+        run: npm ci
+        working-directory: src/billing-app-ui
+
+      - name: Build UI
+        run: npm run build -- --configuration production
+        working-directory: src/billing-app-ui
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish API
+        run: dotnet publish BillingApp.API/BillingApp.API.csproj -c Release -o publish
+        working-directory: src
+
       - name: Copy Files to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_KEY }}
-          source: "."
+          source: "docker-compose.yml,src/billing-app-ui/Dockerfile,src/billing-app-ui/nginx.conf,src/billing-app-ui/dist/billing-app-ui/browser,src/BillingApp.API/Dockerfile,src/publish"
           target: "/home/ubuntu/billing-app"
+          strip_components: 0
 
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@master
@@ -42,23 +67,26 @@ jobs:
             fi
             
             # Fix Oracle Cloud Ubuntu Firewall (iptables)
-            # By default, Oracle images have strict iptables rules. We need to open HTTP/HTTPS.
             sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT
             sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT
             sudo iptables -I INPUT -p tcp --dport 81 -j ACCEPT
-            sudo netfilter-persistent save || echo "netfilter-persistent not found, rules not saved"
+            sudo netfilter-persistent save || echo "rules not saved"
 
             cd /home/ubuntu/billing-app
             
-            # Create .env file for secrets (In a real scenario, use GitHub Secrets to populate this)
-            # For now, we assume you might upload it manually once or use sed to replace values
+            # For consistent paths, we need to move the publish output where the Dockerfile expects it
+            # docker-compose context for api is ./src
+            mkdir -p src/BillingApp.API
+            mv src/publish src/BillingApp.API/publish 2>/dev/null || true
+            
+            # docker-compose context for ui is ./src/billing-app-ui
+            # (scp already put it in src/billing-app-ui/dist/billing-app-ui/browser)
+
             if [ ! -f .env ]; then
                 cp .env.example .env
             fi
 
             # Pull latest images and restart
-            # Note: We use 'docker compose' (v2) instead of 'docker-compose' (v1)
-            # Use sudo to avoid permission denied errors
             sudo docker compose up -d --build
             
             # Diagnostics
@@ -66,6 +94,6 @@ jobs:
             sudo docker ps
             echo "--- UI Logs ---"
             sudo docker logs billing-ui --tail 20
-            echo "--- NPM Logs ---"
-            sudo docker logs npm --tail 20
-            docker image prune -f
+            echo "--- API Logs ---"
+            sudo docker logs billing-api --tail 20
+            sudo docker image prune -f
