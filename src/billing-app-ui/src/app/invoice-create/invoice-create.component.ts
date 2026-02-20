@@ -14,30 +14,30 @@ import { ProductService } from '../product.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule, PaymentModalComponent],
   template: `
-    <div class="page-container animation-fade-in">
-      <div class="container-xl py-4 py-lg-5">
-        
-        <!-- Limit Warning -->
-        <div class="limit-warning-banner glass d-flex align-items-center gap-3 mb-4 p-3" *ngIf="limitReached && !isPro">
-           <span class="fs-4 text-warning">⚠️</span>
-           <div class="flex-grow-1">
-              <strong class="text-danger-emphasis">Free Limit Reached (10 Invoices)</strong>
-              <p class="mb-0 text-danger small">You have used all your free invoices. Please <a routerLink="/subscription" class="fw-bold text-decoration-underline text-danger">upgrade to PRO</a> to create more.</p>
-           </div>
-           <button class="btn btn-primary sm" routerLink="/subscription">Upgrade Now</button>
-        </div>
+    <div class="container-fluid py-4 animate-fade-in">
+      
+      <!-- Limit Warning -->
+      <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3 mb-4 p-3 rounded-4" *ngIf="limitReached && !isPro">
+         <span class="fs-4">⚠️</span>
+         <div class="flex-grow-1">
+            <strong class="text-dark">Free Limit Reached (10 Invoices)</strong>
+            <p class="mb-0 text-muted small">You have used all your free invoices. Please <a routerLink="/subscription" class="fw-bold text-primary">upgrade to PRO</a> to create more.</p>
+         </div>
+         <button class="btn btn-primary btn-sm rounded-pill px-3" routerLink="/subscription">Upgrade Now</button>
+      </div>
 
-        <!-- Header -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 shadow-sm">
-          <div>
-            <h1 class="h2 mb-1 fw-bold">Create New Invoice</h1>
-            <p class="text-muted mb-0">Enter details to generate a professional GST invoice</p>
-          </div>
+      <!-- Header Row -->
+      <div class="row align-items-center mb-4 g-3">
+        <div class="col-md">
+          <h1 class="h3 mb-1 fw-bold">Create New Invoice</h1>
+          <p class="text-muted mb-0 small">Enter details to generate a professional GST invoice</p>
+        </div>
+        <div class="col-md-auto">
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary text-dark bg-light border-0" routerLink="/">Cancel</button>
+            <button type="button" class="btn btn-light border rounded-pill px-4" routerLink="/">Cancel</button>
             <button 
               type="button" 
-              class="btn btn-success btn-lg shadow-vibrant d-flex align-items-center gap-2" 
+              class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2" 
               (click)="onSubmit()" 
               [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting || (limitReached && !isPro)"
             >
@@ -47,26 +47,28 @@ import { ProductService } from '../product.service';
             </button>
           </div>
         </div>
+      </div>
 
-        <div class="row g-4">
-          <!-- Main Form Column -->
-          <div class="col-lg-8">
-            
-            <!-- Customer Section -->
-            <div class="glass card p-4 mb-4 border-0" style="position: relative; z-index: 20;">
-              <div class="d-flex align-items-center gap-3 mb-4 w-100">
-                <span class="step-num">1</span>
-                <h3 class="h5 fw-bold mb-0">Customer Details</h3>
+      <div class="row g-4">
+        <!-- Main Form Column -->
+        <div class="col-lg-8">
+          
+          <!-- Step 1: Customer Section -->
+          <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="badge bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">1</span>
+                <h5 class="mb-0 fw-bold">Customer Details</h5>
               </div>
               
               <div class="position-relative">
-                <label class="form-label fw-bold text-muted small">Find Customer</label>
-                <div class="search-input-container">
-                  <span class="search-icon">🔍</span>
+                <label class="form-label text-muted small fw-bold text-uppercase">Find Customer</label>
+                <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                  <span class="input-group-text bg-light border-0 text-muted"><span class="icon">🔍</span></span>
                   <input 
                     type="text" 
                     id="customerSearch" 
-                    class="form-control premium-input ps-5" 
+                    class="form-control border-0 bg-light py-2" 
                     placeholder="Search by Name or Mobile..."
                     (input)="onCustomerSearch($event)"
                     autocomplete="off"
@@ -74,296 +76,293 @@ import { ProductService } from '../product.service';
                 </div>
                 
                 <!-- Search Results Dropdown -->
-                <div class="dropdown-menu show w-100 mt-2 border-0 shadow-premium rounded-4 overflow-hidden" *ngIf="customerResults.length > 0 || (customerSearchQuery && customerSearchQuery.length >= 2)" style="position: absolute; z-index: 1050;">
-                  <button class="dropdown-item p-3 border-bottom" type="button" *ngFor="let c of customerResults" (click)="selectCustomer(c)">
+                <div class="list-group position-absolute w-100 mt-1 shadow-lg rounded-3 overflow-hidden z-3" *ngIf="customerResults.length > 0 || (customerSearchQuery && customerSearchQuery.length >= 2)">
+                  <button class="list-group-item list-group-item-action p-3 border-0 border-bottom" type="button" *ngFor="let c of customerResults" (click)="selectCustomer(c)">
                     <div class="fw-bold">{{ c.name }}</div>
                     <small class="text-muted">{{ c.mobile }}</small>
                   </button>
-                  <button class="dropdown-item p-3 bg-light text-primary fw-bold d-flex align-items-center gap-2" type="button" *ngIf="customerResults.length === 0 && customerSearchQuery.length >= 2" (click)="openQuickCustomerModal()">
+                  <button class="list-group-item list-group-item-action p-3 bg-light text-primary fw-bold" type="button" *ngIf="customerResults.length === 0 && customerSearchQuery.length >= 2" (click)="openQuickCustomerModal()">
                     <span>➕</span> Add "{{ customerSearchQuery }}" as new customer
                   </button>
                 </div>
               </div>
 
-              <div class="selected-customer-card mt-3 d-flex align-items-center gap-3 p-3 rounded-4 bg-primary-subtle" *ngIf="selectedCustomer">
-                <div class="cust-avatar bg-primary text-white rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; font-weight: 700; font-size: 1.25rem;">
+              <!-- Selected Customer Display -->
+              <div class="mt-3 p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-10 d-flex align-items-center gap-3" *ngIf="selectedCustomer">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.2rem;">
                    {{ selectedCustomer.name.charAt(0) }}
                 </div>
                 <div class="flex-grow-1 overflow-hidden">
-                  <h5 class="mb-0 fw-bold text-primary-emphasis text-truncate">{{ selectedCustomer.name }}</h5>
-                  <p class="mb-0 text-primary small fw-semibold">{{ selectedCustomer.mobile }}</p>
+                  <div class="fw-bold text-dark text-truncate">{{ selectedCustomer.name }}</div>
+                  <div class="small text-primary fw-semibold">{{ selectedCustomer.mobile }}</div>
                   <small class="text-muted d-block text-truncate">{{ selectedCustomer.address }}</small>
                 </div>
-                <button type="button" class="btn btn-link text-danger fw-bold text-decoration-none p-0" (click)="selectedCustomer = null; invoiceForm.patchValue({customerId: null})">Change</button>
+                <button type="button" class="btn btn-sm btn-outline-danger border-0 fw-bold" (click)="selectedCustomer = null; invoiceForm.patchValue({customerId: null})">Change</button>
               </div>
             </div>
+          </div>
 
-            <!-- Items Section -->
-            <form [formGroup]="invoiceForm">
-              <div class="glass card p-4 border-0">
+          <!-- Step 2: Items Section -->
+          <form [formGroup]="invoiceForm">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-body p-4">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                  <span class="step-num">2</span>
-                  <h3 class="h5 fw-bold mb-0">Invoice Items</h3>
+                  <span class="badge bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">2</span>
+                  <h5 class="mb-0 fw-bold">Invoice Items</h5>
                 </div>
                 
-                <div class="mb-3" formArrayName="items">
-                  <div class="item-row-header d-none d-md-grid px-2 mb-2">
-                    <span class="text-uppercase text-muted fw-bold small" style="grid-column: 1;">Item Name</span>
-                    <span class="text-uppercase text-muted fw-bold small text-center" style="grid-column: 2;">Price</span>
-                    <span class="text-uppercase text-muted fw-bold small text-center" style="grid-column: 3;">Qty</span>
-                    <span class="text-uppercase text-muted fw-bold small text-center" style="grid-column: 4;">GST</span>
-                    <span class="text-uppercase text-muted fw-bold small text-end" style="grid-column: 5;">Total</span>
-                    <span style="grid-column: 6;"></span>
+                <div class="mb-4" formArrayName="items">
+                  <!-- Table Header (Desktop) -->
+                  <div class="row g-2 mb-2 d-none d-md-flex px-2 text-muted small fw-bold text-uppercase">
+                    <div class="col-md-4">Item Name</div>
+                    <div class="col-md-2 text-center">Price</div>
+                    <div class="col-md-2 text-center">Qty</div>
+                    <div class="col-md-1 text-center">GST</div>
+                    <div class="col-md-2 text-end">Total</div>
+                    <div class="col-md-1"></div>
                   </div>
 
-                  <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-grid-row mb-3 mb-md-2 p-3 p-md-0 rounded-3 bg-white bg-md-transparent border border-md-0 shadow-sm shadow-md-none">
-                    <div class="grid-col-name position-relative mb-2 mb-md-0">
+                  <!-- Item Rows -->
+                  <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" 
+                       class="row g-2 mb-3 mb-md-2 p-3 p-md-0 rounded-3 bg-light bg-md-transparent border border-md-0 shadow-sm shadow-md-none position-relative">
+                    
+                    <div class="col-md-4 col-12 mb-2 mb-md-0 position-relative">
                        <label class="d-md-none small text-muted fw-bold mb-1">Item Name</label>
-                       <input 
-                         formControlName="itemName" 
-                         class="form-control premium-input" 
-                         placeholder="Search item..."
-                         (input)="onItemSearch($event, i)"
-                         autocomplete="off"
-                       >
-                       <div class="dropdown-menu show w-100 mt-1 border-0 shadow-premium rounded-4 overflow-hidden" *ngIf="itemSearchIndex === i && (itemResults.length > 0 || (itemSearchQuery && itemSearchQuery.length >= 2))" style="position: absolute; z-index: 1050;">
-                         <button class="dropdown-item p-2 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)">
-                           <div class="fw-bold">{{ res.name }}</div>
+                       <input formControlName="itemName" class="form-control border-light py-2 shadow-sm" placeholder="Search item..." (input)="onItemSearch($event, i)" autocomplete="off">
+                       
+                       <!-- Item Search Dropdown -->
+                       <div class="list-group position-absolute w-100 mt-1 shadow-lg rounded-3 overflow-hidden z-3" *ngIf="itemSearchIndex === i && (itemResults.length > 0 || (itemSearchQuery && itemSearchQuery.length >= 2))">
+                         <button class="list-group-item list-group-item-action p-2 border-0 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)">
+                           <div class="fw-bold small">{{ res.name }}</div>
                            <small class="text-muted">₹{{ res.price }} • Stock: {{ res.stockQuantity }}</small>
                          </button>
-                         <button class="dropdown-item p-3 bg-light text-primary fw-bold d-flex align-items-center gap-2" type="button" *ngIf="itemResults.length === 0 && itemSearchQuery.length >= 2" (click)="openQuickProductModal()">
-                            <span>➕</span> Add "{{ itemSearchQuery }}" as new product
+                         <button class="list-group-item list-group-item-action p-2 bg-light text-primary fw-bold small" type="button" *ngIf="itemResults.length === 0 && itemSearchQuery.length >= 2" (click)="openQuickProductModal()">
+                            <span>➕</span> Add "{{ itemSearchQuery }}"
                          </button>
                        </div>
                     </div>
                     
-                    <div class="grid-col-price mb-2 mb-md-0">
-                      <label class="d-md-none small text-muted fw-bold mb-1">Price</label>
-                      <input type="number" formControlName="price" class="form-control premium-input text-md-center" (input)="calculateItemTotal(i)">
+                    <div class="col-md-2 col-6 mb-2 mb-md-0 text-center">
+                      <label class="d-md-none small text-muted fw-bold d-block mb-1">Price</label>
+                      <input type="number" formControlName="price" class="form-control border-light text-md-center py-2 shadow-sm" (input)="calculateItemTotal(i)">
                     </div>
                     
-                    <div class="grid-col-qty mb-2 mb-md-0 position-relative">
-                      <label class="d-md-none small text-muted fw-bold mb-1">Qty</label>
-                      <input type="number" formControlName="quantity" class="form-control premium-input text-md-center" (input)="calculateItemTotal(i)"
-                             [class.is-invalid]="item.get('quantity')?.hasError('insufficientStock')">
-                      <div class="invalid-feedback position-absolute text-nowrap" style="top: 100%; left: 0; font-size: 0.7rem;" *ngIf="item.get('quantity')?.hasError('insufficientStock')">
+                    <div class="col-md-2 col-6 mb-2 mb-md-0 text-center">
+                      <label class="d-md-none small text-muted fw-bold d-block mb-1">Qty</label>
+                      <input type="number" formControlName="quantity" 
+                             class="form-control border-light text-md-center py-2 shadow-sm" 
+                             [class.is-invalid]="item.get('quantity')?.hasError('insufficientStock')"
+                             (input)="calculateItemTotal(i)">
+                      <div class="invalid-feedback small position-absolute" style="font-size: 0.7rem;" *ngIf="item.get('quantity')?.hasError('insufficientStock')">
                          Only {{ item.get('stockQuantity')?.value }} left!
                       </div>
-                      <small *ngIf="item.get('stockQuantity')?.value !== null && !item.get('quantity')?.hasError('insufficientStock')" class="text-muted d-block text-center" style="font-size: 0.7rem;">
+                      <small class="text-muted d-none d-md-block mt-1" style="font-size: 0.65rem;" *ngIf="item.get('stockQuantity')?.value !== null">
                         Stock: {{ item.get('stockQuantity')?.value }}
                       </small>
                     </div>
                     
-                    <div class="grid-col-gst mb-2 mb-md-0">
-                      <label class="d-md-none small text-muted fw-bold mb-1">GST %</label>
-                      <select formControlName="gstRate" class="form-control premium-input text-md-center" (change)="calculateItemTotal(i)">
+                    <div class="col-md-1 col-4 mb-2 mb-md-0 text-center">
+                      <label class="d-md-none small text-muted fw-bold d-block mb-1">GST %</label>
+                      <select formControlName="gstRate" class="form-select border-light text-md-center py-2 shadow-sm" (change)="calculateItemTotal(i)">
                         <option *ngFor="let rate of availableGstRates" [value]="rate">{{ rate }}%</option>
                       </select>
                     </div>
                     
-                    <div class="grid-col-total d-flex d-md-block justify-content-between align-items-center mb-2 mb-md-0 text-md-end">
-                      <label class="d-md-none small text-muted fw-bold mb-0">Total</label>
-                      <span class="fw-bold fs-6">₹{{ item.get('total')?.value | number:'1.2-2' }}</span>
+                    <div class="col-md-2 col-5 mb-2 mb-md-0 text-md-end d-flex flex-column justify-content-center">
+                      <label class="d-md-none small text-muted fw-bold d-block mb-1">Total</label>
+                      <span class="fw-bold text-dark">₹{{ item.get('total')?.value | number:'1.2-2' }}</span>
                     </div>
                     
-                    <div class="grid-col-action text-end">
-                      <button type="button" class="btn-icon-delete" (click)="removeItem(i)" *ngIf="items.length > 1" title="Remove Item">🗑️</button>
+                    <div class="col-md-1 col-3 text-end d-flex align-items-center justify-content-end">
+                      <button type="button" class="btn btn-outline-danger border-0 p-2" (click)="removeItem(i)" *ngIf="items.length > 1" title="Remove Item">🗑️</button>
                     </div>
                   </div>
                 </div>
 
-                <button type="button" class="btn btn-outline-dashed w-100 py-3 fw-bold text-muted" (click)="addItem()">
+                <button type="button" class="btn btn-outline-primary w-100 py-2 border-dashed fw-bold" (click)="addItem()">
                   <span class="me-2">➕</span> Add Another Item
                 </button>
               </div>
-            </form>
-          </div>
-
-          <!-- Sidebar Summary Column -->
-          <div class="col-lg-4">
-            <div class="glass card p-4 border-0 sticky-top" style="top: 20px; z-index: 90;">
-              <h3 class="h5 fw-bold mb-4">Invoice Summary</h3>
-              
-              <div class="summary-details">
-                <div class="d-flex justify-content-between mb-2 text-muted fw-medium">
-                  <span>Subtotal</span>
-                  <span>₹{{ invoiceForm.get('subTotal')?.value | number:'1.2-2' }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2 text-muted fw-medium">
-                  <span>CGST</span>
-                  <span>₹{{ invoiceForm.get('totalCGST')?.value | number:'1.2-2' }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2 text-muted fw-medium">
-                  <span>SGST</span>
-                  <span>₹{{ invoiceForm.get('totalSGST')?.value | number:'1.2-2' }}</span>
-                </div>
-                
-                <hr class="my-4 opacity-50">
-                
-                <div class="d-flex justify-content-between mb-4 align-items-end">
-                  <span class="fw-bold text-dark">Total Amount</span>
-                  <span class="h3 fw-bold text-success mb-0">₹{{ invoiceForm.get('totalAmount')?.value | number:'1.2-2' }}</span>
-                </div>
-                
-                <div class="mb-4">
-                   <label class="form-label text-uppercase text-muted fw-bold small mb-3">Payment Method</label>
-                   <div class="d-grid gap-2 d-md-flex justify-content-between">
-                      <div class="pay-option flex-grow-1" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CASH'" (click)="invoiceForm.patchValue({paymentMethod: 'CASH'})">
-                         <span class="fs-4 d-block mb-1">💵</span>
-                         <span class="small fw-bold text-muted text-uppercase">Cash</span>
-                      </div>
-                      <div class="pay-option flex-grow-1" [class.active]="invoiceForm.get('paymentMethod')?.value === 'UPI'" (click)="onPaymentMethodSelect('UPI')">
-                         <span class="fs-4 d-block mb-1">📱</span>
-                         <span class="small fw-bold text-muted text-uppercase">UPI</span>
-                      </div>
-                      <div class="pay-option flex-grow-1" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CREDIT'" (click)="invoiceForm.patchValue({paymentMethod: 'CREDIT'})">
-                         <span class="fs-4 d-block mb-1">📝</span>
-                         <span class="small fw-bold text-muted text-uppercase">Udhaar</span>
-                      </div>
-                   </div>
-                </div>
-
-                <div class="alert alert-danger border-0 bg-danger-subtle text-danger p-3 rounded-4 mb-3" *ngIf="(invoiceForm.invalid || !selectedCustomer) && !isSubmitting">
-                   <div *ngIf="!selectedCustomer" class="d-flex align-items-center gap-2 mb-1"><span class="small">⚠️</span> <small class="fw-bold">Select a customer (Step 1)</small></div>
-                   <div *ngIf="items.invalid" class="d-flex align-items-center gap-2"><span class="small">⚠️</span> <small class="fw-bold">Fill item details (Step 2)</small></div>
-                </div>
-
-                <button type="button" class="btn btn-success w-100 py-3 fw-bold shadow-vibrant text-uppercase tracking-wide" (click)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting || (limitReached && !isPro)">
-                  <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                   {{ isSubmitting ? 'Processing...' : 'Save & Generate Invoice' }}
-                </button>
-              </div>
             </div>
-            
-            <div class="mt-4 p-4 rounded-4 glass border-0 d-flex gap-3 align-items-start">
-                 <span class="fs-3">💡</span>
-                 <p class="small text-muted mb-0 lh-base fw-medium">Invoices are generated using the Indian GST format complying with HSN standards.</p>
+          </form>
+        </div>
+
+        <!-- Sidebar Summary Column -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 2rem;">
+            <div class="card-body p-4">
+              <h5 class="fw-bold mb-4">Invoice Summary</h5>
+              
+              <div class="list-group list-group-flush mb-4">
+                <div class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2 border-0">
+                  <span class="text-muted">Subtotal</span>
+                  <span class="fw-semibold">₹{{ invoiceForm.get('subTotal')?.value | number:'1.2-2' }}</span>
+                </div>
+                <div class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2 border-0">
+                  <span class="text-muted">CGST</span>
+                  <span class="fw-semibold">₹{{ invoiceForm.get('totalCGST')?.value | number:'1.2-2' }}</span>
+                </div>
+                <div class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2 border-0">
+                  <span class="text-muted">SGST</span>
+                  <span class="fw-semibold">₹{{ invoiceForm.get('totalSGST')?.value | number:'1.2-2' }}</span>
+                </div>
+                <div class="list-group-item bg-transparent d-flex justify-content-between px-0 py-3 border-top mt-2">
+                  <span class="fw-bold h5 mb-0">Total</span>
+                  <span class="fw-bold h4 mb-0 text-success">₹{{ invoiceForm.get('totalAmount')?.value | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                 <label class="form-label text-muted small fw-bold text-uppercase d-block mb-3">Payment Method</label>
+                 <div class="row g-2">
+                    <div class="col-4">
+                       <div class="pay-method-card" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CASH'" (click)="invoiceForm.patchValue({paymentMethod: 'CASH'})">
+                          <div class="fs-4 mb-1">💵</div>
+                          <div class="small fw-bold">Cash</div>
+                       </div>
+                    </div>
+                    <div class="col-4">
+                       <div class="pay-method-card" [class.active]="invoiceForm.get('paymentMethod')?.value === 'UPI'" (click)="onPaymentMethodSelect('UPI')">
+                          <div class="fs-4 mb-1">📱</div>
+                          <div class="small fw-bold">UPI</div>
+                       </div>
+                    </div>
+                    <div class="col-4">
+                       <div class="pay-method-card" [class.active]="invoiceForm.get('paymentMethod')?.value === 'CREDIT'" (click)="invoiceForm.patchValue({paymentMethod: 'CREDIT'})">
+                          <div class="fs-4 mb-1">📝</div>
+                          <div class="small fw-bold">Udhaar</div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div class="alert alert-danger bg-danger-subtle border-0 p-3 rounded-3 mb-4" *ngIf="(invoiceForm.invalid || !selectedCustomer) && !isSubmitting">
+                 <div *ngIf="!selectedCustomer" class="small fw-bold mb-1">⚠️ Select a customer (Step 1)</div>
+                 <div *ngIf="items.invalid" class="small fw-bold">⚠️ Fill item details correctly (Step 2)</div>
+              </div>
+
+              <button type="button" class="btn btn-success btn-lg w-100 py-3 rounded-3 fw-bold shadow-sm" (click)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer || isSubmitting || (limitReached && !isPro)">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                 {{ isSubmitting ? 'Processing...' : 'Generate Invoice' }}
+              </button>
+            </div>
+            <div class="card-footer bg-light border-0 p-4 text-center">
+                 <p class="small text-muted mb-0"><span class="fs-5 me-2">💡</span> Professional GST Invoice compliant with HSN standards</p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Modals Section -->
+    <div *ngIf="showQuickCustomerModal || showQuickProductModal || showSuccessModal" class="modal-backdrop fade show"></div>
+    
     <!-- Quick Add Customer Modal -->
     <div class="modal fade" [class.show]="showQuickCustomerModal" [style.display]="showQuickCustomerModal ? 'block' : 'none'" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-4 p-2">
-          <div class="modal-header border-0">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header border-0 bg-light p-4">
             <h5 class="modal-title fw-bold">Quick Add Customer</h5>
             <button type="button" class="btn-close" (click)="closeQuickCustomerModal()"></button>
           </div>
-          <div class="modal-body">
-            <form [formGroup]="quickCustomerForm" (ngSubmit)="saveQuickCustomer()">
+          <div class="modal-body p-4">
+            <form [formGroup]="quickCustomerForm">
               <div class="mb-3">
-                <label class="form-label fw-bold text-muted small">Full Name</label>
-                <input type="text" formControlName="name" class="form-control premium-input" placeholder="e.g. Rahul Kumar">
+                <label class="form-label fw-bold small text-muted">Full Name</label>
+                <input type="text" formControlName="name" class="form-control py-2 bg-light border-0">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold text-muted small">Mobile Number</label>
-                <input type="text" formControlName="mobile" class="form-control premium-input" placeholder="10-digit number">
+                <label class="form-label fw-bold small text-muted">Mobile Number</label>
+                <input type="text" formControlName="mobile" class="form-control py-2 bg-light border-0">
               </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold text-muted small">Address (Optional)</label>
-                <textarea formControlName="address" class="form-control premium-input" rows="2" placeholder="Full Address"></textarea>
+              <div class="mb-0">
+                <label class="form-label fw-bold small text-muted">Address (Optional)</label>
+                <textarea formControlName="address" class="form-control py-2 bg-light border-0" rows="2"></textarea>
               </div>
             </form>
           </div>
-          <div class="modal-footer border-0">
-            <button type="button" class="btn btn-light text-muted fw-bold" (click)="closeQuickCustomerModal()">Cancel</button>
-            <button type="button" class="btn btn-primary fw-bold px-4" (click)="saveQuickCustomer()" [disabled]="quickCustomerForm.invalid">Save Customer</button>
+          <div class="modal-footer border-0 p-4 pt-0">
+            <button type="button" class="btn btn-light rounded-pill px-4" (click)="closeQuickCustomerModal()">Cancel</button>
+            <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" (click)="saveQuickCustomer()" [disabled]="quickCustomerForm.invalid">Save Customer</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-backdrop fade show" *ngIf="showQuickCustomerModal"></div>
 
     <!-- Quick Add Product Modal -->
     <div class="modal fade" [class.show]="showQuickProductModal" [style.display]="showQuickProductModal ? 'block' : 'none'" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-4 p-2">
-          <div class="modal-header border-0">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header border-0 bg-light p-4">
             <h5 class="modal-title fw-bold">Quick Add Product</h5>
             <button type="button" class="btn-close" (click)="closeQuickProductModal()"></button>
           </div>
-          <div class="modal-body">
-            <form [formGroup]="quickProductForm" (ngSubmit)="saveQuickProduct()">
+          <div class="modal-body p-4">
+            <form [formGroup]="quickProductForm">
               <div class="mb-3">
-                <label class="form-label fw-bold text-muted small">Product Name</label>
-                <input type="text" formControlName="name" class="form-control premium-input">
+                <label class="form-label fw-bold small text-muted">Product Name</label>
+                <input type="text" formControlName="name" class="form-control py-2 bg-light border-0">
               </div>
-              <div class="row">
-                  <div class="col-6 mb-3">
-                    <label class="form-label fw-bold text-muted small">Price (₹)</label>
-                    <input type="number" formControlName="price" class="form-control premium-input">
+              <div class="row g-3 mb-3">
+                  <div class="col-6">
+                    <label class="form-label fw-bold small text-muted">Price (₹)</label>
+                    <input type="number" formControlName="price" class="form-control py-2 bg-light border-0">
                   </div>
-                  <div class="col-6 mb-3">
-                    <label class="form-label fw-bold text-muted small">Stock Qty</label>
-                    <input type="number" formControlName="stockQuantity" class="form-control premium-input">
+                  <div class="col-6">
+                    <label class="form-label fw-bold small text-muted">Stock Qty</label>
+                    <input type="number" formControlName="stockQuantity" class="form-control py-2 bg-light border-0">
                   </div>
               </div>
-              <div class="row">
-                  <div class="col-6 mb-3">
-                    <label class="form-label fw-bold text-muted small">GST %</label>
-                    <select formControlName="gstRate" class="form-control premium-input">
+              <div class="row g-3">
+                  <div class="col-6">
+                    <label class="form-label fw-bold small text-muted">GST %</label>
+                    <select formControlName="gstRate" class="form-select py-2 bg-light border-0">
                         <option *ngFor="let rate of availableGstRates" [value]="rate">{{ rate }}%</option>
                     </select>
                   </div>
-                  <div class="col-6 mb-3">
-                    <label class="form-label fw-bold text-muted small">HSN Code</label>
-                    <input type="text" formControlName="hsnCode" class="form-control premium-input">
+                  <div class="col-6">
+                    <label class="form-label fw-bold small text-muted">HSN Code</label>
+                    <input type="text" formControlName="hsnCode" class="form-control py-2 bg-light border-0">
                   </div>
               </div>
             </form>
           </div>
-          <div class="modal-footer border-0">
-            <button type="button" class="btn btn-light text-muted fw-bold" (click)="closeQuickProductModal()">Cancel</button>
-            <button type="button" class="btn btn-primary fw-bold px-4" (click)="saveQuickProduct()" [disabled]="quickProductForm.invalid">Save Product</button>
+          <div class="modal-footer border-0 p-4 pt-0">
+            <button type="button" class="btn btn-light rounded-pill px-4" (click)="closeQuickProductModal()">Cancel</button>
+            <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" (click)="saveQuickProduct()" [disabled]="quickProductForm.invalid">Save Product</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-backdrop fade show" *ngIf="showQuickProductModal"></div>
 
-    <!-- Success & Share Modal -->
+    <!-- Success Modal -->
     <div class="modal fade" [class.show]="showSuccessModal" [style.display]="showSuccessModal ? 'block' : 'none'" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-premium rounded-5 text-center p-4">
-          <div class="modal-body">
-            <div class="success-icon-wrapper mb-4 mx-auto">
+        <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden text-center p-4">
+          <div class="modal-body py-5">
+            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
               <span class="fs-1">✅</span>
             </div>
-            <h2 class="h3 fw-bold mb-2">Invoice Created!</h2>
-            <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-4 fs-6 fw-bold">{{ createdBillNumber }}</div>
-            <p class="text-muted mb-5">Your invoice has been generated successfully and is ready to share.</p>
+            <h2 class="h3 fw-bold mb-2">Invoice Generated!</h2>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 py-2 rounded-pill mb-4 fs-6 fw-bold">Inv #{{ createdBillNumber }}</div>
+            <p class="text-muted mb-5">Professional invoice created and ready to share with customer.</p>
             
-            <div class="d-grid gap-3 mb-4 mx-auto" style="max-width: 300px;">
-              <button class="btn btn-primary-soft btn-lg fw-bold d-flex align-items-center justify-content-center gap-2" (click)="viewInvoice()">
-                <span>👁️</span> View Invoice
-              </button>
-              <button class="btn btn-whatsapp btn-lg fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm" (click)="shareOnWhatsapp()">
-                <span>📱</span> Share on WhatsApp
-              </button>
-              <button class="btn btn-light btn-lg fw-bold d-flex align-items-center justify-content-center gap-2 text-muted border" (click)="downloadPdf()">
-                <span>📄</span> Download PDF
-              </button>
+            <div class="d-grid gap-2 mb-4">
+              <button class="btn btn-primary rounded-pill py-3 fw-bold" (click)="shareOnWhatsapp()">📱 Share on WhatsApp</button>
+              <button class="btn btn-outline-primary rounded-pill py-3 fw-bold" (click)="viewInvoice()">👁️ View & Print</button>
+              <button class="btn btn-light rounded-pill py-3 fw-bold text-muted border" (click)="downloadPdf()">📄 Download PDF</button>
             </div>
 
-            <div class="position-relative mb-4">
-              <hr class="text-muted opacity-25">
-              <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small fw-bold text-uppercase">or</span>
-            </div>
-
-            <div class="d-flex justify-content-center gap-3">
+            <div class="d-flex justify-content-center gap-3 mt-4">
               <button class="btn btn-link text-decoration-none fw-bold" (click)="resetForm()">Create Another</button>
-              <button class="btn btn-link text-decoration-none text-muted fw-bold" (click)="goToBills()">Go to Bills</button>
+              <button class="btn btn-link text-decoration-none text-muted fw-bold" (click)="goToBills()">View All Bills</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-backdrop fade show" *ngIf="showSuccessModal"></div>
 
-    <!-- Payment Modal -->
+    <!-- UPI Payment Modal -->
     <app-payment-modal
       [isOpen]="isPaymentModalOpen"
       [amount]="invoiceForm.get('totalAmount')?.value || 0"
@@ -374,119 +373,34 @@ import { ProductService } from '../product.service';
     ></app-payment-modal>
   `,
   styles: [`
-    /* Core Aesthetics Restoration */
-    .premium-input {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 16px;
-        font-size: 14px;
-        transition: all 0.2s;
-        width: 100%;
-    }
-    .premium-input:focus {
-        border-color: var(--primary);
-        background: white;
-        box-shadow: 0 0 0 4px var(--primary-glow);
-        outline: none;
-    }
-
-    .shadow-vibrant { box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
-    .shadow-premium { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
-
-    .step-num {
-        width: 32px;
-        height: 32px;
-        background: var(--primary);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 14px;
-        box-shadow: 0 4px 10px var(--primary-glow);
-    }
-    
-    .search-input-container { position: relative; }
-    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-    
-    .pay-option {
-         background: #f8fafc;
-         border: 1px solid #e2e8f0;
-         border-radius: 12px;
-         padding: 16px;
-         text-align: center;
-         cursor: pointer;
-         transition: all 0.2s;
-    }
-    .pay-option:hover { background: #f1f5f9; border-color: #cbd5e1; }
-    .pay-option.active {
-        background: #eff6ff;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 4px var(--primary-glow);
-        color: var(--primary);
-    }
-
-    .btn-outline-dashed {
-        border: 2px dashed #cbd5e1;
-        background: #f8fafc;
-    }
-    .btn-outline-dashed:hover {
-        border-color: var(--primary);
-        color: var(--primary) !important;
-        background: #f0f9ff;
-    }
-
-    .btn-icon-delete {
-        background: #fee2e2;
-        border: none;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-    .btn-icon-delete:hover {
-        background: #ef4444;
-        color: white;
-        transform: scale(1.1);
-    }
-
-    /* Modal Tweaks */
-    .success-icon-wrapper {
-        width: 80px;
-        height: 80px;
-        background: #ecfdf5;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 4px solid #d1fae5;
-        color: #10b981;
-    }
-    .btn-primary-soft { background: #eff6ff; color: #1e40af; border: none; }
-    .btn-primary-soft:hover { background: #dbeafe; color: #1e3a8a; }
-    .btn-whatsapp { background: #25d366; color: white; border: none; }
-    .btn-whatsapp:hover { background: #128c7e; transform: translateY(-2px); }
-
-    /* Responsive Grid for Items */
-    .item-row-header { display: grid; grid-template-columns: 2fr 100px 80px 100px 120px 40px; gap: 12px; }
-    
-    @media (min-width: 768px) {
-        .item-grid-row { display: grid; grid-template-columns: 2fr 100px 80px 100px 120px 40px; gap: 12px; align-items: center; }
-    }
-    
-    /* Animation util */
-    .animation-fade-in { animation: fadeIn 0.5s ease-out; }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Number inputs */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .border-dashed { border: 2px dashed #dee2e6 !important; }
+    .border-dashed:hover { border-color: var(--bs-primary) !important; background-color: var(--bs-primary-bg-subtle); color: var(--bs-primary) !important; }
+
+    .pay-method-card {
+       background: #f8fafc;
+       border: 1px solid #e9ecef;
+       border-radius: 12px;
+       padding: 12px 8px;
+       text-align: center;
+       cursor: pointer;
+       transition: all 0.2s;
+    }
+    .pay-method-card:hover { border-color: #dee2e6; transform: translateY(-2px); }
+    .pay-method-card.active {
+        background: #e7f1ff;
+        border-color: #0d6efd;
+        color: #0d6efd;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.1);
+    }
+    
+    .z-3 { z-index: 1050; }
+    
+    @media (max-width: 767px) {
+        .btn-link { font-size: 0.85rem; }
+    }
   `]
 })
 export class InvoiceCreateComponent implements OnInit {

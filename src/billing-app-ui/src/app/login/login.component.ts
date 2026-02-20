@@ -10,238 +10,139 @@ import { NotificationService } from '../notification.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="login-page">
-      <div class="login-card glass">
-        <div class="login-header">
-          <div class="logo-icon">B</div>
-          <h1>Bill<span>Pro</span></h1>
-          <p>{{ isRegister ? 'Join thousands of smart shop owners' : 'Welcome back, partner!' }}</p>
-        </div>
+    <div class="login-page overflow-hidden">
+      <div class="container d-flex align-items-center justify-content-center min-vh-100 position-relative z-3">
+        <div class="card border-0 shadow-lg rounded-5 overflow-hidden auth-card animate-slide-up">
+          <div class="row g-0">
+            <div class="col-12 p-4 p-md-5">
+              <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-4 shadow-sm mb-3" style="width: 64px; height: 64px; font-size: 2rem; font-weight: 800;">
+                  B
+                </div>
+                <h1 class="h2 fw-bold mb-1">Bill<span class="text-primary">Pro</span></h1>
+                <p class="text-muted small">{{ isRegister ? 'Join thousands of smart shop owners' : 'Welcome back, partner!' }}</p>
+              </div>
 
-        <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="auth-form">
-          <div class="form-group" *ngIf="isRegister">
-            <label>Shop Name</label>
-            <input type="text" formControlName="shopName" class="premium-input" placeholder="e.g. Electra Electronics">
-            <div class="error" *ngIf="showError('shopName')">Shop name is required</div>
+              <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="needs-validation">
+                <div class="mb-3" *ngIf="isRegister">
+                  <label class="form-label small fw-bold text-secondary">Shop Name</label>
+                  <input type="text" formControlName="shopName" class="form-control form-control-lg rounded-3 fs-6 p-3" 
+                         [class.is-invalid]="showError('shopName')" placeholder="e.g. My Awesome Shop">
+                  <div class="invalid-feedback" *ngIf="showError('shopName')">Shop name is required</div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-secondary">Username</label>
+                  <input type="text" formControlName="username" class="form-control form-control-lg rounded-3 fs-6 p-3" 
+                         [class.is-invalid]="showError('username')" placeholder="Your unique username">
+                  <div class="invalid-feedback" *ngIf="showError('username')">Username is required</div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label small fw-bold text-secondary">Password</label>
+                  <input type="password" formControlName="password" class="form-control form-control-lg rounded-3 fs-6 p-3" 
+                         [class.is-invalid]="showError('password')" placeholder="••••••••">
+                  <div class="invalid-feedback" *ngIf="showError('password')">Password is required (min 6 chars)</div>
+                </div>
+
+                <div class="mb-4" *ngIf="isRegister">
+                  <label class="form-label small fw-bold text-secondary">Referral Code (Optional)</label>
+                  <input type="text" formControlName="referralCode" class="form-control form-control-lg rounded-3 fs-6 p-3 text-uppercase" placeholder="E.G. ABCD1234">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 py-3 fw-bold shadow-sm mb-4" [disabled]="authForm.invalid || loading">
+                  <span *ngIf="!loading">{{ isRegister ? 'Create My Account' : 'Sign In to Dashboard' }}</span>
+                  <div *ngIf="loading" class="spinner-border spinner-border-sm" role="status"></div>
+                </button>
+              </form>
+
+              <div class="text-center pt-3 border-top mt-2">
+                <p class="text-muted small mb-2">{{ isRegister ? 'Already have an account?' : "Don't have an account yet?" }}</p>
+                <button type="button" class="btn btn-link text-decoration-none fw-bold p-0" (click)="toggleMode()">
+                  {{ isRegister ? 'Sign In Instead' : 'Create Free Account' }}
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label>Username</label>
-            <input type="text" formControlName="username" class="premium-input" placeholder="Your unique username">
-            <div class="error" *ngIf="showError('username')">Username is required</div>
-          </div>
-
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" formControlName="password" class="premium-input" placeholder="••••••••">
-            <div class="error" *ngIf="showError('password')">Password is required (min 6 chars)</div>
-          </div>
-
-          <div class="form-group" *ngIf="isRegister">
-            <label>Referral Code (Optional)</label>
-            <input type="text" formControlName="referralCode" class="premium-input" placeholder="e.g. ABCD1234">
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-block" [disabled]="authForm.invalid || loading">
-            <span *ngIf="!loading">{{ isRegister ? 'Create My Account' : 'Sign In to Dashboard' }}</span>
-            <span *ngIf="loading" class="spinner"></span>
-          </button>
-        </form>
-
-        <div class="auth-footer">
-          <p>{{ isRegister ? 'Already have an account?' : "Don't have an account yet?" }}</p>
-          <button class="btn-text" (click)="toggleMode()">
-            {{ isRegister ? 'Sign In Instead' : 'Create Free Account' }}
-          </button>
         </div>
       </div>
 
       <!-- Decorative Background Elements -->
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
+      <div class="blob blob-1 position-absolute"></div>
+      <div class="blob blob-2 position-absolute"></div>
     </div>
   `,
   styles: [`
     .login-page {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      overflow: hidden;
+      background-color: #f8fafc;
       position: relative;
     }
 
-    .login-card {
+    .auth-card {
       width: 100%;
-      max-width: 440px;
-      padding: 48px;
-      border-radius: 32px;
-      z-index: 10;
-      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      background: rgba(255, 255, 255, 0.8); /* Fallback/Base */
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
     }
 
-    @media (max-width: 480px) {
-      .login-page {
-        align-items: flex-start;
-        padding-top: 40px;
-        background: white; /* Simplify background on mobile */
-      }
-      
-      .login-card {
-        padding: 32px 24px;
-        border-radius: 0;
-        box-shadow: none;
-        border: none;
-        background: transparent;
-      }
-
-      .blob { display: none; } /* Hide heavy blobs on mobile */
+    .animate-slide-up {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .login-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .logo-icon {
-      width: 64px;
-      height: 64px;
-      background: var(--primary);
-      color: white;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: 800;
-      margin: 0 auto 24px;
-      box-shadow: 0 12px 24px var(--primary-glow);
-    }
-
-    .login-header h1 {
-      font-size: 32px;
-      margin: 0;
-      letter-spacing: -0.04em;
-    }
-
-    .login-header h1 span { color: var(--primary); }
-
-    .login-header p {
-      color: #64748b;
-      margin-top: 8px;
-      font-size: 15px;
-    }
-
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .form-group label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #475569;
-      padding-left: 4px;
-    }
-
-    .premium-input {
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-size: 15px;
-      transition: var(--transition);
-    }
-
-    .premium-input:focus {
-      background: white;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-glow);
-      outline: none;
-    }
-
-    .btn-block {
-      width: 100%;
-      padding: 16px;
-      border-radius: 14px;
-      font-size: 16px;
-      margin-top: 12px;
-    }
-
-    .auth-footer {
-      text-align: center;
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(226, 232, 240, 0.5);
-    }
-
-    .auth-footer p {
-      font-size: 14px;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
-
-    .btn-text {
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    .error { color: var(--danger); font-size: 12px; margin-top: 4px; padding-left: 4px; }
-
-    /* Blobs */
     .blob {
-      position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
+      filter: blur(100px);
       z-index: 1;
-      opacity: 0.4;
+      opacity: 0.15;
     }
 
     .blob-1 {
-      width: 400px;
-      height: 400px;
-      background: #3b82f6;
-      top: -100px;
-      right: -100px;
+      width: 500px;
+      height: 500px;
+      background-color: #0d6efd;
+      top: -150px;
+      right: -150px;
+      animation: float 20s infinite alternate;
     }
 
     .blob-2 {
-      width: 500px;
-      height: 500px;
-      background: #8b5cf6;
-      bottom: -150px;
-      left: -150px;
+      width: 600px;
+      height: 600px;
+      background-color: #6f42c1;
+      bottom: -200px;
+      left: -200px;
+      animation: float 25s infinite alternate-reverse;
     }
 
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
+    @keyframes float {
+      from { transform: translate(0, 0); }
+      to { transform: translate(50px, 50px); }
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .form-control:focus {
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+      border-color: #0d6efd;
+    }
+
+    @media (max-width: 576px) {
+      .auth-card {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent;
+      }
+      .login-page {
+        background: white;
+      }
+      .blob {
+        display: none;
+      }
+    }
   `]
 })
 export class LoginComponent {

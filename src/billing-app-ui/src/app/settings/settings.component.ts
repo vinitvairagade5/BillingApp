@@ -9,188 +9,152 @@ import { NotificationService } from '../notification.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="settings-page animation-fade-in">
-      <header class="page-header">
-        <div>
-          <h1>Settings</h1>
-          <p class="subtitle">Manage your shop profile and tax preferences</p>
+    <div class="container-fluid py-4 animate-fade-in shadow-sm bg-white rounded-4 my-2">
+      <div class="row g-4 align-items-center mb-4">
+        <div class="col">
+          <h1 class="h3 fw-bold mb-1">Settings</h1>
+          <p class="text-secondary small mb-0">Manage your shop profile, security, and tax preferences</p>
         </div>
-      </header>
+      </div>
 
-      <div class="settings-grid">
-        <div class="settings-main">
-          <!-- Profile Section -->
-          <section class="section glass card mb-4">
-            <div class="section-header">
-              <span class="step-num">🏠</span>
-              <h3>Shop Profile</h3>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex align-items-center gap-2">
+              <span class="fs-5">🏠</span>
+              <h5 class="mb-0 fw-bold">Shop Profile</h5>
             </div>
-
-            <form [formGroup]="profileForm" (ngSubmit)="onSave()" class="profile-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Business / Shop Name</label>
-                  <input type="text" formControlName="shopName" class="premium-input">
+            <div class="card-body p-4">
+              <form [formGroup]="profileForm" (ngSubmit)="onSave()">
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">Shop Name</label>
+                    <input type="text" formControlName="shopName" class="form-control rounded-3 p-3">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">GSTIN (Optional)</label>
+                    <input type="text" formControlName="gstin" class="form-control rounded-3 p-3" placeholder="e.g. 07AAAAA0000A1Z5">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>GSTIN (Optional)</label>
-                  <input type="text" formControlName="gstin" class="premium-input" placeholder="e.g. 07AAAAA0000A1Z5">
+
+                <div class="mb-4">
+                  <label class="form-label small fw-bold text-muted">Business Address</label>
+                  <textarea formControlName="address" class="form-control rounded-3 p-3" rows="3"></textarea>
                 </div>
-              </div>
 
-              <div class="form-group">
-                <label>Business Address</label>
-                <textarea formControlName="address" class="premium-input" rows="3"></textarea>
-              </div>
+                <div class="mb-4">
+                  <label class="form-label small fw-bold text-muted">UPI ID (for Payments)</label>
+                  <input type="text" formControlName="upiId" class="form-control rounded-3 p-3" placeholder="e.g. yourshop@okicici">
+                  <p class="form-text small text-muted">Customers will scan a QR code generated from this ID to pay you directly.</p>
+                </div>
 
-              <div class="form-group">
-                <label>UPI ID (for Payments)</label>
-                <input type="text" formControlName="upiId" class="premium-input" placeholder="e.g. yourshop@okicici">
-                <p class="helper-text">Customers will scan a QR code generated from this ID to pay you directly.</p>
-              </div>
+                <div class="mb-4">
+                  <label class="form-label small fw-bold text-muted">Logo URL</label>
+                  <input type="text" formControlName="logoUrl" class="form-control rounded-3 p-3" placeholder="https://example.com/logo.png">
+                  <p class="form-text small text-muted">Enter a direct link to your shop logo (PNG/JPG recommended).</p>
+                </div>
 
-              <div class="form-group">
-                <label>Logo URL</label>
-                <input type="text" formControlName="logoUrl" class="premium-input" placeholder="https://example.com/logo.png">
-                <p class="helper-text">Enter a direct link to your shop logo (PNG/JPG recommended).</p>
-              </div>
-
-              <div class="profile-footer">
-                <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || loading">
-                  <span *ngIf="!loading">Save Changes</span>
-                  <span *ngIf="loading">Saving...</span>
-                </button>
-              </div>
-            </form>
-          </section>
-
-          <!-- Change Password Section -->
-          <section class="section glass card mb-4">
-            <div class="section-header">
-              <span class="step-num">🔒</span>
-              <h3>Security / Change Password</h3>
+                <div class="text-end">
+                  <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold" [disabled]="profileForm.invalid || loading">
+                    <span *ngIf="!loading">Save Changes</span>
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                    <span *ngIf="loading">Saving...</span>
+                  </button>
+                </div>
+              </form>
             </div>
-            
-            <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="profile-form">
-               <div class="form-group">
-                 <label>Current Password</label>
-                 <input type="password" formControlName="currentPassword" class="premium-input" placeholder="••••••">
-               </div>
-               
-               <div class="form-group">
-                 <label>New Password</label>
-                 <input type="password" formControlName="newPassword" class="premium-input" placeholder="•••••• (min 6 chars)">
-               </div>
-               
-               <div class="form-group">
-                 <label>Confirm New Password</label>
-                 <input type="password" formControlName="confirmPassword" class="premium-input" placeholder="••••••">
-                 <p class="error-text" *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched">
-                    Passwords do not match
-                 </p>
-               </div>
-               
-               <div class="profile-footer">
-                 <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || loading">
-                    Update Password
-                 </button>
-               </div>
-            </form>
-          </section>
+          </div>
 
-          <!-- GST Rates Section -->
-          <section class="section glass card">
-            <div class="section-header">
-              <span class="step-num">🧾</span>
-              <h3>GST Rate Configuration</h3>
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex align-items-center gap-2">
+              <span class="fs-5">🔒</span>
+              <h5 class="mb-0 fw-bold">Security / Change Password</h5>
             </div>
-            
-            <p class="section-desc">Add or remove the GST rate percentages available during invoice creation.</p>
-            
-            <div class="gst-manager">
-                <div class="gst-tags">
-                    <div *ngFor="let rate of gstRatesArray; let i = index" class="gst-tag">
-                        {{ rate }}%
-                        <button class="remove-rate" (click)="removeGstRate(i)">×</button>
-                    </div>
+            <div class="card-body p-4">
+              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-muted">Current Password</label>
+                  <input type="password" formControlName="currentPassword" class="form-control rounded-3 p-3" placeholder="••••••">
                 </div>
                 
-                <div class="add-rate-box">
-                    <input type="number" #newRateInput placeholder="New Rate (e.g. 15)" class="premium-input sm">
-                    <button class="btn btn-secondary sm" (click)="addGstRate(newRateInput.value); newRateInput.value=''">Add Rate</button>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">New Password</label>
+                    <input type="password" formControlName="newPassword" class="form-control rounded-3 p-3" placeholder="•••••• (min 6 chars)">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">Confirm New Password</label>
+                    <input type="password" formControlName="confirmPassword" class="form-control rounded-3 p-3" placeholder="••••••">
+                  </div>
                 </div>
+                
+                <div class="alert alert-danger border-0 p-2 small mb-3 animate-fade-in" *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched">
+                   Passwords do not match
+                </div>
+
+                <div class="text-end">
+                  <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold" [disabled]="passwordForm.invalid || loading">
+                    Update Password
+                  </button>
+                </div>
+              </form>
             </div>
-            
-            <div class="profile-footer border-t mt-4 pt-4">
-                <button class="btn btn-primary" (click)="saveGstRates()" [disabled]="loading">
-                    Save GST Rates
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-light border-0 py-3 px-4 d-flex align-items-center gap-2">
+              <span class="fs-5">🧾</span>
+              <h5 class="mb-0 fw-bold">GST Rate Configuration</h5>
+            </div>
+            <div class="card-body p-4">
+              <p class="text-muted small mb-4">Add or remove the GST rate percentages available during invoice creation.</p>
+              
+              <div class="d-flex flex-wrap gap-2 mb-4">
+                <div *ngFor="let rate of gstRatesArray; let i = index" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill p-2 ps-3 d-flex align-items-center gap-2">
+                  <span class="fw-bold">{{ rate }}%</span>
+                  <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" (click)="removeGstRate(i)" aria-label="Remove"></button>
+                </div>
+              </div>
+              
+              <div class="row g-2 align-items-center mb-4">
+                <div class="col-auto">
+                  <input type="number" #newRateInput placeholder="New Rate (e.g. 15)" class="form-control rounded-pill px-3 py-2">
+                </div>
+                <div class="col-auto">
+                  <button type="button" class="btn btn-light rounded-pill px-4 border" (click)="addGstRate(newRateInput.value); newRateInput.value=''">Add Rate</button>
+                </div>
+              </div>
+              
+              <div class="border-top pt-4 text-end">
+                <button type="button" class="btn btn-primary rounded-pill px-5 py-2 fw-bold" (click)="saveGstRates()" [disabled]="loading">
+                  Save GST Rates
                 </button>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
 
-        <aside class="settings-sidebar">
-          <div class="card glass preview-card">
-            <h3>Logo Preview</h3>
-            <div class="logo-preview">
-              <img [src]="profileForm.get('logoUrl')?.value || 'https://via.placeholder.com/150?text=No+Logo'" alt="Logo Preview">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+            <h5 class="fw-bold text-dark mb-4">Logo Preview</h5>
+            <div class="mx-auto rounded-4 border d-flex align-items-center justify-content-center bg-light overflow-hidden mb-3" style="width: 180px; height: 180px;">
+              <img [src]="profileForm.get('logoUrl')?.value || 'https://via.placeholder.com/180?text=No+Logo'" 
+                   class="img-fluid" style="max-height: 100%; object-fit: contain;" alt="Logo Preview">
             </div>
-            <p>This logo will appear in the top right of your generated PDF invoices.</p>
+            <p class="text-secondary small">This logo will appear on your generated PDF invoices for a professional look.</p>
           </div>
-        </aside>
+        </div>
       </div>
     </div>
   `,
   styles: [`
-    .settings-page { padding-bottom: 40px; }
-    .page-header { margin-bottom: 32px; }
-    .page-header h1 { margin: 0; font-size: 32px; }
-    .subtitle { color: #64748b; margin: 4px 0 0 0; }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .settings-grid { display: grid; grid-template-columns: 1fr 300px; gap: 32px; align-items: start; }
-    
-    .section { padding: 32px; }
-    .mb-4 { margin-bottom: 24px; }
-    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-    .step-num { font-size: 24px; }
-    .section-desc { color: #64748b; font-size: 14px; margin-bottom: 24px; }
-    
-    .profile-form { display: flex; flex-direction: column; gap: 24px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-group label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-    
-    .premium-input { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 15px; transition: var(--transition); }
-    .premium-input.sm { padding: 8px 12px; font-size: 14px; width: 140px; }
-    .premium-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px var(--primary-glow); outline: none; }
-    
-    textarea.premium-input { resize: none; }
-    .helper-text { font-size: 12px; color: #94a3b8; margin-top: 4px; }
-
-    .profile-footer { margin-top: 16px; display: flex; justify-content: flex-end; }
-    .border-t { border-top: 1px solid #e2e8f0; }
-    .mt-4 { margin-top: 24px; }
-    .pt-4 { padding-top: 24px; }
-    
-    .gst-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-    .gst-tag { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-    .remove-rate { background: none; border: none; color: #1e40af; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; }
-    .remove-rate:hover { color: #ef4444; }
-    
-    .add-rate-box { display: flex; gap: 12px; align-items: center; }
-    
-    .btn.sm { padding: 8px 16px; font-size: 14px; border-radius: 10px; }
-
-    .preview-card { padding: 24px; text-align: center; }
-    .logo-preview { width: 150px; height: 150px; margin: 20px auto; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white; }
-    .logo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
-    .preview-card p { font-size: 13px; color: #64748b; line-height: 1.5; }
-
-    .animation-fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    
-    .error-text { color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 600; }
+    .form-control:focus {
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+      border-color: #0d6efd;
+    }
   `]
 })
 export class SettingsComponent implements OnInit {

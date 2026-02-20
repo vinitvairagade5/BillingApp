@@ -13,86 +13,103 @@ import { NotificationService } from '../notification.service';
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule, PaymentModalComponent],
   template: `
-    <div class="ledger-page animation-fade-in">
-      <header class="page-header">
-        <div class="header-left">
-           <button class="btn-back" routerLink="/udhaar">← Back</button>
-           <h1>Customer Statement</h1>
+    <div class="container-fluid py-4 animate-fade-in">
+      <div class="row g-4 align-items-center mb-4">
+        <div class="col-auto">
+          <button class="btn btn-link link-secondary text-decoration-none fw-bold p-0" routerLink="/udhaar">
+            <span class="fs-4">←</span> Back
+          </button>
         </div>
-        <div class="header-stats">
-          <div class="stat-box" [class.danger]="balance > 0">
-             <span class="label">Current Balance</span>
-             <span class="value">₹{{ balance | number:'1.2-2' }}</span>
+        <div class="col">
+          <h1 class="h3 fw-bold mb-0">Customer Statement</h1>
+        </div>
+        <div class="col-auto">
+          <div class="card border-0 shadow-sm rounded-4 py-2 px-4 border" 
+               [class.bg-danger-subtle]="balance > 0" 
+               [class.border-danger]="balance > 0"
+               [class.bg-success-subtle]="balance <= 0"
+               [class.border-success]="balance <= 0">
+            <div class="small fw-bold text-uppercase tracking-wider mb-1" [class.text-danger]="balance > 0" [class.text-success]="balance <= 0">Current Balance</div>
+            <div class="h4 fw-extrabold mb-0" [class.text-danger]="balance > 0" [class.text-success]="balance <= 0">₹{{ balance | number:'1.2-2' }}</div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div class="ledger-grid">
-        <div class="history-section">
-          <section class="section glass card">
-             <div class="section-header">
-                <h3>Transaction History</h3>
-             </div>
-             <div class="table-container">
-               <table class="premium-table">
-                 <thead>
-                   <tr>
-                     <th>Date</th>
-                     <th>Details</th>
-                     <th class="text-right">Debit (+)</th>
-                     <th class="text-right">Credit (-)</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr *ngFor="let item of history">
-                     <td>{{ item.date | date:'shortDate' }}</td>
-                     <td>
-                        <div class="details">
-                           <strong>{{ item.description }}</strong>
-                           <small *ngIf="item.billId">Bill #{{ item.billId }}</small>
-                        </div>
-                     </td>
-                     <td class="text-right text-danger">{{ item.type === 'DEBIT' ? '₹' + (item.amount | number:'1.2-2') : '' }}</td>
-                     <td class="text-right text-success">{{ item.type === 'CREDIT' ? '₹' + (item.amount | number:'1.2-2') : '' }}</td>
-                   </tr>
-                   <tr *ngIf="history.length === 0">
-                      <td colspan="4" class="empty-state">No transactions found for this customer.</td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-          </section>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white h-100">
+            <div class="card-header bg-light border-0 py-3 px-4">
+              <h5 class="mb-0 fw-bold">Transaction History</h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                  <tr class="text-muted small fw-bold">
+                    <th class="py-3 px-4 border-0">DATE</th>
+                    <th class="py-3 px-4 border-0">DETAILS</th>
+                    <th class="py-3 px-4 border-0 text-end">DEBIT (+)</th>
+                    <th class="py-3 px-4 border-0 text-end">CREDIT (-)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of history" class="border-bottom border-light">
+                    <td class="py-3 px-4 small text-secondary fw-medium">{{ item.date | date:'shortDate' }}</td>
+                    <td class="py-3 px-4">
+                      <div class="fw-bold text-dark">{{ item.description }}</div>
+                      <div class="text-muted extra-small" *ngIf="item.billId">Bill #{{ item.billId }}</div>
+                    </td>
+                    <td class="py-3 px-4 text-end">
+                      <span class="text-danger fw-bold" *ngIf="item.type === 'DEBIT'">₹{{ item.amount | number:'1.2-2' }}</span>
+                    </td>
+                    <td class="py-3 px-4 text-end">
+                      <span class="text-success fw-bold" *ngIf="item.type === 'CREDIT'">₹{{ item.amount | number:'1.2-2' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-5 text-center" *ngIf="history.length === 0">
+              <div class="display-1 text-muted opacity-25 mb-3">📄</div>
+              <h5 class="text-muted fw-bold">No Transactions</h5>
+              <p class="text-secondary mb-0">No entries recorded for this customer yet.</p>
+            </div>
+          </div>
         </div>
 
-        <aside class="action-sidebar">
-          <section class="section glass card">
-             <div class="section-header">
-                <span class="icon">💰</span>
-                <h3>Record Payment</h3>
-             </div>
-             <p class="desc">Received a payment from the customer? Add it here to settle the balance.</p>
-             
-             <form [formGroup]="paymentForm" (ngSubmit)="onRecordPayment()" class="payment-form">
-                <div class="form-group">
-                   <label>Amount Received</label>
-                   <input type="number" formControlName="amount" class="premium-input" placeholder="0.00">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="fs-4">💰</span>
+              <h5 class="mb-0 fw-bold">Record Payment</h5>
+            </div>
+            <p class="text-muted small mb-4">Received a payment? Record it here to settle the balance.</p>
+            
+            <form [formGroup]="paymentForm" (ngSubmit)="onRecordPayment()">
+              <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Amount Received</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 rounded-start-3">₹</span>
+                  <input type="number" formControlName="amount" class="form-control rounded-end-3 p-3 border-start-0 fs-5 fw-bold" placeholder="0.00">
                 </div>
-                <div class="form-group">
-                   <label>Description (Optional)</label>
-                   <input type="text" formControlName="description" class="premium-input" placeholder="e.g. Paid in Cash">
-                </div>
-                
-                <div class="btn-group">
-                    <button type="button" class="btn btn-secondary" (click)="openUpiModal()" title="Pay via UPI">
-                        📱 UPI
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-block" [disabled]="paymentForm.invalid || loading">
-                       {{ loading ? 'Recording...' : 'Record Credit Entry' }}
-                    </button>
-                </div>
-             </form>
-          </section>
-        </aside>
+              </div>
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-muted">Description (Optional)</label>
+                <input type="text" formControlName="description" class="form-control rounded-3 p-3" placeholder="e.g. Paid in Cash">
+              </div>
+              
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold" (click)="openUpiModal()">
+                  📱 UPI
+                </button>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 flex-grow-1 fw-bold shadow-sm" [disabled]="paymentForm.invalid || loading">
+                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                  Save Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
       
       <app-payment-modal
@@ -106,52 +123,11 @@ import { NotificationService } from '../notification.service';
     </div>
   `,
   styles: [`
-    .ledger-page { padding-bottom: 40px; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: white; padding: 24px 32px; border-radius: 24px; }
-    
-    .header-left { display: flex; align-items: center; gap: 20px; }
-    .btn-back { background: #f1f5f9; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; color: #64748b; transition: var(--transition); }
-    .btn-back:hover { background: #e2e8f0; color: #0f172a; }
-    .page-header h1 { margin: 0; font-size: 28px; }
-    
-    .stat-box { background: #f1f5f9; padding: 12px 24px; border-radius: 16px; border: 1px solid #e2e8f0; text-align: right; }
-    .stat-box .label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-    .stat-box .value { font-size: 24px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .stat-box.danger { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
-
-    .ledger-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
-    
-    .section { padding: 32px; border-radius: 24px; }
-    .section-header { margin-bottom: 24px; }
-    .section-header h3 { margin: 0; font-size: 20px; }
-
-    .premium-table { width: 100%; border-collapse: collapse; }
-    .premium-table th { padding: 16px; border-bottom: 2px solid #f1f5f9; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
-    .premium-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-
-    .details strong { display: block; color: #1e293b; }
-    .details small { color: #94a3b8; }
-
-    .text-danger { color: #dc2626; font-weight: 700; }
-    .text-success { color: #16a34a; font-weight: 700; }
-
-    .action-sidebar .desc { font-size: 14px; color: #64748b; margin-bottom: 24px; }
-    .payment-form { display: flex; flex-direction: column; gap: 20px; }
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-    .premium-input { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 15px; }
-
-    .btn-group { display: flex; gap: 10px; }
-    .btn-block { flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
-    .btn-secondary { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; padding: 14px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    .btn-secondary:hover { background: #dbeafe; }
-    .btn-primary { background: #2563eb; color: white; transition: var(--transition); }
-    .btn-primary:hover { background: #1d4ed8; }
-    
-    .empty-state { text-align: center; color: #94a3b8; padding: 40px !important; }
-
-    .animation-fade-in { animation: fadeIn 0.4s ease-out; }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fw-extrabold { font-weight: 800; }
+    .tracking-wider { letter-spacing: 0.1em; }
+    .extra-small { font-size: 0.75rem; }
   `]
 })
 export class CustomerLedgerComponent implements OnInit {

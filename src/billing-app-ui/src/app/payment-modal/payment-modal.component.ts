@@ -7,111 +7,56 @@ import { QRCodeModule } from 'angularx-qrcode';
   standalone: true,
   imports: [CommonModule, QRCodeModule],
   template: `
-    <div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
-      <div class="modal-content glass" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Scan to Pay</h3>
-          <button class="close-btn" (click)="close()">×</button>
-        </div>
-        
-        <div class="modal-body">
-            <div class="qr-container">
-                <!-- UPI URL Format: upi://pay?pa=ADDRESS&pn=NAME&am=AMOUNT&cu=INR -->
-                <qrcode [qrdata]="upiString" [width]="200" [errorCorrectionLevel]="'M'"></qrcode>
-            </div>
-            
-            <div class="payment-details">
-                <p class="amount">₹{{ amount | number:'1.2-2' }}</p>
-                <p class="upi-id">{{ shopUpiId }}</p>
-                <div class="helper-text">Scan with any UPI App (GPay, PhonePe, Paytm)</div>
-            </div>
-            
-            <div class="info-alert">
-                <span class="icon">ℹ️</span>
-                <p>Payment confirmation is manual. Please check your phone/soundbox for confirmation.</p>
-            </div>
-        </div>
-        
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="close()">Cancel</button>
-          <button class="btn btn-success" (click)="confirmPayment()">
-            ✅ Payment Received
-          </button>
+    <div class="modal fade" [class.show]="isOpen" [style.display]="isOpen ? 'block' : 'none'" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header border-0 bg-light p-4">
+            <h5 class="modal-title fw-bold text-dark">Scan to Pay</h5>
+            <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+          </div>
+          
+          <div class="modal-body p-4 text-center">
+              <div class="qr-wrapper p-3 bg-white shadow-sm rounded-4 d-inline-block border mb-4">
+                  <!-- UPI URL Format: upi://pay?pa=ADDRESS&pn=NAME&am=AMOUNT&cu=INR -->
+                  <qrcode [qrdata]="upiString" [width]="200" [margin]="2" [errorCorrectionLevel]="'M'"></qrcode>
+              </div>
+              
+              <div class="payment-info mb-4">
+                  <div class="display-5 fw-bold text-primary mb-1">₹{{ amount | number:'1.2-2' }}</div>
+                  <div class="badge bg-light text-muted border px-3 py-2 rounded-pill font-monospace small mb-3">{{ shopUpiId }}</div>
+                  <p class="text-muted small px-4">Scan this QR code with any UPI app like GPay, PhonePe, or Paytm to complete the transaction.</p>
+              </div>
+              
+              <div class="alert alert-info border-0 bg-info-subtle text-info d-flex align-items-start gap-3 p-3 rounded-3 text-start mb-0">
+                  <span class="fs-4">ℹ️</span>
+                  <p class="small mb-0 fw-medium">Payment confirmation is manual. Once you've verified the payment on your device, please click the button below.</p>
+              </div>
+          </div>
+          
+          <div class="modal-footer border-0 p-4 pt-0 d-flex gap-3">
+            <button type="button" class="btn btn-light rounded-pill px-4 flex-grow-1 fw-bold text-muted border" (click)="close()">Cancel</button>
+            <button type="button" class="btn btn-success rounded-pill px-4 flex-grow-1 fw-bold shadow-sm" (click)="confirmPayment()">
+              ✅ Payment Received
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    <div class="modal-backdrop fade show" *ngIf="isOpen"></div>
   `,
   styles: [`
-    .modal-backdrop {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-      animation: fadeIn 0.2s ease-out;
-    }
+    .modal.show { display: block; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+    .qr-wrapper { transition: transform 0.3s ease; }
+    .qr-wrapper:hover { transform: scale(1.02); }
     
     .modal-content {
-      background: white; width: 90%; max-width: 400px;
-      border-radius: 20px;
-      padding: 0;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      animation: modalSlideUp 0.3s ease-out;
     }
     
-    .modal-header {
-      padding: 16px 24px;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex; justify-content: space-between; align-items: center;
+    @keyframes modalSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-    
-    .modal-header h3 { margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; }
-    .close-btn { background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer; }
-    
-    .modal-body { padding: 20px 24px; text-align: center; }
-    
-    .qr-container { 
-        background: white; 
-        padding: 16px; 
-        border-radius: 12px; 
-        display: inline-block;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        margin-bottom: 16px;
-    }
-    
-    .amount { font-size: 32px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0; }
-    .upi-id { font-family: monospace; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 16px; }
-    .helper-text { font-size: 13px; color: #64748b; }
-    
-    .info-alert {
-        margin-top: 16px;
-        background: #eff6ff;
-        border: 1px solid #dbeafe;
-        border-radius: 8px;
-        padding: 12px;
-        font-size: 12px;
-        color: #1e40af;
-        display: flex; gap: 8px; align-items: start; text-align: left;
-    }
-    
-    .modal-footer {
-      padding: 16px 24px;
-      border-top: 1px solid #e2e8f0;
-      display: flex; justify-content: flex-end; gap: 12px;
-    }
-    
-    .btn { padding: 10px 20px; border-radius: 10px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
-    .btn-secondary { background: #f1f5f9; color: #475569; }
-    .btn-secondary:hover { background: #e2e8f0; }
-    .btn-success { background: #10b981; color: white; }
-    .btn-success:hover { background: #059669; transform: translateY(-1px); }
-    
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   `]
 })
 export class PaymentModalComponent {

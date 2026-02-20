@@ -1,112 +1,207 @@
-<div class="container">
-  <div class="header">
-    <h1>Products</h1>
-    <button class="btn-primary" (click)="openAddModal()">Add Product</button>
-  </div>
-
-  <div class="search-bar">
-    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-      placeholder="Search products by name or category...">
-  </div>
-
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Price</th>
-          <th>GST Rate (%)</th>
-          <th>Stock</th>
-          <th>HSN Code</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let product of filteredProducts">
-          <td>{{ product.name }}</td>
-          <td>{{ product.category || 'N/A' }}</td>
-          <td>{{ product.price | currency:'INR' }}</td>
-          <td>{{ product.gstRate }}%</td>
-          <td [class.low-stock]="product.stockQuantity <= (product.lowStockThreshold || 5)">
-            {{ product.stockQuantity }}
-            <span *ngIf="product.stockQuantity <= (product.lowStockThreshold || 5)" class="badge-warning">Low</span>
-            <span *ngIf="product.stockQuantity <= 0" class="badge-danger">Out</span>
-          </td>
-          <td>{{ product.hsnCode || 'N/A' }}</td>
-          <td class="actions">
-            <button class="btn-icon" (click)="openEditModal(product)" title="Edit">
-              <span class="icon">✏️</span>
-            </button>
-            <button class="btn-icon btn-delete" (click)="deleteProduct(product.id!)" title="Delete"
-              [disabled]="isSaving">
-              <span class="icon">🗑️</span>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="pagination-controls">
-    <button class="btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
-    <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
-    <button class="btn-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal" [class.open]="isModalOpen">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
-      <button class="close-btn" (click)="closeModal()" [disabled]="isSaving">&times;</button>
+<div class="container-fluid py-4 animate-fade-in shadow-sm bg-white rounded-4 my-2">
+  <!-- Header & Action -->
+  <div class="row g-4 align-items-center mb-4">
+    <div class="col">
+      <h1 class="h3 fw-bold mb-1">Product Inventory</h1>
+      <p class="text-secondary small mb-0">Manage your items, tracking stock levels and tax configurations</p>
     </div>
-    <form (ngSubmit)="saveProduct()">
-      <!-- ... (keeping body same) ... -->
-      <div class="form-group">
-        <label>Product Name</label>
-        <input type="text" [(ngModel)]="newProduct.name" name="name" required [disabled]="isSaving">
-      </div>
-      <div class="form-row">
-        <label>Price</label>
-        <input type="number" [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving">
-      </div>
-      <div class="form-group">
-        <label>Stock Quantity</label>
-        <input type="number" [(ngModel)]="newProduct.stockQuantity" name="stockQuantity" required [disabled]="isSaving">
-      </div>
-      <div class="form-group">
-        <label>Low Stock Limit</label>
-        <input type="number" [(ngModel)]="newProduct.lowStockThreshold" name="lowStockThreshold" [disabled]="isSaving">
-      </div>
-      <div class="form-group">
-        <label>GST Rate (%)</label>
-        <select [(ngModel)]="newProduct.gstRate" name="gstRate" [disabled]="isSaving">
-          <option [ngValue]="0">0%</option>
-          <option [ngValue]="5">5%</option>
-          <option [ngValue]="12">12%</option>
-          <option [ngValue]="18">18%</option>
-          <option [ngValue]="28">28%</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Category</label>
-          <input type="text" [(ngModel)]="newProduct.category" name="category" [disabled]="isSaving">
-        </div>
-        <div class="form-group">
-          <label>HSN Code</label>
-          <input type="text" [(ngModel)]="newProduct.hsnCode" name="hsnCode" [disabled]="isSaving">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Cancel</button>
-        <button type="submit" class="btn-primary" [disabled]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Save Product' }}
-        </button>
-      </div>
+    <div class="col-auto">
+      <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center gap-2"
+        (click)="openAddModal()">
+        <span class="fs-5">+</span> Add New Product
+      </button>
+    </div>
+  </div>
 
-    </form>
+  <!-- Search Bar -->
+  <div class="card border-0 bg-light rounded-4 p-2 mb-4">
+    <div class="input-group input-group-lg border-0">
+      <span class="input-group-text bg-transparent border-0 text-muted"><span class="fs-4">🔍</span></span>
+      <input type="text" class="form-control bg-transparent border-0 shadow-none fs-6" [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()" placeholder="Search by name, category or HSN code...">
+    </div>
+  </div>
+
+  <!-- Product Table -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr class="text-muted extra-small fw-bold text-uppercase">
+            <th class="py-3 px-4 border-0">PRODUCT NAME</th>
+            <th class="py-3 px-4 border-0">CATEGORY</th>
+            <th class="py-3 px-4 border-0 text-end">PRICE</th>
+            <th class="py-3 px-4 border-0 text-center">GST</th>
+            <th class="py-3 px-4 border-0">STOCK STATUS</th>
+            <th class="py-3 px-4 border-0 text-center">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of filteredProducts" class="border-bottom border-light">
+            <td class="py-3 px-4">
+              <div class="fw-bold text-dark">{{ product.name }}</div>
+              <div class="text-muted extra-small">HSN: {{ product.hsnCode || '---' }}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="badge bg-light text-secondary border fw-medium rounded-pill px-3">{{ product.category ||
+                'General' }}</span>
+            </td>
+            <td class="py-3 px-4 text-end">
+              <div class="fw-extrabold text-dark fs-5">₹{{ product.price | number:'1.2-2' }}</div>
+            </td>
+            <td class="py-3 px-4 text-center">
+              <span class="text-muted small fw-bold">{{ product.gstRate }}%</span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-extrabold" [class.text-danger]="product.stockQuantity <= 0"
+                  [class.text-warning]="product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5)">
+                  {{ product.stockQuantity }}
+                </span>
+                <span *ngIf="product.stockQuantity <= 0" class="badge bg-danger rounded-pill extra-small">STOCK
+                  OUT</span>
+                <span *ngIf="product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5)"
+                  class="badge bg-warning text-dark rounded-pill extra-small">LOW STOCK</span>
+              </div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-light btn-sm rounded-circle border p-2" (click)="openEditModal(product)"
+                  title="Edit">
+                  ✏️
+                </button>
+                <button class="btn btn-outline-danger btn-sm rounded-circle p-2" (click)="deleteProduct(product.id!)"
+                  title="Delete" [disabled]="isSaving">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredProducts.length === 0">
+            <td colspan="6" class="py-5 text-center text-muted">
+              <div class="display-1 opacity-25 mb-3">📦</div>
+              <p class="h5 fw-bold text-secondary">No products found</p>
+              <p class="small">Try a different search or add items to your inventory.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer bg-white border-0 py-4 px-4 border-top border-light">
+      <div class="row align-items-center g-3">
+        <div class="col-sm text-center text-sm-start">
+          <span class="text-muted small fw-medium">
+            Page <span class="text-dark fw-bold">{{ currentPage }}</span> of <span class="text-dark fw-bold">{{
+              totalPages || 1 }}</span>
+          </span>
+        </div>
+        <div class="col-sm-auto">
+          <div class="d-flex gap-2 justify-content-center">
+            <button class="btn btn-light btn-sm border rounded-pill px-4 fw-bold" (click)="prevPage()"
+              [disabled]="currentPage === 1">
+              Previous
+            </button>
+            <button class="btn btn-light btn-sm border rounded-pill px-4 fw-bold" (click)="nextPage()"
+              [disabled]="currentPage === totalPages">
+              Next Page
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- Modern Product Modal -->
+<div class="modal fade" [class.show]="isModalOpen" [style.display]="isModalOpen ? 'block' : 'none'" tabindex="-1"
+  role="dialog">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header border-0 bg-primary text-white p-4">
+        <h5 class="modal-title fw-bold">
+          {{ editingProduct ? 'Modify Product Details' : 'Register New Inventory Item' }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()" [disabled]="isSaving"></button>
+      </div>
+      <form (ngSubmit)="saveProduct()">
+        <div class="modal-body p-4 bg-light bg-opacity-50">
+          <div class="row g-4">
+            <!-- Basic Info -->
+            <div class="col-md-12">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Product Display
+                Name</label>
+              <input type="text" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.name" name="name" required [disabled]="isSaving"
+                placeholder="e.g. Wireless Mouse Pro">
+            </div>
+
+            <!-- Financials -->
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Unit Price
+                (₹)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border rounded-start-3 text-muted">₹</span>
+                <input type="number" class="form-control rounded-end-3 p-3 shadow-none border fw-bold"
+                  [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving" placeholder="0.00">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">GST
+                Configuration</label>
+              <select class="form-select rounded-3 p-3 shadow-none border fw-bold" [(ngModel)]="newProduct.gstRate"
+                name="gstRate" [disabled]="isSaving">
+                <option [ngValue]="0">Tax Free (0%)</option>
+                <option [ngValue]="5">GST @ 5%</option>
+                <option [ngValue]="12">GST @ 12%</option>
+                <option [ngValue]="18">GST @ 18%</option>
+                <option [ngValue]="28">GST @ 28%</option>
+              </select>
+            </div>
+
+            <!-- Logistics -->
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Current Stock
+                Qty</label>
+              <input type="number" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.stockQuantity" name="stockQuantity" required [disabled]="isSaving"
+                placeholder="0">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Low Stock Alert
+                Level</label>
+              <input type="number" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.lowStockThreshold" name="lowStockThreshold" [disabled]="isSaving"
+                placeholder="5">
+            </div>
+
+            <!-- Metadata -->
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Product
+                Category</label>
+              <input type="text" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.category" name="category" [disabled]="isSaving" placeholder="e.g. Electronics">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">HSN / SAC
+                Code</label>
+              <input type="text" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.hsnCode" name="hsnCode" [disabled]="isSaving"
+                placeholder="Required for GST billing">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-end gap-3">
+          <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" (click)="closeModal()"
+            [disabled]="isSaving">Discard</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" [disabled]="isSaving">
+            <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isSaving ? 'Committing...' : 'Confirm & Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="isModalOpen"></div>

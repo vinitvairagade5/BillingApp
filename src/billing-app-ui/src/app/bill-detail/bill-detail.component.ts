@@ -10,409 +10,246 @@ import { QRCodeModule } from 'angularx-qrcode';
   standalone: true,
   imports: [CommonModule, RouterModule, QRCodeModule],
   template: `
-    <div class="page-container animation-fade-in" *ngIf="bill">
+    <div class="container-fluid py-4 animate-fade-in" *ngIf="bill">
       
       <!-- Action Bar (No Print) -->
-      <header class="action-bar no-print">
-        <button class="btn-back" routerLink="/bills">← Back</button>
-        <div class="actions">
-          <button class="btn btn-whatsapp" (click)="shareOnWhatsapp()">
-            <span class="icon">📱</span> Share WhatsApp
-          </button>
-          <button class="btn btn-primary" (click)="downloadPdf()">
-            <span class="icon">⬇️</span> Download PDF
-          </button>
-          <button class="btn btn-print" (click)="printInvoice()">
-            <span class="icon">🖨️</span> Print
+      <div class="row mb-4 align-items-center no-print g-3">
+        <div class="col-auto">
+          <button class="btn btn-link link-secondary text-decoration-none fw-bold" routerLink="/bills">
+            <span class="fs-5">←</span> Back to Dashboard
           </button>
         </div>
-      </header>
+        <div class="col text-end">
+          <div class="d-flex gap-2 justify-content-end flex-wrap">
+            <button class="btn btn-whatsapp rounded-pill px-4" (click)="shareOnWhatsapp()">
+              📱 Share WhatsApp
+            </button>
+            <button class="btn btn-outline-primary rounded-pill px-4" (click)="downloadPdf()">
+              ⬇️ PDF
+            </button>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" (click)="printInvoice()">
+              🖨️ Print Invoice
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Invoice Paper -->
-      <div class="invoice-paper shadow-premium">
+      <div class="invoice-paper border-0 shadow-lg mx-auto bg-white rounded-3">
         
         <!-- Header Section -->
-        <div class="invoice-header">
-          <div class="brand-section">
-            <h1 class="shop-name">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
-            <div class="shop-details">
-              <p>{{ bill.shopOwner?.address }}</p>
-              <p *ngIf="bill.shopOwner?.gstin"><strong>GSTIN:</strong> {{ bill.shopOwner?.gstin }}</p>
-              <p *ngIf="bill.shopOwner?.mobile"><strong>Phone:</strong> {{ bill.shopOwner?.mobile }}</p>
+        <div class="row align-items-start mb-5">
+          <div class="col-sm-7">
+            <h1 class="display-6 fw-extrabold text-primary text-uppercase mb-2">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
+            <div class="text-secondary small">
+              <p class="mb-1">{{ bill.shopOwner?.address }}</p>
+              <p class="mb-1" *ngIf="bill.shopOwner?.gstin"><strong>GSTIN:</strong> {{ bill.shopOwner?.gstin }}</p>
+              <p class="mb-0" *ngIf="bill.shopOwner?.mobile"><strong>Phone:</strong> {{ bill.shopOwner?.mobile }}</p>
             </div>
           </div>
-          <div class="invoice-meta">
-            <h2 class="invoice-title">TAX INVOICE</h2>
-            <div class="meta-grid">
-              <div class="meta-row">
-                <span class="label">Invoice No:</span>
-                <span class="value fw-bold">#{{ bill.billNumber }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="label">Date:</span>
-                <span class="value">{{ bill.date | date:'dd MMM yyyy' }}</span>
-              </div>
-              <div class="meta-row payment-status" [class.paid]="bill.paymentMethod !== 'CREDIT'" [class.due]="bill.paymentMethod === 'CREDIT'">
-                <span class="label">Status:</span>
-                <span class="badge">{{ bill.paymentMethod === 'CREDIT' ? 'PAYMENT DUE' : 'PAID' }}</span>
+          <div class="col-sm-5 text-sm-end mt-4 mt-sm-0">
+            <h2 class="h4 text-muted fw-bold tracking-widest text-uppercase mb-3">Tax Invoice</h2>
+            <div class="small">
+              <div class="mb-1 text-muted">Invoice No: <span class="text-dark fw-bold">#{{ bill.billNumber }}</span></div>
+              <div class="mb-1 text-muted">Date: <span class="text-dark fw-bold">{{ bill.date | date:'dd MMM yyyy' }}</span></div>
+              <div class="mt-2">
+                <span class="badge rounded-pill fw-bold" 
+                      [class.bg-success-subtle]="bill.paymentMethod !== 'CREDIT'" 
+                      [class.text-success]="bill.paymentMethod !== 'CREDIT'"
+                      [class.bg-danger-subtle]="bill.paymentMethod === 'CREDIT'"
+                      [class.text-danger]="bill.paymentMethod === 'CREDIT'">
+                  {{ bill.paymentMethod === 'CREDIT' ? 'PAYMENT DUE' : 'PAID IN FULL' }}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <hr class="divider">
+        <hr class="my-4 text-muted opacity-25">
 
         <!-- Customer Section -->
-        <div class="bill-to-section">
-          <div class="section-label">BILLED TO</div>
-          <div class="customer-details">
-            <h3 class="customer-name">{{ bill.customer?.name }}</h3>
-            <p *ngIf="bill.customer?.mobile">{{ bill.customer?.mobile }}</p>
-            <p *ngIf="bill.customer?.address" class="address">{{ bill.customer?.address }}</p>
+        <div class="row mb-5">
+          <div class="col-12">
+            <div class="text-muted small fw-bold tracking-wider mb-2">BILLED TO</div>
+            <h3 class="h5 fw-bold mb-1">{{ bill.customer?.name }}</h3>
+            <div class="text-secondary small">
+              <p class="mb-0">{{ bill.customer?.mobile }}</p>
+              <p class="mb-0 text-wrap" style="max-width: 350px;">{{ bill.customer?.address }}</p>
+            </div>
           </div>
         </div>
 
         <!-- Items Table -->
-        <div class="table-container">
-          <table class="premium-table">
-            <thead>
-              <tr>
-                <th style="width: 5%">#</th>
-                <th style="width: 40%">Item Description</th>
-                <th class="text-center" style="width: 10%">HSN</th>
-                <th class="text-center" style="width: 15%">Price</th>
-                <th class="text-center" style="width: 10%">Qty</th>
-                <th class="text-center" style="width: 10%">GST</th>
-                <th class="text-center" style="width: 10%">Total</th>
+        <div class="table-responsive mb-5 border-bottom">
+          <table class="table table-borderless">
+            <thead class="bg-light border-bottom">
+              <tr class="text-muted small fw-bold">
+                <th class="py-3 px-2">#</th>
+                <th class="py-3 px-2">Description</th>
+                <th class="py-3 px-2 text-center">HSN</th>
+                <th class="py-3 px-2 text-center">Price</th>
+                <th class="py-3 px-2 text-center">Qty</th>
+                <th class="py-3 px-2 text-center">GST</th>
+                <th class="py-3 px-2 text-end">Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of bill.items; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>
-                  <div class="item-name">{{ item.itemName }}</div>
-                </td>
-                <td class="text-center text-muted small">{{ item.hsnCode || '-' }}</td>
-                <td class="text-center">₹{{ item.price | number:'1.2-2' }}</td>
-                <td class="text-center">{{ item.quantity }}</td>
-                <td class="text-center text-muted">{{ getGstRate(item) | number:'1.0-0' }}%</td>
-                <td class="text-right fw-bold">₹{{ item.total | number:'1.2-2' }}</td>
+              <tr *ngFor="let item of bill.items; let i = index" class="border-bottom border-light">
+                <td class="py-3 px-2">{{ i + 1 }}</td>
+                <td class="py-3 px-2 fw-semibold text-dark">{{ item.itemName }}</td>
+                <td class="py-3 px-2 text-center text-muted small">{{ item.hsnCode || '-' }}</td>
+                <td class="py-3 px-2 text-center">₹{{ item.price | number:'1.2-2' }}</td>
+                <td class="py-3 px-2 text-center fw-bold">{{ item.quantity }}</td>
+                <td class="py-3 px-2 text-center text-muted">{{ getGstRate(item) | number:'1.0-0' }}%</td>
+                <td class="py-3 px-2 text-end fw-bold">₹{{ item.total | number:'1.2-2' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Summary Section -->
-        <div class="footer-section">
-          <div class="payment-info">
-             <div class="info-box">
-                <p class="label">PAYMENT METHOD</p>
-                <p class="value">{{ bill.paymentMethod || 'CASH' }}</p>
+        <div class="row g-4 align-items-start mb-5 pb-5 border-bottom">
+          <div class="col-md-7 pe-md-5">
+             <div class="row g-3">
+                <div class="col-sm-6">
+                   <div class="p-3 bg-light rounded-3 h-100">
+                      <div class="text-muted small fw-bold mb-1">PAYMENT DETAILS</div>
+                      <div class="fw-bold text-dark fs-6">{{ bill.paymentMethod || 'CASH' }}</div>
+                   </div>
+                </div>
+                
+                <div class="col-sm-6" *ngIf="bill.shopOwner?.upiId && bill.paymentMethod === 'CREDIT'">
+                   <div class="d-flex gap-3 align-items-center p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10">
+                      <div class="bg-white p-1 rounded">
+                        <qrcode [qrdata]="getUpiString()" [width]="70" [margin]="1" [errorCorrectionLevel]="'M'"></qrcode>
+                      </div>
+                      <div>
+                        <div class="text-primary small fw-bold mb-1">SCAN TO PAY</div>
+                        <div class="text-dark small fw-bold font-monospace">{{ bill.shopOwner.upiId }}</div>
+                      </div>
+                   </div>
+                </div>
              </div>
 
-             <!-- UPI QR Code Section -->
-             <div class="upi-box" *ngIf="bill.shopOwner?.upiId">
-                <div class="upi-container">
-                    <qrcode [qrdata]="getUpiString()" [width]="100" [margin]="2" [errorCorrectionLevel]="'M'"></qrcode>
+             <div class="mt-4">
+                <div class="text-muted small fw-bold mb-2">TERMS & CONDITIONS</div>
+                <div class="text-muted small lh-base">
+                  1. Goods once sold will not be taken back.<br>
+                  2. All disputes are subject to local jurisdiction only.<br>
+                  3. Please notify us of any discrepancies within 24 hours.
                 </div>
-                <div class="upi-details">
-                    <p class="label">SCAN TO PAY</p>
-                    <p class="upi-id">{{ bill.shopOwner.upiId }}</p>
-                </div>
-             </div>
-
-             <div class="terms-box">
-                <p class="label">TERMS & CONDITIONS</p>
-                <p class="small text-muted">1. Goods once sold will not be taken back.<br>2. Interest at 18% p.a. will be charged if not paid by due date.</p>
              </div>
           </div>
 
-          <div class="totals-box glass">
-            <div class="summary-item">
-              <span>Subtotal</span>
-              <span>₹{{ bill.subTotal | number:'1.2-2' }}</span>
+          <div class="col-md-5">
+            <div class="list-group list-group-flush">
+              <div class="list-group-item bg-transparent d-flex justify-content-between p-2 border-0">
+                <span class="text-muted">Subtotal</span>
+                <span class="fw-semibold">₹{{ bill.subTotal | number:'1.2-2' }}</span>
+              </div>
+              <div class="list-group-item bg-transparent d-flex justify-content-between p-2 border-0" *ngIf="bill.totalCGST">
+                <span class="text-muted">CGST</span>
+                <span class="fw-semibold">₹{{ bill.totalCGST | number:'1.2-2' }}</span>
+              </div>
+              <div class="list-group-item bg-transparent d-flex justify-content-between p-2 border-0" *ngIf="bill.totalSGST">
+                <span class="text-muted">SGST</span>
+                <span class="fw-semibold">₹{{ bill.totalSGST | number:'1.2-2' }}</span>
+              </div>
+              <div class="list-group-item bg-transparent d-flex justify-content-between p-3 border-top mt-2 border-2 text-dark">
+                <span class="fw-bold h5 mb-0">TOTAL</span>
+                <span class="fw-extrabold h4 mb-0 text-primary">₹{{ bill.totalAmount | number:'1.2-2' }}</span>
+              </div>
             </div>
-            <div class="summary-item" *ngIf="bill.totalCGST">
-              <span>CGST ({{ (bill.subTotal ? (bill.totalCGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
-              <span>₹{{ bill.totalCGST | number:'1.2-2' }}</span>
-            </div>
-            <div class="summary-item" *ngIf="bill.totalSGST">
-              <span>SGST ({{ (bill.subTotal ? (bill.totalSGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
-              <span>₹{{ bill.totalSGST | number:'1.2-2' }}</span>
-            </div>
-            <div class="summary-item" *ngIf="bill.totalIGST">
-              <span>IGST ({{ (bill.subTotal ? (bill.totalIGST / bill.subTotal * 100) : 0) | number:'1.0-1' }}%)</span>
-              <span>₹{{ bill.totalIGST | number:'1.2-2' }}</span>
-            </div>
-            <div class="grand-total-row">
-              <span>TOTAL</span>
-              <span class="amount">₹{{ bill.totalAmount | number:'1.2-2' }}</span>
-            </div>
-            <div class="amount-in-words">
-               <!-- Placeholder for amount in words if implemented on backend -->
-               <small>(Inclusive of all taxes)</small>
+            <div class="text-end mt-2">
+               <small class="text-muted fst-italic">(Inclusive of all GST charges)</small>
             </div>
           </div>
         </div>
 
-        <!-- Signature -->
-        <div class="signature-section">
-          <div class="signature-box">
-            <p>For {{ bill.shopOwner?.shopName }}</p>
-            <div class="digital-sign">
-               <span class="sign-icon">✅</span>
-               <span class="sign-text">Digitally Signed</span>
-            </div>
-            <p class="auth-sign">Authorized Signatory</p>
+        <!-- Signature Section -->
+        <div class="row align-items-end pt-4">
+          <div class="col-6">
+             <!-- Empty space for extra branding or QR if needed -->
+          </div>
+          <div class="col-6 text-center">
+             <div class="ms-auto" style="max-width: 250px;">
+                <p class="text-dark small fw-bold mb-4">For {{ bill.shopOwner?.shopName }}</p>
+                <div class="digital-stamp mx-auto mb-2 d-flex align-items-center justify-content-center gap-2">
+                   <span class="badge bg-success rounded-circle p-1"><span class="icon">✓</span></span>
+                   <span class="text-success small fw-bold">DIGITALLY SIGNED</span>
+                </div>
+                <p class="text-muted small mb-0 border-top pt-2">Authorized Signatory</p>
+             </div>
           </div>
         </div>
 
-        <div class="footer-branding">
-          Powered by <strong>Vinshri Billing</strong>
+        <div class="mt-5 pt-5 text-center footer-notes text-muted">
+          Thank you for your business! Generated via <span class="fw-bold text-primary opacity-75">Vinshri Billing</span>
         </div>
       </div>
     </div>
 
-    <div class="loading-state" *ngIf="!bill && !error">
-       <div class="spinner"></div>
+    <!-- State Handlers -->
+    <div class="d-flex align-items-center justify-content-center min-vh-100" *ngIf="!bill && !error">
+       <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+       </div>
     </div>
 
-    <div class="error-state" *ngIf="error">
-       <h2>❌ Invoice Not Found</h2>
-       <p>{{ error }}</p>
-       <button class="btn btn-primary" routerLink="/bills">Back</button>
+    <div class="container py-5 text-center min-vh-100 d-flex flex-column align-items-center justify-content-center" *ngIf="error">
+       <div class="display-1 text-danger mb-4">❌</div>
+       <h2 class="h3 fw-bold mb-3">Invoice Not Found</h2>
+       <p class="text-muted mb-4">{{ error }}</p>
+       <button class="btn btn-primary rounded-pill px-5" routerLink="/bills">Back to Dashboard</button>
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    :host {
-        display: block;
-        background: #f1f5f9;
-        min-height: 100vh;
-        font-family: 'Inter', sans-serif;
-        color: #0f172a;
-        padding-bottom: 40px;
-    }
-
-    .page-container {
-        max-width: 850px; /* A4 Width approx */
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    /* Action Bar */
-    .action-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-    .btn-back {
-        background: none;
-        border: none;
-        color: #64748b;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 14px;
-    }
-    .btn-back:hover { color: #0f172a; }
-    .actions { display: flex; gap: 12px; }
-
-    /* Invoice Paper */
     .invoice-paper {
-        background: white;
-        padding: 48px;
-        border-radius: 4px; /* Slight radius but sharp enough for paper feel */
-        position: relative;
-    }
-    .shadow-premium {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        max-width: 850px;
+        min-height: 1100px;
+        padding: 60px;
+        margin-bottom: 50px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
     }
 
-    /* Header */
-    .invoice-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 32px;
-    }
-    .shop-name {
-        font-size: 24px;
-        font-weight: 800;
-        color: var(--primary);
-        text-transform: uppercase;
-        margin: 0 0 8px 0;
-        letter-spacing: -0.02em;
-    }
-    .shop-details p { margin: 2px 0; font-size: 14px; color: #475569; }
-    
-    .invoice-title {
-        font-size: 20px;
-        font-weight: 700;
-        text-align: right;
-        margin: 0 0 16px 0;
-        color: #94a3b8;
-        letter-spacing: 0.1em;
-    }
-    .meta-grid { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
-    .meta-row { display: flex; gap: 12px; font-size: 14px; }
-    .meta-row .label { color: #64748b; font-weight: 500; }
-    .meta-row .value { color: #0f172a; }
+    .fw-extrabold { font-weight: 800; }
+    .tracking-widest { letter-spacing: 0.2em; }
+    .tracking-wider { letter-spacing: 0.1em; }
 
-    .payment-status .badge {
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .payment-status.paid .badge { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .payment-status.due .badge { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-    .divider { border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0; }
-
-    /* Customer */
-    .bill-to-section { margin-bottom: 40px; }
-    .section-label { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .customer-name { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
-    .customer-details p { margin: 0; color: #475569; font-size: 14px; }
-    .customer-details .address { max-width: 300px; line-height: 1.4; margin-top: 4px; }
-
-    /* Table */
-    .table-container { margin-bottom: 40px; }
-    .premium-table { width: 100%; border-collapse: collapse; }
-    .premium-table th {
-        text-align: left;
-        padding: 12px 8px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        border-bottom: 2px solid #e2e8f0;
-    }
-    .premium-table td {
-        padding: 16px 8px;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 14px;
-        vertical-align: top;
-        color: #334155;
-    }
-    .premium-table tr:last-child td { border-bottom: none; }
-    .item-name { font-weight: 500; color: #0f172a; }
-
-    /* Footer Stats */
-    .footer-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 60px;
-    }
-    .payment-info { flex: 1; padding-right: 40px; display: flex; flex-direction: column; gap: 24px; }
-    .info-box .label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
-    .info-box .value { font-size: 14px; font-weight: 600; }
-
-    .upi-box {
-        display: flex;
-        gap: 16px;
-        align-items: center;
-        background: #f8fafc;
-        padding: 12px;
-        border: 1px dashed #cbd5e1;
-        border-radius: 8px;
-        width: fit-content;
-    }
-    .upi-details .label { font-size: 10px; font-weight: 700; color: #166534; margin: 0 0 4px 0; }
-    .upi-details .upi-id { font-size: 12px; font-family: 'Courier New', monospace; margin: 0; color: #0f172a; }
-
-    .totals-box {
-        width: 300px;
-        background: #f8fafc;
-        border-radius: 8px;
-        padding: 20px;
-        border: 1px solid #e2e8f0;
-    }
-    .totals-box .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #64748b; }
-    .grand-total-row {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-top: 16px; padding-top: 16px; border-top: 2px solid #cbd5e1;
-        font-weight: 800; color: #0f172a; font-size: 18px;
-    }
-    .amount-in-words { text-align: right; margin-top: 8px; font-size: 11px; color: #94a3b8; }
-
-    /* Signature */
-    .signature-section { display: flex; justify-content: flex-end; margin-bottom: 40px; page-break-inside: avoid; }
-    .signature-box { text-align: center; width: 200px; }
-    .signature-box p { font-size: 12px; font-weight: 600; margin: 0; color: #0f172a; }
-    .digital-sign { 
-        height: 60px; margin: 8px 0; background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 4px;
-        display: flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; font-size: 12px; font-weight: 600;
-    }
-    .auth-sign { font-size: 10px !important; color: #94a3b8 !important; font-weight: 500 !important; text-transform: uppercase; letter-spacing: 0.05em; }
-
-    .footer-branding {
-        text-align: center;
-        font-size: 10px;
-        color: #cbd5e1;
-        margin-top: 40px;
+    .digital-stamp {
+       padding: 8px 16px;
+       border: 1px dashed var(--bs-success);
+       background: rgba(var(--bs-success-rgb), 0.05);
+       border-radius: 8px;
     }
 
-    /* Utilities */
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .text-muted { color: #94a3b8; }
-    .fw-bold { font-weight: 700; }
-    .small { font-size: 12px; }
-    
-    /* Buttons */
-    .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; gap: 8px; font-size: 14px; transition: all 0.2s; }
-    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(var(--primary-rgb), 0.3); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 10px -1px rgba(var(--primary-rgb), 0.4); }
-    .btn-whatsapp { background: #25d366; color: white; }
-    .btn-whatsapp:hover { background: #128c7e; }
-    .btn-print { background: white; border: 1px solid #e2e8f0; color: #475569; }
-    .btn-print:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-whatsapp { background: #25d366; color: white; border: none; }
+    .btn-whatsapp:hover { background: #128c7e; color: white; transform: translateY(-1px); }
 
-    .loading-state { height: 80vh; display: flex; align-items: center; justify-content: center; }
-    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Print Styles */
-    /* Print Styles */
+    /* Print Overrides */
     @media print {
-        :host { 
-            display: block; 
-            background: white; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-        }
-
-        .page-container { 
-            width: 100%; 
-            margin: 0; 
-            padding: 0;
-            max-width: none; 
-            box-shadow: none; 
-        }
-
+        :host { background: white !important; padding: 0 !important; }
+        .container-fluid { padding: 0 !important; }
+        .no-print { display: none !important; }
         .invoice-paper { 
-            padding: 20px 40px !important; 
-            border: none; 
-            box-shadow: none; 
+          box-shadow: none !important; 
+          border: none !important; 
+          padding: 0 !important; 
+          margin: 0 !important; 
+          max-width: none !important;
         }
-
-        .no-print { 
-            display: none !important; 
-        }
-        
-        /* Ensure background colors print */
-        * { 
-            -webkit-print-color-adjust: exact !important; 
-            print-color-adjust: exact !important; 
-        }
+        body { margin: 0; padding: 0; }
+        @page { margin: 1.5cm; }
     }
-    `]
+
+    @media (max-width: 768px) {
+        .invoice-paper { padding: 30px 20px; }
+        .display-6 { font-size: 1.5rem; }
+    }
+  `]
 })
 export class BillDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
