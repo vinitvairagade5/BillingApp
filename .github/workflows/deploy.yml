@@ -52,18 +52,27 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.OCI_KEY }}" > ~/.ssh/id_rsa
+          # Using a heredoc with quotes to prevent shell execution/expansion
+          cat <<'EOF' > ~/.ssh/id_rsa
+          ${{ secrets.OCI_KEY }}
+          EOF
           chmod 600 ~/.ssh/id_rsa
-          # Ensure there are no Windows-style line endings
+          # Ensure key has correct line endings and a trailing newline
           sed -i 's/\r$//' ~/.ssh/id_rsa
+          sed -i '$a\' ~/.ssh/id_rsa
+          # Basic validation: check if it looks like a private key
+          if ! grep -q "BEGIN" ~/.ssh/id_rsa; then
+            echo "ERROR: OCI_KEY secret does not appear to be a valid private key."
+            exit 1
+          fi
 
       - name: Copy Bundle to Server (Raw SCP)
         run: |
-          scp -vvv -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
+          scp -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -o PreferredAuthentications=publickey -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
 
       - name: Deploy with Docker Compose (Raw SSH)
         run: |
-          ssh -vvv -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
+          ssh -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -o PreferredAuthentications=publickey -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
             set -e
             # Create app directory if not exists
             mkdir -p /home/ubuntu/billing-app
