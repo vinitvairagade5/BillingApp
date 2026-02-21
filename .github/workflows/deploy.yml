@@ -49,26 +49,21 @@ jobs:
           cp -r src/publish deploy/src/
           tar -czf billing-app.tar.gz -C deploy .
 
-      - name: Copy Bundle to Server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.OCI_HOST }}
-          username: ${{ secrets.OCI_USERNAME }}
-          key: ${{ secrets.OCI_KEY }}
-          source: "billing-app.tar.gz"
-          target: "/home/ubuntu/"
-          timeout: 60s
-          debug: true
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OCI_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.OCI_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy with Docker Compose
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.OCI_HOST }}
-          username: ${{ secrets.OCI_USERNAME }}
-          key: ${{ secrets.OCI_KEY }}
-          timeout: 60s
-          command_timeout: 10m
-          script: |
+      - name: Copy Bundle to Server (Raw SCP)
+        run: |
+          scp -v -o StrictHostKeyChecking=no -o ConnectTimeout=60 -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
+
+      - name: Deploy with Docker Compose (Raw SSH)
+        run: |
+          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=60 -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
+            set -e
             # Create app directory if not exists
             mkdir -p /home/ubuntu/billing-app
             
@@ -79,9 +74,9 @@ jobs:
             cd /home/ubuntu/billing-app
 
             # Fix Oracle Cloud Ubuntu Firewall (iptables)
-            sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT
-            sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT
-            sudo iptables -I INPUT -p tcp --dport 81 -j ACCEPT
+            sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT || true
+            sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
+            sudo iptables -I INPUT -p tcp --dport 81 -j ACCEPT || true
             sudo netfilter-persistent save || echo "rules not saved"
 
             # Create .env if missing
@@ -90,7 +85,6 @@ jobs:
             fi
 
             # Deploy with Docker Compose
-            # Building using pre-built artifacts in the current directory
             sudo docker compose up -d --build
             
             # Clean up old images to save space
@@ -99,7 +93,4 @@ jobs:
             # Diagnostics
             echo "--- Container Status ---"
             sudo docker ps
-            echo "--- UI Logs ---"
-            sudo docker logs billing-ui --tail 20
-            echo "--- API Logs ---"
-            sudo docker logs billing-api --tail 20
+          EOF
