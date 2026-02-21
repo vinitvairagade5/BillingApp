@@ -50,20 +50,24 @@ jobs:
           tar -czf billing-app.tar.gz -C deploy .
 
       - name: Copy Bundle to Server
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_KEY }}
           source: "billing-app.tar.gz"
           target: "/home/ubuntu/"
+          timeout: 60s
+          debug: true
 
       - name: Deploy with Docker Compose
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_KEY }}
+          timeout: 60s
+          command_timeout: 10m
           script: |
             # Create app directory if not exists
             mkdir -p /home/ubuntu/billing-app
