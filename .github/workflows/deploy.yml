@@ -50,22 +50,20 @@ jobs:
           tar -czf billing-app.tar.gz -C deploy .
 
       - name: Setup SSH Key
-        env:
-          SSH_KEY: ${{ secrets.OCI_KEY }}
         run: |
           mkdir -p ~/.ssh
-          cat <<EOF > ~/.ssh/id_rsa
-          $SSH_KEY
-          EOF
+          echo "${{ secrets.OCI_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          # Ensure there are no Windows-style line endings
+          sed -i 's/\r$//' ~/.ssh/id_rsa
 
       - name: Copy Bundle to Server (Raw SCP)
         run: |
-          scp -v -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
+          scp -vvv -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
 
       - name: Deploy with Docker Compose (Raw SSH)
         run: |
-          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
+          ssh -vvv -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
             set -e
             # Create app directory if not exists
             mkdir -p /home/ubuntu/billing-app
