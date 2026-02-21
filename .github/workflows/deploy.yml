@@ -50,29 +50,31 @@ jobs:
           tar -czf billing-app.tar.gz -C deploy .
 
       - name: Setup SSH Key
+        shell: bash
         run: |
           mkdir -p ~/.ssh
-          # Using a heredoc with quotes to prevent shell execution/expansion
           cat <<'EOF' > ~/.ssh/id_rsa
           ${{ secrets.OCI_KEY }}
           EOF
-          chmod 600 ~/.ssh/id_rsa
-          # Ensure key has correct line endings and a trailing newline
+          # Clean up any potential hidden characters and ensure trailing newline
           sed -i 's/\r$//' ~/.ssh/id_rsa
           sed -i '$a\' ~/.ssh/id_rsa
-          # Basic validation: check if it looks like a private key
-          if ! grep -q "BEGIN" ~/.ssh/id_rsa; then
-            echo "ERROR: OCI_KEY secret does not appear to be a valid private key."
+          chmod 600 ~/.ssh/id_rsa
+          
+          # CRITICAL: Verify the key is not empty and has correct headers
+          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/id_rsa; then
+            echo "ERROR: OCI_KEY does not start with a valid SSH private key header."
+            echo "Please ensure you pasted the ENTIRE key, including the BEGIN and END lines."
             exit 1
           fi
 
       - name: Copy Bundle to Server (Raw SCP)
         run: |
-          scp -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -o PreferredAuthentications=publickey -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
+          scp -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o IPQoS=lowdelay -o TCPKeepAlive=yes -o IdentitiesOnly=yes -i ~/.ssh/id_rsa billing-app.tar.gz ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }}:/home/ubuntu/
 
       - name: Deploy with Docker Compose (Raw SSH)
         run: |
-          ssh -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ConnectionAttempts=10 -o IPQoS=0x00 -o ServerAliveInterval=15 -o PreferredAuthentications=publickey -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
+          ssh -vvv -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o IPQoS=lowdelay -o TCPKeepAlive=yes -o IdentitiesOnly=yes -i ~/.ssh/id_rsa ${{ secrets.OCI_USERNAME }}@${{ secrets.OCI_HOST }} << 'EOF'
             set -e
             # Create app directory if not exists
             mkdir -p /home/ubuntu/billing-app
