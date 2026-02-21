@@ -50,11 +50,12 @@ jobs:
           tar -czf billing-app.tar.gz -C deploy .
 
       - name: Setup SSH Key
+        env:
+          SSH_KEY: ${{ secrets.OCI_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.OCI_KEY }}" > ~/.ssh/id_rsa
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.OCI_HOST }} >> ~/.ssh/known_hosts
 
       - name: Copy Bundle to Server (Raw SCP)
         run: |
