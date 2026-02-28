@@ -799,6 +799,8 @@ export class InvoiceCreateComponent implements OnInit {
 
   onPaymentConfirmed() {
     this.isPaymentModalOpen = false;
-    // Payment is confirmed visually. User can now save.
+    this.invoiceForm.patchValue({ paymentMethod: 'UPI' });
+    this.notificationService.success('Payment confirmed via UPI. You can now save the invoice.');
   }
+
 }

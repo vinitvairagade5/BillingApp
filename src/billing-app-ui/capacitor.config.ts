@@ -5,9 +5,8 @@ const config: CapacitorConfig = {
   appName: 'BillPro',
   webDir: 'dist/billing-app-ui/browser',
   server: {
-    androidScheme: 'http',
-    cleartext: true,
-    allowNavigation: ['192.168.1.12']
+    androidScheme: 'https',
+    allowNavigation: ['billpro.vinshri.in', '192.168.1.12']
   }
 };
 

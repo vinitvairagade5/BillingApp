@@ -97,7 +97,7 @@ import { AuthService } from './auth.service';
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-grow-1 p-3 p-md-4 min-vh-100 bg-light">
+        <main class="flex-grow-1 p-3 p-md-4 bg-light overflow-x-hidden" style="min-height: 100vh; min-width: 0;">
           <router-outlet></router-outlet>
         </main>
       </div>
@@ -182,10 +182,26 @@ import { AuthService } from './auth.service';
       transition: width 0.3s ease;
     }
     @media (max-width: 991.98px) {
-      .navbar-brand {
-        margin-left: auto;
-        margin-right: auto;
+      .navbar {
+        padding: 0.75rem 1rem !important;
       }
+      .navbar-brand {
+        margin-left: 0 !important;
+        font-size: 1.1rem;
+      }
+      .logo-icon {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.9rem;
+      }
+    }
+    .offcanvas {
+      border-radius: 0 1.5rem 1.5rem 0;
+      box-shadow: 0 0 2rem rgba(0,0,0,0.1);
+    }
+    .offcanvas-backdrop.show {
+      opacity: 0.3;
+      backdrop-filter: blur(2px);
     }
   `]
 })

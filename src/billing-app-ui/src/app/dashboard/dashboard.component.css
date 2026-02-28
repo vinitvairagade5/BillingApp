@@ -36,27 +36,71 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Stats Scrolling Row for Mobile */
+/* Quick Stats Grid */
+.stat-card-parent,
+.stat-card,
+.stat-card-body {
+    min-width: 0;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+}
+
+/* Mobile Adjustments */
 @media (max-width: 767px) {
-    .stats-scroll-container {
-        overflow-x: auto;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        /* Firefox */
-        -ms-overflow-style: none;
-        /* IE 10+ */
+    .stats-wrapper .stat-card-parent {
+        border-radius: 0.5rem !important;
+        /* Smaller border radius */
+        width: calc(25% - 0.2rem) !important;
+        flex: 0 0 calc(25% - 0.2rem) !important;
+        overflow: hidden !important;
+        margin: 0 !important;
     }
 
-    .stats-scroll-container::-webkit-scrollbar {
-        display: none;
-        /* Chrome/Safari */
+    .stats-wrapper {
+        justify-content: space-between !important;
+        gap: 0 !important;
     }
 
-    .col-stats {
-        min-width: 160px;
-        flex: 0 0 auto;
+    .stat-card-body {
+        padding: 0.25rem 0.15rem !important;
+        /* Extremely tight padding */
+    }
+
+    .stat-icon {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .stat-label {
+        font-size: 0.5rem !important;
+        /* ultra small label */
+        letter-spacing: 0em;
+        line-height: 1;
+    }
+
+    .stat-value {
+        font-size: 0.85rem !important;
+        /* smaller values */
+    }
+
+    .stats-container .col-3 {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
     }
 }
 

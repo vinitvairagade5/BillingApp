@@ -132,15 +132,18 @@ import { NotificationService } from '../notification.service';
 
     @media (max-width: 576px) {
       .auth-card {
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        background: transparent;
+        border-radius: 1.5rem !important;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1) !important;
+        background: rgba(255, 255, 255, 0.95);
+        width: 95%;
+        margin: auto;
       }
       .login-page {
-        background: white;
+        background-color: #f8fafc;
       }
       .blob {
-        display: none;
+        display: block;
+        opacity: 0.1;
       }
     }
   `]

@@ -61,16 +61,17 @@ This document is the **Single Source of Truth** for the conversion of BillingApp
 ## 🚀 Phase 4: Advanced Scaling
 *Goal: Professional automation.*
 
-* [ ] **UPI Payment Integration**
-  * Store `UpiId` in Shop Settings.
-  * "Pay via UPI" button on Invoice.
-  * Popup with Dynamic QR Code (`upi://...`).
-  * Manual "Payment Received" confirmation (Zero-fee flow).
-* [ ] **Excel Exports** (CA-ready reports).
+* [x] **UPI Payment Integration**
+  * [x] Store `UpiId` in Shop Settings.
+  * [x] "Pay via UPI" button on Invoice.
+  * [x] Popup with Dynamic QR Code (`upi://...`).
+  * [x] Manual "Payment Received" confirmation (Zero-fee flow).
+* [x] **Excel Exports** (CA-ready reports).
 * [ ] **Official WhatsApp API** (Background PDF sending - Optional Add-on).
-* [ ] **Android App (Capacitor)**
-  * Wrapper for Play Store deployment.
-  * Access to native features (Camera for barcode scanning).
+* [x] **Android App (Capacitor)**
+  * [x] Wrapper for Play Store deployment.
+  * [x] Access to native features (Camera for barcode scanning).
+
 
 ---
 *Last Updated: 25-Jan-2026*

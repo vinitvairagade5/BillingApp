@@ -22,49 +22,82 @@ import { LedgerService, CustomerBalance } from '../ledger.service';
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mt-4">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-              <tr class="text-muted small fw-bold">
-                <th class="py-3 px-4 border-0">CUSTOMER</th>
-                <th class="py-3 px-4 border-0">MOBILE</th>
-                <th class="py-3 px-4 border-0 text-end">BALANCE</th>
-                <th class="py-3 px-4 border-0 text-center">ACTION</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of balances" class="border-bottom border-light">
-                <td class="py-3 px-4">
-                  <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1.1rem;">
-                      {{ item.name.charAt(0) }}
+      <div class="mt-4">
+        <!-- Udhaar Table - Desktop Only -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white d-none d-md-block">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr class="text-muted small fw-bold">
+                  <th class="py-3 px-4 border-0">CUSTOMER</th>
+                  <th class="py-3 px-4 border-0">MOBILE</th>
+                  <th class="py-3 px-4 border-0 text-end">BALANCE</th>
+                  <th class="py-3 px-4 border-0 text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of balances" class="border-bottom border-light">
+                  <td class="py-3 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                        {{ item.name.charAt(0) }}
+                      </div>
+                      <div>
+                        <div class="fw-bold text-dark fs-6">{{ item.name }}</div>
+                        <div class="text-muted small">Customer ID: #{{ item.customerId }}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div class="fw-bold text-dark fs-6">{{ item.name }}</div>
-                      <div class="text-muted small">Customer ID: #{{ item.customerId }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="py-3 px-4">
-                  <span class="text-secondary small fw-medium">{{ item.mobile }}</span>
-                </td>
-                <td class="py-3 px-4 text-end">
-                  <span class="fw-extrabold fs-6" [class.text-danger]="item.balance > 0">
-                    ₹{{ item.balance | number:'1.2-2' }}
-                  </span>
-                </td>
-                <td class="py-3 px-4 text-center">
-                  <button class="btn btn-light border rounded-pill px-4 btn-sm fw-bold text-primary" [routerLink]="['/udhaar', item.customerId]">
-                    View Statement
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="text-secondary small fw-medium">{{ item.mobile }}</span>
+                  </td>
+                  <td class="py-3 px-4 text-end">
+                    <span class="fw-extrabold fs-6" [class.text-danger]="item.balance > 0">
+                      ₹{{ item.balance | number:'1.2-2' }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <button class="btn btn-light border rounded-pill px-4 btn-sm fw-bold text-primary" [routerLink]="['/udhaar', item.customerId]">
+                      View Statement
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="p-5 text-center" *ngIf="balances.length === 0 && !loading">
+        <!-- Mobile Card View -->
+        <div class="d-md-none">
+          <div *ngFor="let item of balances" class="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden border-start border-danger" style="border-left-width: 5px !important;">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px;">
+                    {{ item.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-0">{{ item.name }}</h6>
+                    <div class="extra-small text-muted">{{ item.mobile }}</div>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="extra-small text-muted text-uppercase fw-bold">Balance</div>
+                  <div class="fw-extrabold text-danger fs-5">₹{{ item.balance | number:'1.2-2' }}</div>
+                </div>
+              </div>
+              
+              <div class="d-grid mt-3">
+                <button class="btn btn-light border rounded-pill py-2 fw-bold text-primary" [routerLink]="['/udhaar', item.customerId]">
+                  View Full Statement 📄
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty/Loading States -->
+        <div class="p-5 text-center bg-white rounded-4 shadow-sm" *ngIf="balances.length === 0 && !loading">
           <div class="display-1 text-muted opacity-25 mb-3">📂</div>
           <h4 class="text-muted fw-bold">No Pending Credit</h4>
           <p class="text-secondary mb-0">Great job! All customer accounts are currently settled.</p>
