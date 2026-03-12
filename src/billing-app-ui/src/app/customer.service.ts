@@ -10,6 +10,7 @@ export interface Customer {
     name: string;
     mobile: string;
     address?: string;
+    gstin?: string;
     shopOwnerId: number;
 }
 

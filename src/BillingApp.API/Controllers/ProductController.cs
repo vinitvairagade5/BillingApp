@@ -49,8 +49,8 @@ public class ProductController : BaseApiController
         item.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
-            INSERT INTO ""Items"" (""Name"", ""Price"", ""Category"", ""HSNCode"", ""GSTRate"", ""ShopOwnerId"", ""StockQuantity"", ""LowStockThreshold"")
-            VALUES (@Name, @Price, @Category, @HSNCode, @GSTRate, @ShopOwnerId, @StockQuantity, @LowStockThreshold)
+            INSERT INTO ""Items"" (""Name"", ""Price"", ""PurchasePrice"", ""SKU"", ""Barcode"", ""UnitType"", ""Category"", ""HSNCode"", ""GSTRate"", ""ShopOwnerId"", ""StockQuantity"", ""LowStockThreshold"")
+            VALUES (@Name, @Price, @PurchasePrice, @SKU, @Barcode, @UnitType, @Category, @HSNCode, @GSTRate, @ShopOwnerId, @StockQuantity, @LowStockThreshold)
             RETURNING ""Id""";
         
         var id = await connection.ExecuteScalarAsync<int>(sql, item);
@@ -64,7 +64,7 @@ public class ProductController : BaseApiController
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
             UPDATE ""Items"" 
-            SET ""Name"" = @Name, ""Price"" = @Price, ""Category"" = @Category, 
+            SET ""Name"" = @Name, ""Price"" = @Price, ""PurchasePrice"" = @PurchasePrice, ""SKU"" = @SKU, ""Barcode"" = @Barcode, ""UnitType"" = @UnitType, ""Category"" = @Category, 
                 ""HSNCode"" = @HSNCode, ""GSTRate"" = @GSTRate, 
                 ""StockQuantity"" = @StockQuantity, ""LowStockThreshold"" = @LowStockThreshold
             WHERE ""Id"" = @Id AND ""ShopOwnerId"" = @ShopOwnerId";

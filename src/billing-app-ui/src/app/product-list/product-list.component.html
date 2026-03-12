@@ -56,7 +56,7 @@
               <div class="d-flex align-items-center gap-2">
                 <span class="fw-extrabold" [class.text-danger]="product.stockQuantity <= 0"
                   [class.text-warning]="product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5)">
-                  {{ product.stockQuantity }}
+                  {{ product.stockQuantity }} {{ product.unitType }}
                 </span>
                 <span *ngIf="product.stockQuantity <= 0" class="badge bg-danger rounded-pill extra-small">STOCK
                   OUT</span>
@@ -104,7 +104,7 @@
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold" [class.text-danger]="product.stockQuantity <= 0"
                 [class.text-warning]="product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5)">
-                {{ product.stockQuantity }} in stock
+                {{ product.stockQuantity }} {{ product.unitType }} in stock
               </span>
             </div>
           </div>
@@ -176,13 +176,36 @@
 
             <!-- Financials -->
             <div class="col-md-6">
-              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Unit Price
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Purchase Price
+                (₹)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border rounded-start-3 text-muted">₹</span>
+                <input type="number" class="form-control rounded-end-3 p-3 shadow-none border fw-bold"
+                  [(ngModel)]="newProduct.purchasePrice" name="purchasePrice" required [disabled]="isSaving"
+                  placeholder="0.00">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Selling Price
                 (₹)</label>
               <div class="input-group">
                 <span class="input-group-text bg-white border rounded-start-3 text-muted">₹</span>
                 <input type="number" class="form-control rounded-end-3 p-3 shadow-none border fw-bold"
                   [(ngModel)]="newProduct.price" name="price" required [disabled]="isSaving" placeholder="0.00">
               </div>
+            </div>
+
+            <!-- Tax & Identification -->
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">SKU / Item
+                Code</label>
+              <input type="text" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.sku" name="sku" [disabled]="isSaving" placeholder="Unique Identifier">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Barcode</label>
+              <input type="text" class="form-control rounded-3 p-3 shadow-none border fw-bold"
+                [(ngModel)]="newProduct.barcode" name="barcode" [disabled]="isSaving" placeholder="UPC / EAN">
             </div>
             <div class="col-md-6">
               <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">GST
@@ -198,15 +221,28 @@
             </div>
 
             <!-- Logistics -->
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Unit Type</label>
+              <select class="form-select rounded-3 p-3 shadow-none border fw-bold" [(ngModel)]="newProduct.unitType"
+                name="unitType" [disabled]="isSaving">
+                <option value="pc">Piece (pc)</option>
+                <option value="kg">Kilogram (kg)</option>
+                <option value="g">Gram (g)</option>
+                <option value="ltr">Litre (ltr)</option>
+                <option value="ml">Millilitre (ml)</option>
+                <option value="box">Box</option>
+                <option value="doz">Dozen</option>
+              </select>
+            </div>
+            <div class="col-md-4">
               <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Current Stock
                 Qty</label>
               <input type="number" class="form-control rounded-3 p-3 shadow-none border fw-bold"
                 [(ngModel)]="newProduct.stockQuantity" name="stockQuantity" required [disabled]="isSaving"
                 placeholder="0">
             </div>
-            <div class="col-md-6">
-              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Low Stock Alert
+            <div class="col-md-4">
+              <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Low Stock
                 Level</label>
               <input type="number" class="form-control rounded-3 p-3 shadow-none border fw-bold"
                 [(ngModel)]="newProduct.lowStockThreshold" name="lowStockThreshold" [disabled]="isSaving"

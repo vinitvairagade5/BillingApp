@@ -139,6 +139,77 @@ CREATE TABLE IF NOT EXISTS "CustomerLedger" (
     "ShopOwnerId" INT REFERENCES "Users"("Id")
 );
 
+-- Epic Phase 4 Migrations (Retail Extensions)
+
+-- 1. Users (Staff Support)
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Role" VARCHAR(20) DEFAULT 'OWNER';
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ParentShopId" INT REFERENCES "Users"("Id");
+
+-- 2. Items (Purchase Price, Unit, SKU)
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "PurchasePrice" DECIMAL(18,2) DEFAULT 0;
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "SKU" VARCHAR(50);
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "Barcode" VARCHAR(100);
+ALTER TABLE "Items" ADD COLUMN IF NOT EXISTS "UnitType" VARCHAR(20) DEFAULT 'pc';
+
+-- 3. Customers (B2B GSTIN)
+ALTER TABLE "Customers" ADD COLUMN IF NOT EXISTS "GSTIN" VARCHAR(20);
+
+-- 4. Bills (Cancellation Support)
+ALTER TABLE "Bills" ADD COLUMN IF NOT EXISTS "Status" VARCHAR(20) DEFAULT 'COMPLETED';
+
+-- 5. Suppliers Table
+CREATE TABLE IF NOT EXISTS "Suppliers" (
+    "Id" SERIAL PRIMARY KEY,
+    "Name" VARCHAR(100) NOT NULL,
+    "Contact" VARCHAR(15),
+    "GSTIN" VARCHAR(20),
+    "Address" TEXT,
+    "ShopOwnerId" INT REFERENCES "Users"("Id"),
+    "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Purchases Table
+CREATE TABLE IF NOT EXISTS "Purchases" (
+    "Id" SERIAL PRIMARY KEY,
+    "InvoiceNo" VARCHAR(50) NOT NULL,
+    "Date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "SupplierId" INT REFERENCES "Suppliers"("Id"),
+    "TotalAmount" DECIMAL(18,2) NOT NULL,
+    "PaymentStatus" VARCHAR(20) DEFAULT 'PAID', -- 'PAID', 'UNPAID', 'PARTIAL'
+    "ShopOwnerId" INT REFERENCES "Users"("Id"),
+    CONSTRAINT "Unique_PurchaseInvoce_Per_Shop" UNIQUE ("InvoiceNo", "ShopOwnerId")
+);
+
+-- 7. PurchaseItems Table
+CREATE TABLE IF NOT EXISTS "PurchaseItems" (
+    "Id" SERIAL PRIMARY KEY,
+    "PurchaseId" INT REFERENCES "Purchases"("Id") ON DELETE CASCADE,
+    "ItemId" INT REFERENCES "Items"("Id"),
+    "Quantity" INT NOT NULL,
+    "PurchasePrice" DECIMAL(18,2) NOT NULL,
+    "Total" DECIMAL(18,2) NOT NULL
+);
+
+-- 8. Expenses Table
+CREATE TABLE IF NOT EXISTS "Expenses" (
+    "Id" SERIAL PRIMARY KEY,
+    "Date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "Category" VARCHAR(50) NOT NULL,
+    "Amount" DECIMAL(18,2) NOT NULL,
+    "Description" TEXT,
+    "ShopOwnerId" INT REFERENCES "Users"("Id")
+);
+
+-- 9. ActivityLogs Table
+CREATE TABLE IF NOT EXISTS "ActivityLogs" (
+    "Id" SERIAL PRIMARY KEY,
+    "Timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UserId" INT REFERENCES "Users"("Id"),
+    "Action" VARCHAR(100) NOT NULL,
+    "Details" TEXT,
+    "ShopOwnerId" INT REFERENCES "Users"("Id")
+);
+
 -- Seed Data (Refined with Realistic Indian Context)
 INSERT INTO "Users" ("Username", "PasswordHash", "ShopName", "Address", "GSTIN", "IsAdmin")
 VALUES ('admin', 'admin123', 'ELECTRA ELECTRONICS', 'Shop No. 42, Nehru Place Commercial Complex, New Delhi - 110019', '07AAAAA0000A1Z5', TRUE)
@@ -163,22 +234,30 @@ INSERT INTO "Customers" ("Name", "Mobile", "Address", "ShopOwnerId")
 SELECT 'Sonal Singh', '9555444333', 'Sector 15, Dwarka, Delhi', "Id" FROM "Users" WHERE "Username" = 'admin'
 ON CONFLICT ("Mobile", "ShopOwnerId") DO NOTHING;
 
+-- Cleanup duplicate items that may have been created from previous runs
+DELETE FROM "Items" a USING "Items" b 
+WHERE a."Id" > b."Id" 
+  AND a."Name" = b."Name" 
+  AND a."ShopOwnerId" = b."ShopOwnerId"
+  AND NOT EXISTS (SELECT 1 FROM "BillItems" bi WHERE bi."ItemId" = a."Id")
+  AND NOT EXISTS (SELECT 1 FROM "PurchaseItems" pi WHERE pi."ItemId" = a."Id");
+
 -- Seed Items
 INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
 SELECT 'Smart LED TV 43"', 24500.00, 'Electronics', '8528', 18, "Id", 15 FROM "Users" WHERE "Username" = 'admin'
-ON CONFLICT DO NOTHING;
+AND NOT EXISTS (SELECT 1 FROM "Items" WHERE "Name" = 'Smart LED TV 43"' AND "ShopOwnerId" = "Users"."Id");
 
 INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
 SELECT 'Wireless Mouse', 850.00, 'Accessories', '8471', 12, "Id", 50 FROM "Users" WHERE "Username" = 'admin'
-ON CONFLICT DO NOTHING;
+AND NOT EXISTS (SELECT 1 FROM "Items" WHERE "Name" = 'Wireless Mouse' AND "ShopOwnerId" = "Users"."Id");
 
 INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
 SELECT 'USB-C Charging Cable', 450.00, 'Accessories', '8544', 18, "Id", 20 FROM "Users" WHERE "Username" = 'admin'
-ON CONFLICT DO NOTHING;
+AND NOT EXISTS (SELECT 1 FROM "Items" WHERE "Name" = 'USB-C Charging Cable' AND "ShopOwnerId" = "Users"."Id");
 
 INSERT INTO "Items" ("Name", "Price", "Category", "HSNCode", "GSTRate", "ShopOwnerId", "StockQuantity")
 SELECT 'Bluetooth Earbuds', 1999.00, 'Electronics', '8518', 18, "Id", 12 FROM "Users" WHERE "Username" = 'admin'
-ON CONFLICT DO NOTHING;
+AND NOT EXISTS (SELECT 1 FROM "Items" WHERE "Name" = 'Bluetooth Earbuds' AND "ShopOwnerId" = "Users"."Id");
 
 -- Fix global unique constraint on BillNumber (Migration)
 -- This must run before Seed Data because seed data uses ON CONFLICT ("BillNumber", "ShopOwnerId")

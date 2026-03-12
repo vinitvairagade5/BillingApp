@@ -15,6 +15,10 @@ export interface Item {
     shopOwnerId: number;
     stockQuantity: number;
     lowStockThreshold: number;
+    purchasePrice: number;
+    sku?: string;
+    barcode?: string;
+    unitType: string;
 }
 
 

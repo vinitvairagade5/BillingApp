@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { InvoiceService, Customer, Item, CreateBill } from '../invoice.service';
 import { CustomerService } from '../customer.service';
 import { AuthService } from '../auth.service';
@@ -29,8 +29,9 @@ import { ProductService } from '../product.service';
       <!-- Header Row -->
       <div class="row align-items-center mb-4 g-3">
         <div class="col-md">
-          <h1 class="h3 mb-1 fw-bold">Create New Invoice</h1>
-          <p class="text-muted mb-0 small">Enter details to generate a professional GST invoice</p>
+          <h1 class="h3 mb-1 fw-bold">{{ exchangeMode ? 'Exchange Invoice' : 'Create New Invoice' }}</h1>
+          <p class="text-muted mb-0 small" *ngIf="!exchangeMode">Enter details to generate a professional GST invoice</p>
+          <p class="text-primary mb-0 small fw-bold" *ngIf="exchangeMode">Processing exchange for Bill #{{ originalBillNumber }}</p>
         </div>
         <div class="col-md-auto">
           <div class="d-flex gap-2">
@@ -114,10 +115,10 @@ import { ProductService } from '../product.service';
                 <div class="mb-4" formArrayName="items">
                   <!-- Table Header (Desktop) -->
                   <div class="row g-2 mb-2 d-none d-md-flex px-2 text-muted small fw-bold text-uppercase">
-                    <div class="col-md-4">Item Name</div>
+                    <div class="col-md-3">Item Name</div>
                     <div class="col-md-2 text-center">Price</div>
                     <div class="col-md-2 text-center">Qty</div>
-                    <div class="col-md-1 text-center">GST</div>
+                    <div class="col-md-2 text-center">GST</div>
                     <div class="col-md-2 text-end">Total</div>
                     <div class="col-md-1"></div>
                   </div>
@@ -126,7 +127,7 @@ import { ProductService } from '../product.service';
                   <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" 
                        class="row g-2 mb-3 mb-md-2 p-3 p-md-0 rounded-3 bg-light bg-md-transparent border border-md-0 shadow-sm shadow-md-none position-relative">
                     
-                    <div class="col-md-4 col-12 mb-2 mb-md-0 position-relative">
+                    <div class="col-md-3 col-12 mb-2 mb-md-0 position-relative">
                        <label class="d-md-none small text-muted fw-bold mb-1">Item Name</label>
                        <input formControlName="itemName" class="form-control border-light py-2 shadow-sm" placeholder="Search item..." (input)="onItemSearch($event, i)" autocomplete="off">
                        
@@ -161,7 +162,7 @@ import { ProductService } from '../product.service';
                       </small>
                     </div>
                     
-                    <div class="col-md-1 col-4 mb-2 mb-md-0 text-center">
+                    <div class="col-md-2 col-4 mb-2 mb-md-0 text-center">
                       <label class="d-md-none small text-muted fw-bold d-block mb-1">GST %</label>
                       <select formControlName="gstRate" class="form-select border-light text-md-center py-2 shadow-sm" (change)="calculateItemTotal(i)">
                         <option *ngFor="let rate of availableGstRates" [value]="rate">{{ rate }}%</option>
@@ -177,6 +178,14 @@ import { ProductService } from '../product.service';
                       <button type="button" class="btn btn-outline-danger border-0 p-2" (click)="removeItem(i)" *ngIf="items.length > 1" title="Remove Item">🗑️</button>
                     </div>
                   </div>
+                </div>
+
+                <div class="alert alert-info border-0 shadow-sm rounded-3 p-3 mb-4 d-flex align-items-center gap-2" *ngIf="exchangeMode">
+                   <span class="fs-4">ℹ️</span>
+                   <div>
+                     <strong>Exchange Mode Active</strong><br>
+                     <small>Original items are marked with negative quantities (-). Add new items below to calculate the difference amount.</small>
+                   </div>
                 </div>
 
                 <button type="button" class="btn btn-outline-primary w-100 py-2 border-dashed fw-bold" (click)="addItem()">
@@ -411,6 +420,7 @@ export class InvoiceCreateComponent implements OnInit {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   invoiceForm!: FormGroup;
   quickCustomerForm!: FormGroup;
@@ -430,6 +440,10 @@ export class InvoiceCreateComponent implements OnInit {
   isSubmitting: boolean = false;
   limitReached: boolean = false;
   isPro: boolean = false;
+
+  exchangeMode: boolean = false;
+  originalBillId: number | null = null;
+  originalBillNumber: string = '';
 
   availableGstRates: number[] = [0, 5, 12, 18, 28];
 
@@ -464,6 +478,14 @@ export class InvoiceCreateComponent implements OnInit {
         });
       }
     }
+
+    // Check for Exchange Mode
+    this.route.queryParams.subscribe(params => {
+      const exchangeFrom = params['exchangeFrom'];
+      if (exchangeFrom) {
+        this.loadOriginalBillForExchange(Number(exchangeFrom));
+      }
+    });
   }
 
   initForm() {
@@ -477,6 +499,7 @@ export class InvoiceCreateComponent implements OnInit {
       totalIGST: [0],
       totalAmount: [0],
       paymentMethod: ['CASH'],
+      originalBillId: [null],
       items: this.fb.array([], Validators.required)
     });
   }
@@ -523,6 +546,58 @@ export class InvoiceCreateComponent implements OnInit {
   removeItem(index: number) {
     this.items.removeAt(index);
     this.calculateTotals();
+  }
+
+  loadOriginalBillForExchange(billId: number) {
+    this.exchangeMode = true;
+    this.originalBillId = billId;
+    this.invoiceService.getById(billId).subscribe({
+      next: (bill) => {
+        this.originalBillNumber = bill.billNumber;
+        this.invoiceForm.patchValue({ originalBillId: bill.id });
+        if (bill.customer) {
+          const cust: Customer = {
+            id: bill.customerId,
+            name: bill.customer.name,
+            mobile: bill.customer.mobile || '',
+            address: bill.customer.address
+          };
+          this.selectCustomer(cust);
+        }
+
+        // Clear empty starting item
+        while (this.items.length !== 0) {
+          this.items.removeAt(0);
+        }
+
+        // Add original items as negative returning
+        bill.items.forEach((item: any) => {
+          const itemGroup = this.fb.group({
+            itemId: [item.itemId],
+            itemName: [item.itemName, Validators.required],
+            price: [item.price, [Validators.required, Validators.min(0.01)]],
+            quantity: [-Math.abs(item.quantity), [Validators.required]],
+            hsnCode: [item.hsnCode || ''],
+            gstRate: [item.cgst > 0 ? ((item.cgst + item.sgst) / (item.price * item.quantity)) * 100 : 0],
+            cgst: [0],
+            sgst: [0],
+            igst: [0],
+            total: [0],
+            stockQuantity: [99999] // Bypassing stock validation for returned items implicitly
+          });
+          this.items.push(itemGroup);
+        });
+
+        // Trigger calculations
+        for (let i = 0; i < this.items.length; i++) {
+          this.calculateItemTotal(i);
+        }
+      },
+      error: (err) => {
+        this.notificationService.error('Failed to load original invoice for exchange.');
+        this.router.navigate(['/bills']);
+      }
+    });
   }
 
   onCustomerSearch(event: any) {
@@ -669,13 +744,12 @@ export class InvoiceCreateComponent implements OnInit {
     const stockQuantity = itemGroup.get('stockQuantity')?.value;
 
     // Stock Validation Warning
-    if (stockQuantity !== undefined && quantity > stockQuantity) {
+    if (stockQuantity !== undefined && quantity > 0 && quantity > stockQuantity) {
       itemGroup.get('quantity')?.setErrors({ 'insufficientStock': true });
     } else {
       if (itemGroup.get('quantity')?.hasError('insufficientStock')) {
         itemGroup.get('quantity')?.setErrors(null);
-        // Re-run other validators if any? Min(1) is standard.
-        if (quantity < 1) itemGroup.get('quantity')?.setErrors({ 'min': true });
+        if (quantity === 0) itemGroup.get('quantity')?.setErrors({ 'min': true });
       }
     }
 

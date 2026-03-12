@@ -74,6 +74,21 @@ import { AuthService } from './auth.service';
               </a>
             </li>
             <li class="nav-item mb-1">
+              <a routerLink="/suppliers" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
+                <span class="me-3 fs-5">🏢</span> Suppliers
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/purchases" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
+                <span class="me-3 fs-5">📦</span> Purchases
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/expenses" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
+                <span class="me-3 fs-5">💸</span> Expenses
+              </a>
+            </li>
+            <li class="nav-item mb-1">
               <a routerLink="/subscription" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">💎</span> Subscription
               </a>
@@ -86,6 +101,11 @@ import { AuthService } from './auth.service';
             <li class="nav-item mb-1">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📊</span> Reports
+              </a>
+            </li>
+            <li class="nav-item mb-1" *ngIf="!user?.parentShopId">
+              <a routerLink="/staff" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
+                <span class="me-3 fs-5">👨‍💼</span> Staff Access
               </a>
             </li>
             <li class="nav-item mb-1" *ngIf="user?.isAdmin">
@@ -133,6 +153,21 @@ import { AuthService } from './auth.service';
               </a>
             </li>
             <li class="nav-item mb-1">
+              <a routerLink="/suppliers" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
+                <span class="me-3">🏢</span> Suppliers
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/purchases" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
+                <span class="me-3">📦</span> Purchases
+              </a>
+            </li>
+            <li class="nav-item mb-1">
+              <a routerLink="/expenses" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
+                <span class="me-3">💸</span> Expenses
+              </a>
+            </li>
+            <li class="nav-item mb-1">
               <a routerLink="/subscription" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">💎</span> Subscription
               </a>
@@ -145,6 +180,11 @@ import { AuthService } from './auth.service';
             <li class="nav-item mb-1">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📊</span> Reports
+              </a>
+            </li>
+            <li class="nav-item mb-1" *ngIf="!user?.parentShopId">
+              <a routerLink="/staff" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
+                <span class="me-3">👨‍💼</span> Staff Access
               </a>
             </li>
             <li class="nav-item mb-1" *ngIf="user?.isAdmin">

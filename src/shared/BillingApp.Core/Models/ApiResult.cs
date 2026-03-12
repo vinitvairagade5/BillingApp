@@ -35,4 +35,6 @@ public class UserDto
     public string? GSTIN { get; set; }
     public string? LogoUrl { get; set; }
     public string? GstRates { get; set; }
+    public string Role { get; set; } = "OWNER";
+    public int? ParentShopId { get; set; }
 }

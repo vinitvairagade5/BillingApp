@@ -67,13 +67,16 @@ public class InvoiceController : BaseApiController
         using var connection = _connectionFactory.CreateConnection();
         
         var totalSales = await connection.ExecuteScalarAsync<decimal>(
-            "SELECT COALESCE(SUM(\"TotalAmount\"), 0) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { shopOwnerId });
+            @"SELECT COALESCE(SUM(""TotalAmount""), 0) FROM ""Bills"" 
+              WHERE ""ShopOwnerId"" = @ShopOwnerId AND ""Status"" != 'CANCELLED'", new { shopOwnerId });
             
         var totalGST = await connection.ExecuteScalarAsync<decimal>(
-            "SELECT COALESCE(SUM(\"TotalCGST\" + \"TotalSGST\" + \"TotalIGST\"), 0) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { shopOwnerId });
+            @"SELECT COALESCE(SUM(""TotalCGST"" + ""TotalSGST"" + ""TotalIGST""), 0) FROM ""Bills"" 
+              WHERE ""ShopOwnerId"" = @ShopOwnerId AND ""Status"" != 'CANCELLED'", new { shopOwnerId });
             
         var totalInvoices = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", new { shopOwnerId });
+            @"SELECT COUNT(*) FROM ""Bills"" 
+              WHERE ""ShopOwnerId"" = @ShopOwnerId AND ""Status"" != 'CANCELLED'", new { shopOwnerId });
 
         var totalUdhaar = await connection.ExecuteScalarAsync<decimal>(@"
             SELECT 
@@ -86,7 +89,7 @@ public class InvoiceController : BaseApiController
             SELECT ""ItemName"" as ""name"", SUM(""Quantity"") as ""totalQuantity"", SUM(""Total"") as ""totalRevenue""
             FROM ""BillItems"" bi
             JOIN ""Bills"" b ON bi.""BillId"" = b.""Id""
-            WHERE b.""ShopOwnerId"" = @ShopOwnerId
+            WHERE b.""ShopOwnerId"" = @ShopOwnerId AND b.""Status"" != 'CANCELLED'
             GROUP BY ""ItemName""
             ORDER BY ""totalRevenue"" DESC
             LIMIT 5", new { shopOwnerId });
@@ -95,6 +98,7 @@ public class InvoiceController : BaseApiController
             SELECT COALESCE(SUM(""TotalAmount""), 0) 
             FROM ""Bills"" 
             WHERE ""ShopOwnerId"" = @ShopOwnerId 
+            AND ""Status"" != 'CANCELLED'
             AND EXTRACT(MONTH FROM ""Date"") = EXTRACT(MONTH FROM CURRENT_DATE)
             AND EXTRACT(YEAR FROM ""Date"") = EXTRACT(YEAR FROM CURRENT_DATE)", new { shopOwnerId });
 
@@ -106,8 +110,21 @@ public class InvoiceController : BaseApiController
             ORDER BY ""StockQuantity"" ASC
             LIMIT 5", new { shopOwnerId });
 
+        var totalCOGS = await connection.ExecuteScalarAsync<decimal>(
+            @"SELECT COALESCE(SUM(bi.""Quantity"" * i.""PurchasePrice""), 0)
+              FROM ""BillItems"" bi
+              JOIN ""Bills"" b ON bi.""BillId"" = b.""Id""
+              JOIN ""Items"" i ON bi.""ItemId"" = i.""Id""
+              WHERE b.""ShopOwnerId"" = @ShopOwnerId AND b.""Status"" != 'CANCELLED'", new { shopOwnerId });
+
+        var totalExpenses = await connection.ExecuteScalarAsync<decimal>(
+            @"SELECT COALESCE(SUM(""Amount""), 0) FROM ""Expenses""
+              WHERE ""ShopOwnerId"" = @ShopOwnerId", new { shopOwnerId });
+
         return Ok(new {
             TotalSales = totalSales,
+            TotalCOGS = totalCOGS,
+            TotalExpenses = totalExpenses,
             MonthlySales = monthlySales,
             TotalGST = totalGST,
             TotalInvoices = totalInvoices,
@@ -118,22 +135,57 @@ public class InvoiceController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<BillingApp.Core.Models.PaginatedResult<Bill>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<BillingApp.Core.Models.PaginatedResult<Bill>> Get(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchBillNumber = null,
+        [FromQuery] string? searchCustomer = null,
+        [FromQuery] string? searchStatus = null)
     {
         var shopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var offset = (page - 1) * pageSize;
         
-        var sql = @"
-            SELECT * FROM ""Bills"" 
-            WHERE ""ShopOwnerId"" = @ShopOwnerId 
-            ORDER BY ""Date"" DESC 
+        var whereClause = @"WHERE b.""ShopOwnerId"" = @ShopOwnerId";
+        
+        if (!string.IsNullOrEmpty(searchBillNumber))
+            whereClause += @" AND b.""BillNumber"" ILIKE @SearchBillNumber";
+            
+        if (!string.IsNullOrEmpty(searchCustomer))
+            whereClause += @" AND (c.""Name"" ILIKE @SearchCustomer OR c.""Mobile"" ILIKE @SearchCustomer)";
+            
+        if (!string.IsNullOrEmpty(searchStatus))
+            whereClause += @" AND b.""Status"" = @SearchStatus";
+        
+        var sql = $@"
+            SELECT b.*, c.*
+            FROM ""Bills"" b
+            LEFT JOIN ""Customers"" c ON b.""CustomerId"" = c.""Id""
+            {whereClause}
+            ORDER BY b.""Date"" DESC 
             OFFSET @Offset LIMIT @Limit";
 
-        var countSql = @"SELECT COUNT(*) FROM ""Bills"" WHERE ""ShopOwnerId"" = @ShopOwnerId";
+        var countSql = $@"
+            SELECT COUNT(*) 
+            FROM ""Bills"" b
+            LEFT JOIN ""Customers"" c ON b.""CustomerId"" = c.""Id""
+            {whereClause}";
 
-        var items = await connection.QueryAsync<Bill>(sql, new { ShopOwnerId = shopOwnerId, Offset = offset, Limit = pageSize });
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { ShopOwnerId = shopOwnerId });
+        var parameters = new { 
+            ShopOwnerId = shopOwnerId, 
+            Offset = offset, 
+            Limit = pageSize,
+            SearchBillNumber = $"%{searchBillNumber}%",
+            SearchCustomer = $"%{searchCustomer}%",
+            SearchStatus = searchStatus
+        };
+
+        var items = await connection.QueryAsync<Bill, Customer, Bill>(sql, (bill, customer) => {
+            bill.Customer = customer;
+            return bill;
+        }, parameters, splitOn: "Id");
+        
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
 
         return new BillingApp.Core.Models.PaginatedResult<Bill>(items, totalCount, page, pageSize);
     }
@@ -144,6 +196,22 @@ public class InvoiceController : BaseApiController
         var bill = await GetFullBillByIdInternal(id);
         if (bill == null) return NotFound();
         return Ok(bill);
+    }
+
+    [HttpGet("migrate-exchange")]
+    [AllowAnonymous]
+    public async Task<IActionResult> MigrateExchange()
+    {
+        try 
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            await connection.ExecuteAsync("ALTER TABLE \"Bills\" ADD COLUMN IF NOT EXISTS \"OriginalBillId\" INTEGER NULL;");
+            return Ok("Migration applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost]
@@ -172,16 +240,18 @@ public class InvoiceController : BaseApiController
             var count = await connection.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM \"Bills\" WHERE \"ShopOwnerId\" = @ShopOwnerId", 
                 new { bill.ShopOwnerId }, transaction);
-            bill.BillNumber = $"{DateTime.UtcNow:yyyyMMdd}-{count + 1:D4}";
+            
+            var prefix = bill.OriginalBillId.HasValue ? "EX" : "";
+            bill.BillNumber = $"{prefix}{DateTime.UtcNow:yyyyMMdd}-{count + 1:D4}";
 
             // 2. Insert Bill Header
             var billSql = @"
                 INSERT INTO ""Bills"" (
                     ""BillNumber"", ""Date"", ""CustomerId"", ""SubTotal"", ""Discount"", 
-                    ""TotalCGST"", ""TotalSGST"", ""TotalIGST"", ""TotalAmount"", ""PaymentMethod"", ""ShopOwnerId""
+                    ""TotalCGST"", ""TotalSGST"", ""TotalIGST"", ""TotalAmount"", ""PaymentMethod"", ""ShopOwnerId"", ""OriginalBillId""
                 ) VALUES (
                     @BillNumber, @Date, @CustomerId, @SubTotal, @Discount, 
-                    @TotalCGST, @TotalSGST, @TotalIGST, @TotalAmount, @PaymentMethod, @ShopOwnerId
+                    @TotalCGST, @TotalSGST, @TotalIGST, @TotalAmount, @PaymentMethod, @ShopOwnerId, @OriginalBillId
                 ) RETURNING ""Id""";
 
             var billId = await connection.ExecuteScalarAsync<int>(billSql, bill, transaction);
@@ -201,32 +271,25 @@ public class InvoiceController : BaseApiController
                 item.BillId = billId;
                 await connection.ExecuteAsync(itemSql, item, transaction);
 
-                // Inventory Management: Deduct Stock
-                // We check existing stock first to ensure data integrity or raise error
-                // Option: Allow negative stock but warn? Or strict block?
-                // Let's implement strict block for now as per plan logic "Deduct stock". 
-                // Using atomic update for safety: "Update Items Set Stock = Stock - Qty Where Id = @Id AND Stock >= Qty"
-                // If row count is 0, it means insufficient stock (concurrently or just invalid).
-                
+                // Inventory Management: Adjust Stock
+                // For positive quantity (sale), stock decreases.
+                // For negative quantity (return), stock increases automatically.
                 var updateStockSql = @"
                     UPDATE ""Items"" 
                     SET ""StockQuantity"" = ""StockQuantity"" - @Quantity 
                     WHERE ""Id"" = @ItemId AND ""ShopOwnerId"" = @ShopOwnerId AND ""StockQuantity"" >= @Quantity";
                 
-                // We need ShopOwnerId here, which is in bill.ShopOwnerId
                 var stockAffected = await connection.ExecuteAsync(updateStockSql, 
                     new { Quantity = item.Quantity, ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
                 
                 if (stockAffected == 0)
                 {
-                     // Check if item exists to give better error
                      var currentStock = await connection.ExecuteScalarAsync<int?>(
                         @"SELECT ""StockQuantity"" FROM ""Items"" WHERE ""Id"" = @ItemId AND ""ShopOwnerId"" = @ShopOwnerId",
                         new { ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
                      
                      if (currentStock == null) throw new Exception($"Item with ID {item.ItemId} not found.");
                      
-                     // If we are here, stock was insufficient
                      throw new Exception($"Insufficient stock for item '{item.ItemName}'. Available: {currentStock}, Requested: {item.Quantity}");
                 }
             }
@@ -263,6 +326,71 @@ public class InvoiceController : BaseApiController
             return StatusCode(500, $"Error creating invoice: {ex.Message}");
         }
     }
+
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var shopOwnerId = GetUserId();
+        using var connection = _connectionFactory.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var bill = await connection.QuerySingleOrDefaultAsync<Bill>(
+                "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id AND \"ShopOwnerId\" = @ShopOwnerId", 
+                new { Id = id, ShopOwnerId = shopOwnerId }, transaction);
+
+            if (bill == null) return NotFound("Invoice not found.");
+            if (bill.Status == "CANCELLED") return BadRequest("Invoice is already cancelled.");
+
+            // 1. Mark as cancelled
+            await connection.ExecuteAsync(
+                "UPDATE \"Bills\" SET \"Status\" = 'CANCELLED' WHERE \"Id\" = @Id", 
+                new { Id = id }, transaction);
+
+            // 2. Return stock
+            var items = await connection.QueryAsync<BillItem>(
+                "SELECT * FROM \"BillItems\" WHERE \"BillId\" = @Id", new { Id = id }, transaction);
+
+            foreach (var item in items)
+            {
+                await connection.ExecuteAsync(
+                    "UPDATE \"Items\" SET \"StockQuantity\" = \"StockQuantity\" + @Quantity WHERE \"Id\" = @ItemId AND \"ShopOwnerId\" = @ShopOwnerId",
+                    new { Quantity = item.Quantity, ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
+            }
+
+            // 3. Reverse Ledger if it was a credit sale
+            if (bill.PaymentMethod == "CREDIT")
+            {
+                var ledgerEntry = new CustomerLedger
+                {
+                    CustomerId = bill.CustomerId,
+                    BillId = id,
+                    Date = DateTime.UtcNow,
+                    Type = "CREDIT", // Reversing a DEBIT with a CREDIT
+                    Amount = bill.TotalAmount,
+                    Description = $"Invoice Cancelled (Bill #{bill.BillNumber})",
+                    ShopOwnerId = shopOwnerId
+                };
+                
+                var ledgerSql = @"
+                    INSERT INTO ""CustomerLedger"" (""CustomerId"", ""BillId"", ""Date"", ""Type"", ""Amount"", ""Description"", ""ShopOwnerId"") 
+                    VALUES (@CustomerId, @BillId, @Date, @Type, @Amount, @Description, @ShopOwnerId)";
+                
+                await connection.ExecuteAsync(ledgerSql, ledgerEntry, transaction);
+            }
+
+            transaction.Commit();
+            return Ok(new { Message = "Invoice cancelled successfully." });
+        }
+        catch (Exception ex)
+        {
+            transaction.Rollback();
+            return StatusCode(500, $"Error cancelling invoice: {ex.Message}");
+        }
+    }
+
     [HttpGet("{id}/whatsapp")]
     public async Task<IActionResult> GetWhatsappUrl(int id)
     {

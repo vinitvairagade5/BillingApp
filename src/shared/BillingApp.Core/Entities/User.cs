@@ -16,5 +16,7 @@ public class User
     public string? ReferralCode { get; set; }
     public int? ReferredById { get; set; }
     public bool IsAdmin { get; set; }
+    public string Role { get; set; } = "OWNER";
+    public int? ParentShopId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

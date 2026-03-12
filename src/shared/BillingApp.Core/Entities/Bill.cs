@@ -16,9 +16,12 @@ public class Bill
     public decimal TotalIGST { get; set; }
     public decimal TotalAmount { get; set; }
     public string PaymentMethod { get; set; } = "CASH";
+    public string Status { get; set; } = "COMPLETED";
     
     public int ShopOwnerId { get; set; }
     public User? ShopOwner { get; set; }
+
+    public int? OriginalBillId { get; set; }
     
     public List<BillItem> Items { get; set; } = new();
 }

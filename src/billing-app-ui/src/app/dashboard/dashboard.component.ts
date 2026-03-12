@@ -75,4 +75,11 @@ export class DashboardComponent implements OnInit {
     navigateToSubscription(): void {
         this.router.navigate(['/subscription']);
     }
+
+    get profit(): number {
+        const sales = this.stats.totalSales || 0;
+        const cogs = this.stats.totalCOGS || 0;
+        const exp = this.stats.totalExpenses || 0;
+        return sales - cogs - exp;
+    }
 }

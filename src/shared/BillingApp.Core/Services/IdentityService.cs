@@ -79,7 +79,9 @@ public class IdentityService : IIdentityService
                 IsAdmin = user.IsAdmin,
                 SubscriptionType = user.SubscriptionType,
                 SubscriptionExpiry = user.SubscriptionExpiry,
-                ReferralCode = user.ReferralCode
+                ReferralCode = user.ReferralCode,
+                Role = user.Role,
+                ParentShopId = user.ParentShopId
             }
         });
     }
@@ -185,9 +187,15 @@ public class IdentityService : IIdentityService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var effectiveShopOwnerId = user.Role == "CASHIER" && user.ParentShopId.HasValue 
+            ? user.ParentShopId.Value 
+            : user.Id;
+
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, effectiveShopOwnerId.ToString()),
+            new Claim("ActualUserId", user.Id.ToString()),
+            new Claim("Role", user.Role),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim("ShopName", user.ShopName),
             new Claim("IsAdmin", user.IsAdmin.ToString())

@@ -13,6 +13,8 @@ export interface Bill {
         name: string;
     } | null;
     totalAmount: number;
+    status: string;
+    originalBillId?: number;
 }
 
 
@@ -55,6 +57,8 @@ export interface CreateBill {
     totalSGST: number;
     totalIGST: number;
     totalAmount: number;
+    paymentMethod: string;
+    originalBillId?: number;
     items: BillItem[];
 }
 
@@ -65,8 +69,14 @@ export class InvoiceService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/Invoice`;
 
-    getBills(page: number = 1, pageSize: number = 10): Observable<PaginatedResult<Bill>> {
-        return this.http.get<PaginatedResult<Bill>>(`${this.apiUrl}?page=${page}&pageSize=${pageSize}`);
+    getBills(page: number = 1, pageSize: number = 10, filters?: any): Observable<PaginatedResult<Bill>> {
+        let queryParams = `?page=${page}&pageSize=${pageSize}`;
+        if (filters) {
+            if (filters.searchBillNumber) queryParams += `&searchBillNumber=${encodeURIComponent(filters.searchBillNumber)}`;
+            if (filters.searchCustomer) queryParams += `&searchCustomer=${encodeURIComponent(filters.searchCustomer)}`;
+            if (filters.searchStatus) queryParams += `&searchStatus=${encodeURIComponent(filters.searchStatus)}`;
+        }
+        return this.http.get<PaginatedResult<Bill>>(`${this.apiUrl}${queryParams}`);
     }
 
     getById(id: number): Observable<any> {
@@ -102,5 +112,9 @@ export class InvoiceService {
 
     getDashboardStats(): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/dashboard`);
+    }
+
+    cancelInvoice(id: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/${id}/cancel`, {});
     }
 }

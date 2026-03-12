@@ -14,6 +14,10 @@ import { ReportDashboardComponent } from './reports/reports.component';
 import { authGuard } from './auth.guard';
 
 import { BillDetailComponent } from './bill-detail/bill-detail.component';
+import { SupplierListComponent } from './supplier-list/supplier-list.component';
+import { ExpenseListComponent } from './expense-list/expense-list.component';
+import { StaffListComponent } from './staff-list/staff-list.component';
+import { PurchaseListComponent } from './purchase-list/purchase-list.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -22,6 +26,10 @@ export const routes: Routes = [
     { path: 'bills/:id', component: BillDetailComponent, canActivate: [authGuard] },
     { path: 'products', component: ProductListComponent, canActivate: [authGuard] },
     { path: 'customers', component: CustomerListComponent, canActivate: [authGuard] },
+    { path: 'suppliers', component: SupplierListComponent, canActivate: [authGuard] },
+    { path: 'purchases', component: PurchaseListComponent, canActivate: [authGuard] },
+    { path: 'expenses', component: ExpenseListComponent, canActivate: [authGuard] },
+    { path: 'staff', component: StaffListComponent, canActivate: [authGuard] },
     { path: 'create', component: InvoiceCreateComponent, canActivate: [authGuard] },
     { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
     { path: 'subscription', component: SubscriptionComponent, canActivate: [authGuard] },

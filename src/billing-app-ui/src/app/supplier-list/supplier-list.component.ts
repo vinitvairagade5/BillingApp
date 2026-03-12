@@ -1,27 +1,27 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CustomerService, Customer } from '../customer.service';
+import { SupplierService, Supplier } from '../supplier.service';
 import { AuthService } from '../auth.service';
 import { NotificationService } from '../notification.service';
 
 @Component({
-    selector: 'app-customer-list',
+    selector: 'app-supplier-list',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    templateUrl: './customer-list.component.html',
-    styleUrls: ['./customer-list.component.css']
+    templateUrl: './supplier-list.component.html',
+    styleUrls: ['./supplier-list.component.css']
 })
-export class CustomerListComponent implements OnInit {
-    private customerService = inject(CustomerService);
+export class SupplierListComponent implements OnInit {
+    private supplierService = inject(SupplierService);
     private authService = inject(AuthService);
     private notificationService = inject(NotificationService);
 
-    customers: Customer[] = [];
+    suppliers: Supplier[] = [];
     searchTerm: string = '';
     isModalOpen: boolean = false;
     isSaving: boolean = false;
-    editingCustomer: Customer | null = null;
+    editingSupplier: Supplier | null = null;
 
     // Pagination State
     currentPage: number = 1;
@@ -29,7 +29,7 @@ export class CustomerListComponent implements OnInit {
     totalCount: number = 0;
     totalPages: number = 0;
 
-    newCustomer: Customer = {
+    newSupplier: Supplier = {
         name: '',
         mobile: '',
         address: '',
@@ -38,19 +38,19 @@ export class CustomerListComponent implements OnInit {
     };
 
     ngOnInit(): void {
-        this.loadCustomers();
+        this.loadSuppliers();
     }
 
-    loadCustomers(): void {
-        this.customerService.getCustomers(this.currentPage, this.pageSize).subscribe(data => {
-            this.customers = data.items;
+    loadSuppliers(): void {
+        this.supplierService.getSuppliers(this.currentPage, this.pageSize).subscribe(data => {
+            this.suppliers = data.items;
             this.totalCount = data.totalCount;
             this.totalPages = data.totalPages;
         });
     }
 
-    get filteredCustomers(): Customer[] {
-        return this.customers.filter(c =>
+    get filteredSuppliers(): Supplier[] {
+        return this.suppliers.filter(c =>
             c.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
             c.mobile.includes(this.searchTerm)
         );
@@ -59,20 +59,20 @@ export class CustomerListComponent implements OnInit {
     nextPage(): void {
         if (this.currentPage < this.totalPages) {
             this.currentPage++;
-            this.loadCustomers();
+            this.loadSuppliers();
         }
     }
 
     prevPage(): void {
         if (this.currentPage > 1) {
             this.currentPage--;
-            this.loadCustomers();
+            this.loadSuppliers();
         }
     }
 
     openAddModal(): void {
-        this.editingCustomer = null;
-        this.newCustomer = {
+        this.editingSupplier = null;
+        this.newSupplier = {
             name: '',
             mobile: '',
             address: '',
@@ -82,9 +82,9 @@ export class CustomerListComponent implements OnInit {
         this.isModalOpen = true;
     }
 
-    openEditModal(customer: Customer): void {
-        this.editingCustomer = { ...customer };
-        this.newCustomer = { ...customer };
+    openEditModal(supplier: Supplier): void {
+        this.editingSupplier = { ...supplier };
+        this.newSupplier = { ...supplier };
         this.isModalOpen = true;
     }
 
@@ -92,18 +92,18 @@ export class CustomerListComponent implements OnInit {
         this.isModalOpen = false;
     }
 
-    saveCustomer(): void {
+    saveSupplier(): void {
         this.isSaving = true;
-        this.customerService.createOrUpdateCustomer(this.newCustomer).subscribe({
+        this.supplierService.createOrUpdateSupplier(this.newSupplier).subscribe({
             next: () => {
                 this.isSaving = false;
-                this.loadCustomers();
+                this.loadSuppliers();
                 this.closeModal();
             },
             error: (err) => {
                 this.isSaving = false;
-                console.error('Error saving customer', err);
-                this.notificationService.error('Failed to save customer');
+                console.error('Error saving supplier', err);
+                this.notificationService.error('Failed to save supplier');
             }
         });
     }

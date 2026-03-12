@@ -37,7 +37,11 @@ export class ProductListComponent implements OnInit {
         gstRate: 18,
         shopOwnerId: 0,
         stockQuantity: 0,
-        lowStockThreshold: 5
+        lowStockThreshold: 5,
+        purchasePrice: 0,
+        sku: '',
+        barcode: '',
+        unitType: 'pc'
     };
 
     ngOnInit(): void {
@@ -86,7 +90,11 @@ export class ProductListComponent implements OnInit {
             gstRate: 18,
             shopOwnerId: 0,
             stockQuantity: 0,
-            lowStockThreshold: 5
+            lowStockThreshold: 5,
+            purchasePrice: 0,
+            sku: '',
+            barcode: '',
+            unitType: 'pc'
         };
         this.isModalOpen = true;
     }

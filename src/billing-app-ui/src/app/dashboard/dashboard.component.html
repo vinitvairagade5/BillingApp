@@ -6,7 +6,7 @@
             <p class="text-secondary small mb-0">Overview of your shop's performance and recent activity</p>
         </div>
         <div class="col-md-auto">
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" routerLink="/invoice/create">
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" routerLink="/create">
                 <span class="me-2">+</span> Create Invoice
             </button>
         </div>
@@ -87,6 +87,30 @@
                     </div>
                     <h4 class="mb-0 fw-extrabold text-danger stat-value text-truncate"
                         title="₹{{ stats.totalUdhaar | number:'1.0-0' }}">₹{{ stats.totalUdhaar | number:'1.0-0' }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit Overview Banner -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4"
+                [ngClass]="profit >= 0 ? 'bg-success text-white' : 'bg-danger text-white'">
+                <div class="card-body p-4 position-relative z-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-uppercase tracking-wider extra-small fw-bold opacity-75 mb-1">Estimated Net
+                                Profit</div>
+                            <h2 class="mb-0 fw-extrabold text-white">₹{{ profit | number:'1.2-2' }}</h2>
+                        </div>
+                        <div class="text-end fw-medium small opacity-75 border-start border-light ps-3">
+                            <div class="mb-1">COGS <span class="fw-bold fs-6">₹{{ stats.totalCOGS || 0 | number:'1.0-0'
+                                    }}</span></div>
+                            <div>Expenses <span class="fw-bold fs-6">₹{{ stats.totalExpenses || 0 | number:'1.0-0'
+                                    }}</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

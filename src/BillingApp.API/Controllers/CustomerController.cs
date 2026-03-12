@@ -54,10 +54,10 @@ public class CustomerController : BaseApiController
         customer.ShopOwnerId = GetUserId();
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
-            INSERT INTO ""Customers"" (""Name"", ""Mobile"", ""Address"", ""ShopOwnerId"")
-            VALUES (@Name, @Mobile, @Address, @ShopOwnerId)
+            INSERT INTO ""Customers"" (""Name"", ""Mobile"", ""Address"", ""GSTIN"", ""ShopOwnerId"")
+            VALUES (@Name, @Mobile, @Address, @GSTIN, @ShopOwnerId)
             ON CONFLICT (""Mobile"", ""ShopOwnerId"") DO UPDATE 
-            SET ""Name"" = @Name, ""Address"" = @Address
+            SET ""Name"" = @Name, ""Address"" = @Address, ""GSTIN"" = @GSTIN
             RETURNING ""Id""";
         
         var id = await connection.ExecuteScalarAsync<int>(sql, customer);

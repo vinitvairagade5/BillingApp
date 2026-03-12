@@ -41,6 +41,24 @@ public class DatabaseInitializer
             // 2. Initialize Schema
             using var connection = _connectionFactory.CreateConnection();
             
+            // Forcefully terminate any orphaned connections holding locks
+            try
+            {
+                var originalDbName = new Npgsql.NpgsqlConnectionStringBuilder(connection.ConnectionString).Database;
+                _logger.LogInformation("Clearing orphaned database locks...");
+                await connection.ExecuteAsync($@"
+                    SELECT pg_terminate_backend(pid) 
+                    FROM pg_stat_activity 
+                    WHERE datname = '{originalDbName}' 
+                    AND pid <> pg_backend_pid() 
+                    AND state IN ('idle', 'idle in transaction', 'active');
+                ");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Could not clear locks: {ex.Message}");
+            }
+
             var sql = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Data", "init.sql"));
             
             _logger.LogInformation("Initializing database schema...");
