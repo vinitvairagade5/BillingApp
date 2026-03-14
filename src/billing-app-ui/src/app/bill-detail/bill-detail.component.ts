@@ -39,7 +39,7 @@ import { QRCodeModule } from 'angularx-qrcode';
         
         <!-- Header Section -->
         <div class="row align-items-start mb-5">
-          <div class="col-sm-7 d-print-none">
+          <div class="col-sm-7">
             <h1 class="display-6 fw-extrabold text-primary text-uppercase mb-2">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
             <div class="text-secondary small">
               <p class="mb-1">{{ bill.shopOwner?.address }}</p>
@@ -242,6 +242,16 @@ import { QRCodeModule } from 'angularx-qrcode';
           max-width: none !important;
           min-height: auto !important;
         }
+        
+        /* Reduce spacing for a compact print layout */
+        .mb-5 { margin-bottom: 1rem !important; }
+        .pb-5 { padding-bottom: 1rem !important; }
+        .mt-4 { margin-top: 0.5rem !important; }
+        .my-4 { margin-top: 1rem !important; margin-bottom: 1rem !important; }
+        .pt-5 { padding-top: 1rem !important; }
+        .pt-4 { padding-top: 0.5rem !important; }
+        .mb-4 { margin-bottom: 1rem !important; }
+
         body { margin: 0; padding: 0; }
         @page { margin: 0.5cm; size: auto; }
     }
