@@ -25,7 +25,6 @@ public class PdfService : IPdfService
 
                 page.Header().Element(ComposeHeader);
                 page.Content().Element(ComposeContent);
-                page.Footer().Element(ComposeFooter);
             });
         }).GeneratePdf();
 
@@ -69,16 +68,16 @@ public class PdfService : IPdfService
 
         void ComposeContent(IContainer container)
         {
-            container.PaddingVertical(20).Column(column =>
+            container.PaddingVertical(10).Column(column =>
             {
-                column.Item().PaddingBottom(20).Container().Border(1).BorderColor(Colors.Black).Padding(15).Column(col =>
+                column.Item().PaddingBottom(15).Row(row =>
                 {
-                    col.Item().Text("BILLED TO").FontSize(8).FontColor(Colors.Black).SemiBold();
-                    col.Item().Text(bill.Customer?.Name ?? "Walk-in Customer").FontSize(12).Bold();
+                    row.AutoItem().PaddingRight(5).Text("BILLED TO:").FontSize(10).FontColor(Colors.Black).SemiBold();
+                    row.AutoItem().PaddingRight(10).Text(bill.Customer?.Name ?? "Walk-in Customer").FontSize(11).Bold();
                     if (!string.IsNullOrEmpty(bill.Customer?.Mobile))
-                        col.Item().Text(bill.Customer.Mobile).FontSize(10);
+                        row.AutoItem().PaddingRight(10).Text($"📞 {bill.Customer.Mobile}").FontSize(10);
                     if (!string.IsNullOrEmpty(bill.Customer?.Address))
-                        col.Item().Text(bill.Customer.Address).FontSize(10);
+                        row.AutoItem().Text($"📍 {bill.Customer.Address}").FontSize(10);
                 });
 
                 column.Item().Element(ComposeTable);
@@ -118,17 +117,15 @@ public class PdfService : IPdfService
                                 table.Cell().AlignRight().PaddingBottom(5).Text($"{bill.TotalIGST:N2}");
                             }
 
-                            table.Cell().ColumnSpan(2).PaddingVertical(10).LineHorizontal(1).LineColor(Colors.Black);
+                            table.Cell().ColumnSpan(2).PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Black);
 
                             table.Cell().Text("TOTAL").FontSize(14).Bold();
                             table.Cell().AlignRight().Text($"INR {bill.TotalAmount:N2}").FontSize(14).Bold();
-                            
-                            table.Cell().ColumnSpan(2).AlignRight().Text("(Inclusive of all taxes)").FontSize(8).FontColor(Colors.Black);
                         });
                     });
                 });
                 
-                column.Item().PaddingTop(30).Column(col => {
+                column.Item().PaddingTop(10).Column(col => {
                     col.Item().Text("TERMS & CONDITIONS").FontSize(10).SemiBold();
                     col.Item().PaddingTop(5).Text("1. Goods once sold will not be taken back.").FontSize(9).FontColor(Colors.Black);
                     col.Item().Text("2. Interest at 18% p.a. will be charged if not paid by due date.").FontSize(9).FontColor(Colors.Black);
@@ -191,33 +188,5 @@ public class PdfService : IPdfService
             });
         }
 
-        void ComposeFooter(IContainer container)
-        {
-            container.Column(col => 
-            {
-                col.Item().PaddingBottom(20).AlignRight().Column(sig => 
-                {
-                    sig.Item().AlignRight().Text($"For {bill.ShopOwner?.ShopName}").FontSize(10).SemiBold();
-                    
-                    sig.Item().PaddingVertical(10).AlignRight().Container()
-                        .Border(1).BorderColor(Colors.Black)
-                        .PaddingHorizontal(15).PaddingVertical(8)
-                        .Row(row => 
-                        {
-                            row.Spacing(5);
-                            row.AutoItem().Text("✓").FontColor(Colors.Black).Bold();
-                            row.AutoItem().Text("Digitally Signed").FontColor(Colors.Black).SemiBold().FontSize(10);
-                        });
-
-                    sig.Item().AlignRight().Text("Authorized Signatory").FontSize(9).FontColor(Colors.Black);
-                });
-
-                col.Item().BorderTop(1).BorderColor(Colors.Black).PaddingTop(10).AlignCenter().Text(text => 
-                {
-                    text.Span("Powered by ").FontSize(9).FontColor(Colors.Black);
-                    text.Span("Vinshri Billing").FontSize(9).Bold().FontColor(Colors.Black);
-                });
-            });
-        }
     }
 }
