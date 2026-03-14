@@ -56,8 +56,8 @@ public class InvoiceController : BaseApiController
         bill.Items = items.ToList();
 
         bill.ShopOwner = await connection.QuerySingleOrDefaultAsync<User>(
-            "SELECT \"Id\", \"ShopName\", \"Username\", \"Address\", \"GSTIN\", \"LogoUrl\" FROM \"Users\" WHERE \"Id\" = @UserId", 
-            new { UserId = userId });
+            "SELECT \"Id\", \"ShopName\", \"Username\", \"Address\", \"GSTIN\", \"LogoUrl\" FROM \"Users\" WHERE \"Id\" = @ShopOwnerId", 
+            new { ShopOwnerId = bill.ShopOwnerId });
 
         bill.Customer = await connection.QuerySingleOrDefaultAsync<Customer>(
              "SELECT * FROM \"Customers\" WHERE \"Id\" = @CustomerId", new { bill.CustomerId });
