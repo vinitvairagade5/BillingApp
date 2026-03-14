@@ -39,7 +39,7 @@ import { QRCodeModule } from 'angularx-qrcode';
         
         <!-- Header Section -->
         <div class="row align-items-start mb-5">
-          <div class="col-sm-7">
+          <div class="col-sm-7 d-print-none">
             <h1 class="display-6 fw-extrabold text-primary text-uppercase mb-2">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
             <div class="text-secondary small">
               <p class="mb-1">{{ bill.shopOwner?.address }}</p>
@@ -47,12 +47,12 @@ import { QRCodeModule } from 'angularx-qrcode';
               <p class="mb-0" *ngIf="bill.shopOwner?.mobile"><strong>Phone:</strong> {{ bill.shopOwner?.mobile }}</p>
             </div>
           </div>
-          <div class="col-sm-5 text-sm-end mt-4 mt-sm-0">
+          <div class="col-sm-5 ms-sm-auto text-sm-end mt-4 mt-sm-0">
             <h2 class="h4 text-muted fw-bold tracking-widest text-uppercase mb-3">Tax Invoice</h2>
             <div class="small">
               <div class="mb-1 text-muted">Invoice No: <span class="text-dark fw-bold">#{{ bill.billNumber }}</span></div>
               <div class="mb-1 text-muted">Date: <span class="text-dark fw-bold">{{ bill.date | date:'dd MMM yyyy' }}</span></div>
-              <div class="mt-2">
+              <div class="mt-2 text-end">
                 <span class="badge rounded-pill fw-bold" 
                       [class.bg-success-subtle]="bill.paymentMethod !== 'CREDIT'" 
                       [class.text-success]="bill.paymentMethod !== 'CREDIT'"
@@ -111,14 +111,14 @@ import { QRCodeModule } from 'angularx-qrcode';
         <div class="row g-4 align-items-start mb-5 pb-5 border-bottom">
           <div class="col-md-7 pe-md-5">
              <div class="row g-3">
-                <div class="col-sm-6">
+                <div class="col-sm-6 d-print-none">
                    <div class="p-3 bg-light rounded-3 h-100">
                       <div class="text-muted small fw-bold mb-1">PAYMENT DETAILS</div>
                       <div class="fw-bold text-dark fs-6">{{ bill.paymentMethod || 'CASH' }}</div>
                    </div>
                 </div>
                 
-                <div class="col-sm-6" *ngIf="bill.shopOwner?.upiId && bill.paymentMethod === 'CREDIT'">
+                <div class="col-sm-6 d-print-none" *ngIf="bill.shopOwner?.upiId && bill.paymentMethod === 'CREDIT'">
                    <div class="d-flex gap-3 align-items-center p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10">
                       <div class="bg-white p-1 rounded">
                         <qrcode [qrdata]="getUpiString()" [width]="70" [margin]="1" [errorCorrectionLevel]="'M'"></qrcode>
@@ -167,7 +167,7 @@ import { QRCodeModule } from 'angularx-qrcode';
         </div>
 
         <!-- Signature Section -->
-        <div class="row align-items-end pt-4">
+        <div class="row align-items-end pt-4 d-print-none">
           <div class="col-6">
              <!-- Empty space for extra branding or QR if needed -->
           </div>
