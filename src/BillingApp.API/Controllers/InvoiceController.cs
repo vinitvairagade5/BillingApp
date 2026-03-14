@@ -414,8 +414,14 @@ public class InvoiceController : BaseApiController
         }
 
         // Format message
-        // Dynamically determine the host (IP or Domain) from the current request
-        var scheme = Request.Scheme;
+        // Determine the scheme (handle Nginx proxy using X-Forwarded-Proto, fallback to Request.Scheme)
+        var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? Request.Scheme;
+        
+        // Force HTTPS if it's a known production domain to be safe
+        if (Request.Host.Host.Contains("vinshri.in")) {
+            scheme = "https";
+        }
+        
         var host = Request.Host;
         var pdfLink = $"{scheme}://{host}/api/Invoice/{id}/pdf";
         var message = $"Hello {customer.Name},\n\nInvoice #{bill.BillNumber} for ₹{bill.TotalAmount:N2} is generated.\n\nClick to Download PDF:\n{pdfLink}\n\nThank you for shopping with {shopOwner?.ShopName ?? "us"}.";
