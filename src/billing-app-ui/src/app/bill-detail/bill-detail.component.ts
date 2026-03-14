@@ -108,7 +108,7 @@ import { QRCodeModule } from 'angularx-qrcode';
         </div>
 
         <!-- Summary Section -->
-        <div class="row g-4 align-items-start mb-5 pb-5 border-bottom">
+        <div class="row g-4 align-items-start mb-5 pb-5 mb-print-1 pb-print-1 border-bottom">
           <div class="col-md-7 pe-md-5">
              <div class="row g-3">
                 <div class="col-sm-6 d-print-none">
@@ -160,7 +160,7 @@ import { QRCodeModule } from 'angularx-qrcode';
                 <span class="fw-extrabold h4 mb-0 text-primary">₹{{ bill.totalAmount | number:'1.2-2' }}</span>
               </div>
             </div>
-            <div class="text-end mt-2">
+            <div class="text-end mt-2 mb-0">
                <small class="text-muted fst-italic">(Inclusive of all GST charges)</small>
             </div>
           </div>
@@ -183,7 +183,7 @@ import { QRCodeModule } from 'angularx-qrcode';
           </div>
         </div>
 
-        <div class="mt-5 pt-5 text-center footer-notes text-muted">
+        <div class="mt-5 pt-5 text-center footer-notes text-muted d-print-none">
           Thank you for your business! Generated via <span class="fw-bold text-primary opacity-75">Vinshri Billing</span>
         </div>
       </div>
