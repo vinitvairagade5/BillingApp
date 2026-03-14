@@ -26,22 +26,27 @@ public class InvoiceController : BaseApiController
     }
 
     [HttpGet("{id}/pdf")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPdf(int id)
     {
-        var bill = await GetFullBillByIdInternal(id);
+        var bill = await GetFullBillByIdInternal(id, isPublic: true);
         if (bill == null) return NotFound();
 
         var pdfBytes = _pdfService.GenerateInvoicePdf(bill);
         return File(pdfBytes, "application/pdf", $"Invoice-{bill.BillNumber}.pdf");
     }
 
-    private async Task<Bill?> GetFullBillByIdInternal(int id)
+    private async Task<Bill?> GetFullBillByIdInternal(int id, bool isPublic = false)
     {
-        var userId = GetUserId();
+        int? userId = isPublic ? null : GetUserId();
         using var connection = _connectionFactory.CreateConnection();
+        
+        var query = userId.HasValue ? 
+            "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id AND \"ShopOwnerId\" = @UserId" :
+            "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id";
+            
         var bill = await connection.QuerySingleOrDefaultAsync<Bill>(
-            "SELECT * FROM \"Bills\" WHERE \"Id\" = @Id AND \"ShopOwnerId\" = @UserId", 
-            new { Id = id, UserId = userId });
+            query, new { Id = id, UserId = userId });
 
         if (bill == null) return null;
 
