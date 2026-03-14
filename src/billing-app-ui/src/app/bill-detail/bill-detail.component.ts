@@ -240,9 +240,10 @@ import { QRCodeModule } from 'angularx-qrcode';
           padding: 0 !important; 
           margin: 0 !important; 
           max-width: none !important;
+          min-height: auto !important;
         }
         body { margin: 0; padding: 0; }
-        @page { margin: 1.5cm; }
+        @page { margin: 0.5cm; size: auto; }
     }
 
     @media (max-width: 768px) {
