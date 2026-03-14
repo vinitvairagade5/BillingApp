@@ -8,7 +8,7 @@ import { QRCodeModule } from 'angularx-qrcode';
 @Component({
   selector: 'app-bill-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, QRCodeModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="container-fluid py-4 animate-fade-in" *ngIf="bill">
       
@@ -38,7 +38,7 @@ import { QRCodeModule } from 'angularx-qrcode';
       <div class="invoice-paper border-0 shadow-lg mx-auto bg-white rounded-3">
         
         <!-- Header Section -->
-        <div class="row align-items-start mb-5">
+        <div class="row align-items-start mb-3">
           <div class="col-sm-7">
             <h1 class="display-6 fw-extrabold text-primary text-uppercase mb-2">{{ bill.shopOwner?.shopName || 'MY SHOP' }}</h1>
             <div class="text-secondary small">
@@ -65,10 +65,10 @@ import { QRCodeModule } from 'angularx-qrcode';
           </div>
         </div>
 
-        <hr class="my-4 text-muted opacity-25">
+        <hr class="my-3 text-muted opacity-25">
 
         <!-- Customer Section -->
-        <div class="row mb-4">
+        <div class="row mb-3">
           <div class="col-12">
             <div class="d-flex align-items-center flex-wrap gap-2">
                <span class="text-muted small fw-bold tracking-wider me-1">BILLED TO:</span>
@@ -80,7 +80,7 @@ import { QRCodeModule } from 'angularx-qrcode';
         </div>
 
         <!-- Items Table -->
-        <div class="table-responsive mb-5 border-bottom">
+        <div class="table-responsive mb-3 border-bottom">
           <table class="table table-borderless">
             <thead class="bg-light border-bottom">
               <tr class="text-muted small fw-bold">
@@ -108,30 +108,9 @@ import { QRCodeModule } from 'angularx-qrcode';
         </div>
 
         <!-- Summary Section -->
-        <div class="row g-4 align-items-start mb-5 pb-5 mb-print-1 pb-print-1 border-bottom">
+        <div class="row g-4 align-items-start mb-3 pb-3 mb-print-1 pb-print-1 border-bottom">
           <div class="col-md-7 pe-md-5">
-             <div class="row g-3">
-                <div class="col-sm-6 d-print-none">
-                   <div class="p-3 bg-light rounded-3 h-100">
-                      <div class="text-muted small fw-bold mb-1">PAYMENT DETAILS</div>
-                      <div class="fw-bold text-dark fs-6">{{ bill.paymentMethod || 'CASH' }}</div>
-                   </div>
-                </div>
-                
-                <div class="col-sm-6 d-print-none" *ngIf="bill.shopOwner?.upiId && bill.paymentMethod === 'CREDIT'">
-                   <div class="d-flex gap-3 align-items-center p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10">
-                      <div class="bg-white p-1 rounded">
-                        <qrcode [qrdata]="getUpiString()" [width]="70" [margin]="1" [errorCorrectionLevel]="'M'"></qrcode>
-                      </div>
-                      <div>
-                        <div class="text-primary small fw-bold mb-1">SCAN TO PAY</div>
-                        <div class="text-dark small fw-bold font-monospace">{{ bill.shopOwner.upiId }}</div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-
-             <div class="mt-4">
+             <div class="mt-2">
                 <div class="text-muted small fw-bold mb-2">TERMS & CONDITIONS</div>
                 <div class="text-muted small lh-base">
                   1. Goods once sold will not be taken back.<br>
@@ -160,31 +139,7 @@ import { QRCodeModule } from 'angularx-qrcode';
                 <span class="fw-extrabold h4 mb-0 text-primary">₹{{ bill.totalAmount | number:'1.2-2' }}</span>
               </div>
             </div>
-            <div class="text-end mt-2 mb-0">
-               <small class="text-muted fst-italic">(Inclusive of all GST charges)</small>
-            </div>
           </div>
-        </div>
-
-        <!-- Signature Section -->
-        <div class="row align-items-end pt-4 d-print-none">
-          <div class="col-6">
-             <!-- Empty space for extra branding or QR if needed -->
-          </div>
-          <div class="col-6 text-center">
-             <div class="ms-auto" style="max-width: 250px;">
-                <p class="text-dark small fw-bold mb-4">For {{ bill.shopOwner?.shopName }}</p>
-                <div class="digital-stamp mx-auto mb-2 d-flex align-items-center justify-content-center gap-2">
-                   <span class="badge bg-success rounded-circle p-1"><span class="icon">✓</span></span>
-                   <span class="text-success small fw-bold">DIGITALLY SIGNED</span>
-                </div>
-                <p class="text-muted small mb-0 border-top pt-2">Authorized Signatory</p>
-             </div>
-          </div>
-        </div>
-
-        <div class="mt-5 pt-5 text-center footer-notes text-muted d-print-none">
-          Thank you for your business! Generated via <span class="fw-bold text-primary opacity-75">Vinshri Billing</span>
         </div>
       </div>
     </div>
@@ -311,17 +266,5 @@ export class BillDetailComponent implements OnInit {
 
   printInvoice() {
     window.print();
-  }
-
-  getUpiString(): string {
-    if (!this.bill?.shopOwner?.upiId) return '';
-
-    // Format: upi://pay?pa=ADDRESS&pn=NAME&am=AMOUNT&tn=NOTE
-    const pa = this.bill.shopOwner.upiId;
-    const pn = encodeURIComponent(this.bill.shopOwner.shopName);
-    const am = this.bill.totalAmount;
-    const tn = encodeURIComponent(`Bill \${this.bill.billNumber}`);
-
-    return `upi://pay?pa=\${pa}&pn=\${pn}&am=\${am}&tn=\${tn}`;
   }
 }
