@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
   template: `
     <div class="app-wrapper" [class.no-auth]="!user">
       <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm px-3" *ngIf="user">
+      <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm px-3 d-print-none" *ngIf="user">
         <div class="container-fluid">
           <button class="btn btn-outline-secondary d-lg-none me-2" type="button" (click)="toggleMobileSidebar()">
             <span class="navbar-toggler-icon"></span>
@@ -51,7 +51,7 @@ import { AuthService } from './auth.service';
 
       <div class="d-flex">
         <!-- Sidebar Navigation (Desktop) -->
-        <aside class="sidebar bg-white border-end d-none d-lg-flex flex-column p-3 position-sticky" style="top: 72px; height: calc(100vh - 72px); width: 260px; z-index: 1000;" *ngIf="user">
+        <aside class="sidebar bg-white border-end d-none d-lg-flex flex-column p-3 position-sticky d-print-none" style="top: 72px; height: calc(100vh - 72px); width: 260px; z-index: 1000;" *ngIf="user">
           <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item mb-1">
               <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link d-flex align-items-center text-dark">

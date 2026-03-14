@@ -68,13 +68,13 @@ import { QRCodeModule } from 'angularx-qrcode';
         <hr class="my-4 text-muted opacity-25">
 
         <!-- Customer Section -->
-        <div class="row mb-5">
+        <div class="row mb-4">
           <div class="col-12">
-            <div class="text-muted small fw-bold tracking-wider mb-2">BILLED TO</div>
-            <h3 class="h5 fw-bold mb-1">{{ bill.customer?.name }}</h3>
-            <div class="text-secondary small">
-              <p class="mb-0">{{ bill.customer?.mobile }}</p>
-              <p class="mb-0 text-wrap" style="max-width: 350px;">{{ bill.customer?.address }}</p>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+               <span class="text-muted small fw-bold tracking-wider me-1">BILLED TO:</span>
+               <h3 class="h6 fw-bold mb-0 text-dark">{{ bill.customer?.name }}</h3>
+               <span class="text-secondary small ms-2" *ngIf="bill.customer?.mobile">📞 {{ bill.customer?.mobile }}</span>
+               <span class="text-secondary small ms-2 text-truncate" style="max-width: 350px;" *ngIf="bill.customer?.address">📍 {{ bill.customer?.address }}</span>
             </div>
           </div>
         </div>
