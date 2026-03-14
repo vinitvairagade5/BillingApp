@@ -48,7 +48,7 @@ import { QRCodeModule } from 'angularx-qrcode';
             </div>
           </div>
           <div class="col-sm-5 ms-sm-auto text-sm-end mt-4 mt-sm-0">
-            <h2 class="h4 text-muted fw-bold tracking-widest text-uppercase mb-3">Tax Invoice</h2>
+            <h2 class="h4 text-muted fw-bold tracking-widest text-uppercase mb-3">Bill Invoice</h2>
             <div class="small">
               <div class="mb-1 text-muted">Invoice No: <span class="text-dark fw-bold">#{{ bill.billNumber }}</span></div>
               <div class="mb-1 text-muted">Date: <span class="text-dark fw-bold">{{ bill.date | date:'dd MMM yyyy' }}</span></div>

@@ -48,7 +48,7 @@ public class PdfService : IPdfService
 
                 row.ConstantItem(180).Column(column =>
                 {
-                    column.Item().AlignRight().Text("TAX INVOICE")
+                    column.Item().AlignRight().Text("BILL INVOICE")
                         .FontSize(16).SemiBold().FontColor(Colors.Black);
                     
                     column.Item().PaddingTop(10).AlignRight().Text(text =>
