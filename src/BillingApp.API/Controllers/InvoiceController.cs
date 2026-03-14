@@ -288,9 +288,11 @@ public class InvoiceController : BaseApiController
                         @"SELECT ""StockQuantity"" FROM ""Items"" WHERE ""Id"" = @ItemId AND ""ShopOwnerId"" = @ShopOwnerId",
                         new { ItemId = item.ItemId, ShopOwnerId = shopOwnerId }, transaction);
                      
-                     if (currentStock == null) throw new Exception($"Item with ID {item.ItemId} not found.");
+                     transaction.Rollback();
                      
-                     throw new Exception($"Insufficient stock for item '{item.ItemName}'. Available: {currentStock}, Requested: {item.Quantity}");
+                     if (currentStock == null) return BadRequest(new { message = $"Item with ID {item.ItemId} not found." });
+                     
+                     return BadRequest(new { message = $"Insufficient stock for item '{item.ItemName}'. Available: {currentStock}, Requested: {item.Quantity}" });
                 }
             }
 

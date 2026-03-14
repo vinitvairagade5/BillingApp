@@ -137,7 +137,7 @@ export class ProductListComponent implements OnInit {
                     next: () => {
                         this.isSaving = false;
                         this.loadProducts();
-                        this.notificationService.success('Product deleted successfully');
+                        // Removed blocking success popup for better UX
                     },
                     error: (err) => {
                         this.isSaving = false;

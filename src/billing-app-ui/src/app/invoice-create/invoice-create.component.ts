@@ -129,13 +129,14 @@ import { ProductService } from '../product.service';
                     
                     <div class="col-md-3 col-12 mb-2 mb-md-0 position-relative">
                        <label class="d-md-none small text-muted fw-bold mb-1">Item Name</label>
-                       <input formControlName="itemName" class="form-control border-light py-2 shadow-sm" placeholder="Search item..." (input)="onItemSearch($event, i)" autocomplete="off">
+                       <input formControlName="itemName" class="form-control border-light py-2 shadow-sm" placeholder="Search item..." (input)="onItemSearch($event, i)" (focus)="onItemSearch($event, i)" autocomplete="off">
                        
                        <!-- Item Search Dropdown -->
                        <div class="list-group position-absolute w-100 mt-1 shadow-lg rounded-3 overflow-hidden z-3" *ngIf="itemSearchIndex === i && (itemResults.length > 0 || (itemSearchQuery && itemSearchQuery.length >= 2))">
-                         <button class="list-group-item list-group-item-action p-2 border-0 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)">
-                           <div class="fw-bold small">{{ res.name }}</div>
-                           <small class="text-muted">₹{{ res.price }} • Stock: {{ res.stockQuantity }}</small>
+                         <button class="list-group-item list-group-item-action p-2 border-0 border-bottom" type="button" *ngFor="let res of itemResults" (click)="selectItem(res, i)" [disabled]="res.stockQuantity !== undefined && res.stockQuantity <= 0">
+                           <div class="fw-bold small" [class.text-muted]="res.stockQuantity !== undefined && res.stockQuantity <= 0">{{ res.name }}</div>
+                           <small class="text-muted" *ngIf="res.stockQuantity === undefined || res.stockQuantity > 0">₹{{ res.price }} • Stock: {{ res.stockQuantity }}</small>
+                           <small class="text-danger fw-bold" *ngIf="res.stockQuantity !== undefined && res.stockQuantity <= 0">₹{{ res.price }} • OUT OF STOCK</small>
                          </button>
                          <button class="list-group-item list-group-item-action p-2 bg-light text-primary fw-bold small" type="button" *ngIf="itemResults.length === 0 && itemSearchQuery.length >= 2" (click)="openQuickProductModal()">
                             <span>➕</span> Add "{{ itemSearchQuery }}"
@@ -712,6 +713,13 @@ export class InvoiceCreateComponent implements OnInit {
   }
 
   selectItem(item: Item, index: number) {
+    if (item.stockQuantity !== undefined && item.stockQuantity <= 0) {
+      this.notificationService.error(`Cannot add '${item.name}' as it is currently out of stock.`);
+      this.itemResults = [];
+      this.itemSearchIndex = null;
+      return;
+    }
+
     const itemGroup = this.items.at(index) as FormGroup;
     itemGroup.patchValue({
       itemId: item.id,
@@ -722,9 +730,6 @@ export class InvoiceCreateComponent implements OnInit {
     });
 
     // Store available stock in a temporary property on the control for validation in template/TS
-    // Since we can't easily add ad-hoc properties to AbstractControl, we might need a separate tracker or just use a custom validator.
-    // For simplicity, let's just use the item object reference if needed or add a hidden control.
-    // Let's add 'stockQuantity' control to the formGroup
     if (!itemGroup.contains('stockQuantity')) {
       itemGroup.addControl('stockQuantity', this.fb.control(item.stockQuantity));
     } else {
