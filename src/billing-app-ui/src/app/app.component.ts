@@ -38,6 +38,7 @@ import { AuthService } from './auth.service';
                   {{ user.shopName.charAt(0) }}
                 </div>
                 <span class="d-none d-sm-inline">{{ user.shopName }}</span>
+                <span class="badge bg-warning text-dark ms-2 small" *ngIf="user.parentShopId">Staff</span>
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
                 <li><a class="dropdown-item" routerLink="/settings">Settings</a></li>
@@ -255,18 +256,24 @@ export class AppComponent {
 
   constructor() {
     this.authService.currentUser$.subscribe(u => this.user = u);
+    if (this.authService.currentUserValue) {
+      this.authService.refreshProfile().subscribe({
+        error: () => this.logout() // If token invalid/expired during refresh
+      });
+    }
   }
 
   hasAccess(menu: string): boolean {
     if (!this.user) return false;
-    if (menu === 'dashboard') return true; // Everyone can see dashboard
+    const menuSlug = menu.toLowerCase();
+    if (menuSlug === 'dashboard') return true; 
     if (this.user.isAdmin) return true;
-    if (!this.user.parentShopId) return true; // Shop Owner has full access
+    if (!this.user.parentShopId) return true; 
     
     if (!this.user.accessibleMenus) return false;
     try {
-      const menus: string[] = JSON.parse(this.user.accessibleMenus);
-      return menus.includes(menu);
+      const menus: string[] = JSON.parse(this.user.accessibleMenus).map((m: string) => m.toLowerCase());
+      return menus.includes(menuSlug);
     } catch {
       return false;
     }
