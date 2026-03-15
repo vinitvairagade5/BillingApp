@@ -87,6 +87,17 @@ public class DatabaseInitializer
                 await connection.ExecuteAsync("ALTER TABLE \"Users\" ADD COLUMN \"UpiId\" TEXT NULL");
                 _logger.LogInformation("Migration: UpiId column added.");
             }
+
+            // Migration: Add AccessibleMenus column if not exists
+            var accessibleMenusExists = await connection.ExecuteScalarAsync<bool>(
+                "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Users' AND column_name='AccessibleMenus')");
+            
+            if (!accessibleMenusExists)
+            {
+                _logger.LogInformation("Migrating: Adding AccessibleMenus column to Users table...");
+                await connection.ExecuteAsync("ALTER TABLE \"Users\" ADD COLUMN \"AccessibleMenus\" TEXT NULL");
+                _logger.LogInformation("Migration: AccessibleMenus column added.");
+            }
         }
         catch (Exception ex)
         {

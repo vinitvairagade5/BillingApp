@@ -53,52 +53,52 @@ import { AuthService } from './auth.service';
         <!-- Sidebar Navigation (Desktop) -->
         <aside class="sidebar bg-white border-end d-none d-lg-flex flex-column p-3 position-sticky d-print-none" style="top: 72px; height: calc(100vh - 72px); width: 260px; z-index: 1000;" *ngIf="user">
           <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('dashboard')">
               <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📊</span> Dashboard
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('bills')">
               <a routerLink="/bills" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📜</span> Bills
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('products')">
               <a routerLink="/products" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📦</span> Products
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('customers')">
               <a routerLink="/customers" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">👥</span> Customers
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('suppliers')">
               <a routerLink="/suppliers" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">🏢</span> Suppliers
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('purchases')">
               <a routerLink="/purchases" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📦</span> Purchases
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('expenses')">
               <a routerLink="/expenses" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">💸</span> Expenses
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('subscription')">
               <a routerLink="/subscription" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">💎</span> Subscription
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('udhaar')">
               <a routerLink="/udhaar" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📝</span> Udhaar
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('reports')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link d-flex align-items-center text-dark">
                 <span class="me-3 fs-5">📊</span> Reports
               </a>
@@ -132,52 +132,52 @@ import { AuthService } from './auth.service';
         </div>
         <div class="offcanvas-body p-0">
           <ul class="nav nav-pills flex-column p-3">
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('dashboard')">
               <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📊</span> Dashboard
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('bills')">
               <a routerLink="/bills" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📜</span> Bills
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('products')">
               <a routerLink="/products" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📦</span> Products
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('customers')">
               <a routerLink="/customers" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">👥</span> Customers
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('suppliers')">
               <a routerLink="/suppliers" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">🏢</span> Suppliers
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('purchases')">
               <a routerLink="/purchases" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📦</span> Purchases
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('expenses')">
               <a routerLink="/expenses" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">💸</span> Expenses
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('subscription')">
               <a routerLink="/subscription" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">💎</span> Subscription
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('udhaar')">
               <a routerLink="/udhaar" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📝</span> Udhaar
               </a>
             </li>
-            <li class="nav-item mb-1">
+            <li class="nav-item mb-1" *ngIf="hasAccess('reports')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link text-dark" (click)="closeMobileSidebar()">
                 <span class="me-3">📊</span> Reports
               </a>
@@ -255,6 +255,21 @@ export class AppComponent {
 
   constructor() {
     this.authService.currentUser$.subscribe(u => this.user = u);
+  }
+
+  hasAccess(menu: string): boolean {
+    if (!this.user) return false;
+    if (menu === 'dashboard') return true; // Everyone can see dashboard
+    if (this.user.isAdmin) return true;
+    if (!this.user.parentShopId) return true; // Shop Owner has full access
+    
+    if (!this.user.accessibleMenus) return false;
+    try {
+      const menus: string[] = JSON.parse(this.user.accessibleMenus);
+      return menus.includes(menu);
+    } catch {
+      return false;
+    }
   }
 
   toggleSidebar() {

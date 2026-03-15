@@ -22,7 +22,7 @@ public class AuthController : BaseApiController
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var userId = GetUserId();
+        var userId = GetActualUserId();
         using var connection = _connectionFactory.CreateConnection();
         var user = await connection.QuerySingleOrDefaultAsync<User>(
             "SELECT * FROM \"Users\" WHERE \"Id\" = @userId", new { userId });
@@ -42,7 +42,9 @@ public class AuthController : BaseApiController
             Address = user.Address,
             GSTIN = user.GSTIN,
             LogoUrl = user.LogoUrl,
-            GstRates = user.GstRates
+            GstRates = user.GstRates,
+            AccessibleMenus = user.AccessibleMenus,
+            ParentShopId = user.ParentShopId
         };
 
         return Ok(dto);
@@ -83,7 +85,7 @@ public class AuthController : BaseApiController
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        var userId = GetUserId();
+        var userId = GetActualUserId();
         var result = await _identityService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
         return HandleResult(result);
     }

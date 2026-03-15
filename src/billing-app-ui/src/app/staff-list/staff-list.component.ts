@@ -42,6 +42,7 @@ import { AuthService } from '../auth.service';
                   <span class="badge bg-light text-primary border fw-medium rounded-pill px-3">{{ member.role }}</span>
                 </td>
                 <td class="py-3 px-4 text-center">
+                  <button class="btn btn-outline-primary btn-sm rounded-circle p-2 me-2" (click)="openEditModal(member)" title="Edit Access">✏️</button>
                   <button class="btn btn-outline-danger btn-sm rounded-circle p-2" (click)="deleteStaff(member.id)" title="Revoke Access">🗑️</button>
                 </td>
               </tr>
@@ -76,6 +77,17 @@ import { AuthService } from '../auth.service';
                                 <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Password</label>
                                 <input type="password" class="form-control rounded-3 p-3 shadow-none border fw-bold" [(ngModel)]="newRequest.password" name="password" required placeholder="Secure Password">
                             </div>
+                            <div class="col-12 mt-3">
+                                <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Menu Access</label>
+                                <div class="row g-2">
+                                  <div class="col-6" *ngFor="let menu of availableMenus">
+                                    <div class="form-check form-switch p-2 border rounded-3 bg-white shadow-sm d-flex justify-content-between align-items-center">
+                                      <label class="form-check-label small fw-medium text-dark mb-0 ms-1 w-100" [for]="'addCheck' + menu.id">{{ menu.label }}</label>
+                                      <input class="form-check-input mt-0 ms-0" style="cursor: pointer" type="checkbox" role="switch" [id]="'addCheck' + menu.id" [checked]="isMenuSelected(menu.id, false)" (change)="toggleMenu(menu.id, false)">
+                                    </div>
+                                  </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-end gap-3">
@@ -89,7 +101,44 @@ import { AuthService } from '../auth.service';
             </div>
         </div>
       </div>
-      <div class="modal-backdrop fade show" *ngIf="isModalOpen"></div>
+      
+      <!-- Edit Access Modal -->
+      <div class="modal fade" [class.show]="isEditModalOpen" [style.display]="isEditModalOpen ? 'block' : 'none'" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 bg-primary text-white p-4">
+                    <h5 class="modal-title fw-bold">Edit Access: {{ editingStaff?.username }}</h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="closeEditModal()"></button>
+                </div>
+                <form (ngSubmit)="saveEdit()">
+                    <div class="modal-body p-4 bg-light bg-opacity-50">
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label extra-small fw-bold text-muted text-uppercase tracking-wider">Menu Access</label>
+                                <div class="row g-2">
+                                  <div class="col-6" *ngFor="let menu of availableMenus">
+                                    <div class="form-check form-switch p-2 border rounded-3 bg-white shadow-sm d-flex justify-content-between align-items-center">
+                                      <label class="form-check-label small fw-medium text-dark mb-0 ms-1 w-100" [for]="'editCheck' + menu.id">{{ menu.label }}</label>
+                                      <input class="form-check-input mt-0 ms-0" style="cursor: pointer" type="checkbox" role="switch" [id]="'editCheck' + menu.id" [checked]="isMenuSelected(menu.id, true)" (change)="toggleMenu(menu.id, true)">
+                                    </div>
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-end gap-3">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" (click)="closeEditModal()">Discard</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" [disabled]="isSaving">
+                            <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+                            {{ isSaving ? 'Saving...' : 'Save Access' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>
+      
+      <div class="modal-backdrop fade show" *ngIf="isModalOpen || isEditModalOpen"></div>
     </div>
   `
 })
@@ -99,9 +148,23 @@ export class StaffListComponent implements OnInit {
 
   staffList: Staff[] = [];
   isModalOpen = false;
+  isEditModalOpen = false;
   isSaving = false;
 
-  newRequest = { username: '', password: '' };
+  availableMenus = [
+    { id: 'bills', label: 'Bills' },
+    { id: 'products', label: 'Products' },
+    { id: 'customers', label: 'Customers' },
+    { id: 'suppliers', label: 'Suppliers' },
+    { id: 'purchases', label: 'Purchases' },
+    { id: 'expenses', label: 'Expenses' },
+    { id: 'udhaar', label: 'Udhaar' },
+    { id: 'reports', label: 'Reports' }
+  ];
+
+  newRequest: { username: string, password: string, accessibleMenus: string[] } = { username: '', password: '', accessibleMenus: [] };
+  editingStaff: Staff | null = null;
+  editRequest: { accessibleMenus: string[] } = { accessibleMenus: [] };
 
   ngOnInit() { this.loadStaff(); }
 
@@ -113,10 +176,40 @@ export class StaffListComponent implements OnInit {
   }
 
   openAddModal() {
-    this.newRequest = { username: '', password: '' };
+    this.newRequest = { username: '', password: '', accessibleMenus: [] };
     this.isModalOpen = true;
   }
   closeModal() { this.isModalOpen = false; }
+
+  openEditModal(staff: Staff) {
+    this.editingStaff = staff;
+    let menus: string[] = [];
+    try {
+      menus = staff.accessibleMenus ? JSON.parse(staff.accessibleMenus) : [];
+    } catch { }
+    this.editRequest = { accessibleMenus: menus };
+    this.isEditModalOpen = true;
+  }
+  
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editingStaff = null;
+  }
+
+  toggleMenu(menuId: string, isEdit: boolean = false) {
+    const list = isEdit ? this.editRequest.accessibleMenus : this.newRequest.accessibleMenus;
+    const index = list.indexOf(menuId);
+    if (index > -1) {
+      list.splice(index, 1);
+    } else {
+      list.push(menuId);
+    }
+  }
+
+  isMenuSelected(menuId: string, isEdit: boolean = false): boolean {
+    const list = isEdit ? this.editRequest.accessibleMenus : this.newRequest.accessibleMenus;
+    return list.includes(menuId);
+  }
 
   saveStaff() {
     this.isSaving = true;
@@ -131,6 +224,24 @@ export class StaffListComponent implements OnInit {
         this.isSaving = false;
         // err.error might be a text phrase based on backend responses (BadRequest returning string)
         const msg = typeof err.error === 'string' ? err.error : 'Failed to add cashier.';
+        this.notificationService.error(msg);
+      }
+    });
+  }
+
+  saveEdit() {
+    if (!this.editingStaff) return;
+    this.isSaving = true;
+    this.staffService.updateStaffAccess(this.editingStaff.id, this.editRequest.accessibleMenus).subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.loadStaff();
+        this.closeEditModal();
+        this.notificationService.success('Cashier access updated.');
+      },
+      error: (err) => {
+        this.isSaving = false;
+        const msg = typeof err.error === 'string' ? err.error : 'Failed to update access.';
         this.notificationService.error(msg);
       }
     });

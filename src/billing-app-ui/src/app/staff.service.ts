@@ -8,6 +8,7 @@ export interface Staff {
     username: string;
     role: string;
     createdAt: Date;
+    accessibleMenus?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +22,10 @@ export class StaffService {
 
     addStaff(request: any): Observable<{ id: number }> {
         return this.http.post<{ id: number }>(this.apiUrl, request);
+    }
+
+    updateStaffAccess(id: number, accessibleMenus: string[]): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${id}/access`, { accessibleMenus });
     }
 
     deleteStaff(id: number): Observable<any> {

@@ -21,6 +21,13 @@ public abstract class BaseApiController : ControllerBase
         return claim != null ? int.Parse(claim.Value) : 0;
     }
 
+    protected int GetActualUserId()
+    {
+        var claim = User.FindFirst("ActualUserId");
+        if (claim != null) return int.Parse(claim.Value);
+        return GetUserId(); // Fallback
+    }
+
     protected bool IsAdmin()
     {
         var claim = User.FindFirst("IsAdmin");

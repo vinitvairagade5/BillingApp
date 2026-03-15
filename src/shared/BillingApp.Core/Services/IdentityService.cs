@@ -81,7 +81,8 @@ public class IdentityService : IIdentityService
                 SubscriptionExpiry = user.SubscriptionExpiry,
                 ReferralCode = user.ReferralCode,
                 Role = user.Role,
-                ParentShopId = user.ParentShopId
+                ParentShopId = user.ParentShopId,
+                AccessibleMenus = user.AccessibleMenus
             }
         });
     }

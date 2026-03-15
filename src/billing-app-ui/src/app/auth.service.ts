@@ -18,6 +18,8 @@ export interface User {
     passwordHash?: string;
     isAdmin?: boolean;
     upiId?: string;
+    accessibleMenus?: string;
+    parentShopId?: number;
 }
 
 export interface AuthResponse {

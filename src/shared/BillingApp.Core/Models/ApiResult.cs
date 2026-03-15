@@ -37,4 +37,5 @@ public class UserDto
     public string? GstRates { get; set; }
     public string Role { get; set; } = "OWNER";
     public int? ParentShopId { get; set; }
+    public string? AccessibleMenus { get; set; }
 }

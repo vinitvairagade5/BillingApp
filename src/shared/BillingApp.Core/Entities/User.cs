@@ -18,5 +18,6 @@ public class User
     public bool IsAdmin { get; set; }
     public string Role { get; set; } = "OWNER";
     public int? ParentShopId { get; set; }
+    public string? AccessibleMenus { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
